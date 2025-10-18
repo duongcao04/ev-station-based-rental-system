@@ -1,0 +1,45 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// This enum defines the different types of notifications you can have
+enum NotificationType {
+  NEW_MESSAGE
+  NEW_FOLLOWER
+  SYSTEM_ALERT
+  BOOKING_CONFIRMED
+  BOOKING_REMINDER
+  INFO
+}
+
+// The main Notification model
+model Notification {
+  id String @id @default(uuid())
+
+  title   String?
+  message String // The content of the notification (e.g., "Your booking is confirmed")
+  isRead  Boolean          @default(false)
+  type    NotificationType @default(INFO) // Uses the enum defined above
+  url     String? // Optional: A link to navigate to (e.g., /bookings/123)
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // --- Relation ---
+  // This notification belongs to one user
+  userId String
+
+  @@index([userId]) // Add an index on userId for faster lookups
+}
