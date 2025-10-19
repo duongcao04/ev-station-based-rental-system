@@ -11,10 +11,10 @@ import {
 const router = express.Router();
 
 router.post("/", createBooking);
+router.get("/me/history", myBookings);
 router.put("/:id/checkin", checkin);
 router.put("/:id/return", returnVehicle);
-router.get("/:id", getBooking);
-router.get("/me/history", myBookings);
 router.put("/:id/cancel", cancelBooking);
+router.get("/:id", getBooking);
 
 export default router;
