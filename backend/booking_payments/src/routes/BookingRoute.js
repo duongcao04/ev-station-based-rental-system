@@ -5,14 +5,16 @@ import {
   returnVehicle,
   getBooking,
   myBookings,
-} from "../controllers/booking.controller.js";
+  cancelBooking,
+} from "../controllers/BookingController.js";
 
 const router = express.Router();
 
-router.post("/", createBooking);              
-router.put("/:id/checkin", checkin);          
-router.put("/:id/return", returnVehicle);     
-router.get("/:id", getBooking);              
-router.get("/me/history", myBookings);        
+router.post("/", createBooking);
+router.put("/:id/checkin", checkin);
+router.put("/:id/return", returnVehicle);
+router.get("/:id", getBooking);
+router.get("/me/history", myBookings);
+router.put("/:id/cancel", cancelBooking);
 
 export default router;

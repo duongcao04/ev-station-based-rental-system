@@ -1,6 +1,6 @@
 import pool from "../config/db.js";
-import { BookingModel } from "../models/booking.model.js";
-import { calcCost } from "../services/pricing.service.js";
+import { BookingModel } from "../models/BookingModel.js";
+import { calcCost } from "../services/PricingService.js";
 
 // POST /v1/api/bookings
 export const createBooking = async (req, res) => {
@@ -10,8 +10,24 @@ export const createBooking = async (req, res) => {
       return res.status(400).json({ error: "Missing required fields" });
     }
 
+    // Tính estimated_cost nếu không được cung cấp
+    let finalEstimatedCost = estimated_cost;
+    if (!finalEstimatedCost) {
+      const pricing = await BookingModel.getVehiclePricing(vehicle_id);
+      if (pricing) {
+        finalEstimatedCost = calcCost({
+          start_time,
+          end_time: expected_end_time,
+          pricing_type: pricing.pricing_type || 'daily',
+          price_per_day: pricing.price_per_day || 0,
+          price_per_month: pricing.price_per_month || 0,
+          price_per_year: pricing.price_per_year || 0,
+        });
+      }
+    }
+
     const booking = await BookingModel.create({
-      renter_id, vehicle_id, start_station_id, start_time, expected_end_time, estimated_cost,
+      renter_id, vehicle_id, start_station_id, start_time, expected_end_time, estimated_cost: finalEstimatedCost,
     });
     res.status(201).json(booking);
   } catch (e) {
@@ -51,12 +67,15 @@ export const returnVehicle = async (req, res) => {
       return res.status(400).json({ error: "Invalid state or rental not found" });
     }
 
-    // tính tiền theo vehicles.price_per_hour
+    // tính tiền theo pricing_type mới
     const pricing = await BookingModel.getVehiclePricing(current.vehicle_id);
     const actual_cost = calcCost({
       start_time: current.start_time,
       end_time,
-      price_per_hour: pricing?.price_per_hour || 0,
+      pricing_type: pricing?.pricing_type || 'daily',
+      price_per_day: pricing?.price_per_day || 0,
+      price_per_month: pricing?.price_per_month || 0,
+      price_per_year: pricing?.price_per_year || 0,
     });
 
     await client.query("BEGIN");
@@ -99,3 +118,34 @@ export const myBookings = async (req, res) => {
     res.status(500).json({ error: "Server error" });
   }
 };
+// PUT /v1/api/bookings/:id/cancel
+export const cancelBooking = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { renter_id, reason } = req.body;
+
+    const rental = await BookingModel.getById(id);
+    if (!rental) return res.status(404).json({ error: "Booking not found" });
+
+    if (rental.status !== "booked") {
+      return res.status(400).json({ error: "Only booked rentals can be cancelled" });
+    }
+
+    // Nếu bạn muốn xác thực đúng người hủy:
+    if (renter_id && rental.renter_id !== renter_id) {
+      return res.status(403).json({ error: "Unauthorized to cancel this booking" });
+    }
+
+    const cancelled = await BookingModel.cancel(id, reason);
+    if (!cancelled) {
+      return res.status(400).json({ error: "Cancel failed (state changed or not booked)" });
+    }
+
+    return res.json({ message: "Booking cancelled successfully", rental: cancelled });
+  } catch (e) {
+    console.error("cancelBooking error:", e);
+    res.status(500).json({ error: e.message || "Server error" });
+  }
+
+};
+

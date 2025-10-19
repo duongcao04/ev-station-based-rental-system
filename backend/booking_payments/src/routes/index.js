@@ -1,8 +1,8 @@
 import express from "express";
-import bookingRoutes from "./booking.routes.js";
+import bookingRoutes from "./BookingRoute.js";
 
 const router = express.Router();
 
 router.use("/bookings", bookingRoutes);
 
-export default (app) => app.use("/v1/api", router);
+export default router;

@@ -45,7 +45,10 @@ export const BookingModel = {
   },
 
   getVehiclePricing: async (vehicle_id) => {
-    const { rows } = await pool.query(`SELECT price_per_hour FROM vehicles WHERE id=$1`, [vehicle_id]);
+    const { rows } = await pool.query(`
+      SELECT pricing_type, price_per_day, price_per_month, price_per_year 
+      FROM vehicles WHERE id=$1
+    `, [vehicle_id]);
     return rows[0] || null;
   },
 
@@ -66,4 +69,17 @@ export const BookingModel = {
     );
     return rows;
   },
+
+  cancel: async (id, reason) => {
+    const q = `
+      UPDATE rentals
+      SET status = 'cancelled',
+          check_out_notes = COALESCE(check_out_notes, '') || '\n[CANCELLED]' || COALESCE(' ' || $2, '')
+      WHERE id = $1 AND status = 'booked'
+      RETURNING *;
+    `;
+    const { rows } = await pool.query(q, [id, reason]);
+    return rows[0] || null;
+  },
+
 };
