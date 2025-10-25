@@ -1,14 +1,13 @@
 {
-  "name": "ev_station_based_rental_system",
+  "name": "booking_services",
   "version": "1.0.0",
-  "description": "",
+  "description": "Booking Services for EV Station Rental System",
   "main": "src/index.js",
   "type": "module",
   "scripts": {
     "dev": "nodemon src/index.js",
     "debug": "node --inspect src/index.js",
-    "start": "node src/index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node src/index.js"
   },
   "keywords": [],
   "author": "",
