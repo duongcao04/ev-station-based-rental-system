@@ -19,10 +19,10 @@ app.use((req, res, next) => {
   next();
 });
 
-const port = (process.env.PORT || 3000);
+const port = (process.env.PORT || 4000);
 
 app.use("/v1/api", router);
 
 app.listen(port, () => {
-  console.log(`✅ Booking Service đang chạy tại http://localhost:${port}`);
+  console.log(` Booking Service đang chạy tại http://localhost:${port}`);
 });

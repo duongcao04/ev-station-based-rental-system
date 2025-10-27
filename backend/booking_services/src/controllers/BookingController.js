@@ -7,7 +7,6 @@ export const createBooking = async (req, res) => {
     const { vehicle_id, start_date, end_date, total_amount, calculated_price_details } = req.body;
     const user_id = req.user.id; // Lấy từ authenticated user
 
-    // Basic validation only
     if (!vehicle_id || !start_date || !end_date || !total_amount) {
       return res.status(400).json({ error: "Missing required fields" });
     }
@@ -17,7 +16,7 @@ export const createBooking = async (req, res) => {
     });
     res.status(201).json(booking);
   } catch (e) {
-    // Database constraint errors
+ 
     if (e.code && e.code.startsWith("23")) {
       return res.status(409).json({ error: "Vehicle time overlap or constraint violation" });
     }
