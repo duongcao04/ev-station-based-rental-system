@@ -15,7 +15,7 @@ export const createPayment = async (req, res) => {
       error: "Missing required fields"
     })
   }
-  
+
   // crate payments
   return PaymentModel.create({
     booking_id,

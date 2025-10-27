@@ -4,19 +4,19 @@ import { BookingModel } from "../models/BookingModel.js";
 // POST /v1/api/bookings
 export const createBooking = async (req, res) => {
   try {
-    const { vehicle_id, start_date, end_date, total_amount, calculated_price_details } = req.body;
-    const user_id = req.user.id; // Lấy từ authenticated user
+    const { vehicle_id, payment_id, start_station_id, end_station_id, start_date, end_date, total_amount, calculated_price_details } = req.body;
+    const user_id = req.user.id;
 
-    if (!vehicle_id || !start_date || !end_date || !total_amount) {
-      return res.status(400).json({ error: "Missing required fields" });
+    if (!vehicle_id || !payment_id || !start_station_id || !end_station_id || !start_date || !end_date || !total_amount) {
+      return res.status(400).json({ error: "Missing required fields (vehicle_id, payment_id, start_station_id, end_station_id, start_date, end_date, total_amount)" });
     }
 
     const booking = await BookingModel.create({
-      user_id, vehicle_id, start_date, end_date, total_amount, calculated_price_details,
+      user_id, vehicle_id, payment_id, start_station_id, end_station_id, start_date, end_date, total_amount, calculated_price_details,
     });
     res.status(201).json(booking);
   } catch (e) {
- 
+
     if (e.code && e.code.startsWith("23")) {
       return res.status(409).json({ error: "Vehicle time overlap or constraint violation" });
     }
@@ -29,8 +29,24 @@ export const createBooking = async (req, res) => {
 // PUT /v1/api/bookings/:id/checkin
 export const checkin = async (req, res) => {
   try {
-    const booking = await BookingModel.checkin({ booking_id: req.params.id });
-    if (!booking) return res.status(400).json({ error: "Invalid state or booking not found" });
+    const { id } = req.params;
+
+    // Kiểm tra booking có tồn tại không
+    const existingBooking = await BookingModel.getById(id);
+    if (!existingBooking) {
+      return res.status(404).json({ error: "Booking not found" });
+    }
+
+    // Kiểm tra trạng thái booking
+    if (existingBooking.status !== 'booked') {
+      return res.status(400).json({
+        error: "Booking cannot be checked in",
+        current_status: existingBooking.status,
+        required_status: "booked"
+      });
+    }
+
+    const booking = await BookingModel.checkin({ booking_id: id });
     res.json(booking);
   } catch (e) {
     console.error(e);
@@ -53,12 +69,16 @@ export const returnVehicle = async (req, res) => {
       return res.status(400).json({ error: "Request body is missing. Please send JSON data." });
     }
 
-    const { actual_return_date, final_amount } = req.body;
+    const { actual_return_date, actual_return_station_id, final_amount } = req.body;
 
-    console.log('Return request:', { id, actual_return_date, final_amount });
+    console.log('Return request:', { id, actual_return_date, actual_return_station_id, final_amount });
 
     if (!actual_return_date) {
       return res.status(400).json({ error: "actual_return_date is required" });
+    }
+
+    if (!actual_return_station_id) {
+      return res.status(400).json({ error: "actual_return_station_id is required" });
     }
 
     // booking hiện tại
@@ -77,6 +97,7 @@ export const returnVehicle = async (req, res) => {
     const updated = await BookingModel.returnVehicle(client, {
       booking_id: id,
       actual_return_date,
+      actual_return_station_id,
       final_amount: final_amount || current.total_amount,
     });
     await client.query("COMMIT");
@@ -153,7 +174,6 @@ export const getAllBookings = async (req, res) => {
 export const cancelBooking = async (req, res) => {
   try {
     const { id } = req.params;
-    const user_id = req.user.id; // Lấy từ authenticated user
 
     const booking = await BookingModel.getById(id);
     if (!booking) return res.status(404).json({ error: "Booking not found" });
@@ -162,11 +182,7 @@ export const cancelBooking = async (req, res) => {
       return res.status(400).json({ error: "Only booked bookings can be cancelled" });
     }
 
-    // Renter chỉ có thể hủy booking của mình
-    if (req.user.role === 'renter' && booking.user_id !== user_id) {
-      return res.status(403).json({ error: "Unauthorized to cancel this booking" });
-    }
-
+    // Ownership đã được kiểm tra bởi middleware checkOwnership
     const cancelled = await BookingModel.cancel(id);
     if (!cancelled) {
       return res.status(400).json({ error: "Cancel failed (state changed or not booked)" });
