@@ -1,13 +1,9 @@
 import { lazy, Suspense } from 'react';
-import {
-  createBrowserRouter,
-  RouterProvider,
-  Outlet,
-  ScrollRestoration,
-} from 'react-router-dom';
+import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import './index.css';
 
 import MainLayout from '@/components/layouts/MainLayout';
+import ThueXeTuLaiPage from './pages/thue-xe-tu-lai/ThueXeTuLaiPage';
 const HomePage = lazy(() => import('@/pages/home/HomePage'));
 const ErrorPage = lazy(() => import('@/pages/error/ErrorPage'));
 
@@ -26,6 +22,14 @@ export const router = createBrowserRouter([
         element: (
           <MainLayout>
             <HomePage />
+          </MainLayout>
+        ),
+      },
+      {
+        path: '/thue-xe-tu-lai',
+        element: (
+          <MainLayout>
+            <ThueXeTuLaiPage />
           </MainLayout>
         ),
       },

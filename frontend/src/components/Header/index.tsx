@@ -100,7 +100,7 @@ export default function Header() {
                     }}>
                         Trang chủ
                     </Link>
-                    <Link to="/thue-xe" style={{
+                    <Link to="/thue-xe-tu-lai" style={{
                         color: '#374151',
                         textDecoration: 'none',
                         fontWeight: '600',
