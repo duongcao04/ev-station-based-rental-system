@@ -1,4 +1,5 @@
 import Header from '../Header';
+import Footer from '../Footer';
 
 export default function MainLayout({
   children,
@@ -6,9 +7,12 @@ export default function MainLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div id='page'>
+    <div className="min-h-screen bg-gray-50">
       <Header />
-      {children}
+      <main className="pt-0">
+        {children}
+      </main>
+      <Footer />
     </div>
   );
 }

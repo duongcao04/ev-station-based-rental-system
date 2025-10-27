@@ -20,12 +20,12 @@ router.post("/", authorize('renter'), createBooking);
 router.get("/me/history", authorize('renter'), myBookings);
 router.put("/:id/cancel", authorize('renter'), cancelBooking);
 
-// Staff routes - Specific routes first
+// Staff routes
 router.put("/:id/checkin", authorize('staff', 'admin'), checkin);
 router.put("/:id/return", authorize('staff', 'admin'), returnVehicle);
 router.get("/all", authorize('staff', 'admin'), getAllBookings);
 
-// Admin routes - Generic route last
+// Admin routes
 router.get("/:id", authorize('renter', 'staff', 'admin'), getBooking);
 
 export default router;
