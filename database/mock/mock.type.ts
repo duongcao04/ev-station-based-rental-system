@@ -16,11 +16,6 @@ type Brand = {
 	description: string,
 	thumbnailUrl?: string
 }
-type Uom = {
-	id: string,
-	displayName: string,
-	description: string
-}
 type CarSpecification = {
 	id: string
 	label: SpecificationType,
@@ -28,15 +23,15 @@ type CarSpecification = {
 }
 type Car = {
 	id: string,
-	depositPrice?: number
 	regularPrice: number,
-	salePrice: number,
+	salePrice?: number,
+	depositPrice?: number
 	categories?: Category[],
 	brand?: Brand,
-	inStock: boolean,
+	quantity?: number
+	isInStock: boolean,
 	specifications?: CarSpecification[]
 	description?: string
-	uom: Uom
 	thumbnailUrl: string,
 	featuredImageUrls?: string[]
 }
