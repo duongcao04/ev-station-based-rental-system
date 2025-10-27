@@ -27,7 +27,11 @@ export const router = createBrowserRouter([
       },
       {
         path: '/thue-xe-tu-lai',
-        element: <ThueXeTuLaiPage />,
+        element: (
+          <MainLayout>
+            <ThueXeTuLaiPage />
+          </MainLayout>
+        ),
       },
       // Catch-all
       { path: '*', element: <ErrorPage /> },

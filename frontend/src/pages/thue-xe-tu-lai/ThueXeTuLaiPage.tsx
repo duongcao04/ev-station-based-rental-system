@@ -1,102 +1,76 @@
-import CarList from './components/CarList';
+import { ArrowUpDown } from 'lucide-react';
+import CarCard from './components/CarCard';
 import FilterBar from './components/FilterBar';
-import LocationBar from './components/LocationBar';
+import LocationCard from './components/LocationCard';
 
-const data = [
+const vehicles = [
   {
-    id: 'car_12345',
-    displayName: 'Toyota Camry 2024', // <--- Added this field
-    depositPrice: 50000000,
-    regularPrice: 1100000000,
-    salePrice: 1050000000,
-    categories: [
-      {
-        id: 'cat_001',
-        displayName: 'Sedan',
-        description: 'A passenger car in a three-box configuration...',
-        thumbnailUrl: 'https://www.svgrepo.com/show/521829/sedan.svg',
-      },
-      {
-        id: 'cat_002',
-        displayName: 'Family Car',
-        description: 'Vehicles suitable for families...',
-        thumbnailUrl: 'https://www.svgrepo.com/show/493847/car-family.svg',
-      },
-    ],
-    brand: {
-      id: 'brand_001',
-      displayName: 'Toyota',
-      description:
-        'Toyota Motor Corporation is a Japanese multinational automotive manufacturer...',
-      thumbnailUrl:
-        'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9d/Toyota_carlogo.svg/2560px-Toyota_carlogo.svg.png',
-    },
-    inStock: true,
-    specifications: [
-      {
-        id: 'car_spec_001',
-        label: {
-          id: 'spec_type_001',
-          label: 'Engine',
-          icon: 'engine-icon.svg',
-        },
-        value: '2.5L Dynamic Force 4-Cylinder',
-      },
-      {
-        id: 'car_spec_002',
-        label: {
-          id: 'spec_type_002',
-          label: 'Transmission',
-          icon: 'gearbox-icon.svg',
-        },
-        value: '8-speed Automatic',
-      },
-      {
-        id: 'car_spec_003',
-        label: {
-          id: 'spec_type_003',
-          label: 'Color',
-          icon: 'color-palette-icon.svg',
-        },
-        value: 'Celestial Silver Metallic',
-      },
-      {
-        id: 'car_spec_004',
-        label: {
-          id: 'spec_type_004',
-          label: 'Mileage',
-          icon: 'odometer-icon.svg',
-        },
-        value: '8.7 L/100km (Combined)',
-      },
-    ],
-    description:
-      'The 2024 Toyota Camry offers a compelling blend of comfort, reliability, and style. This mid-size sedan is perfect for families or commuters seeking a dependable and efficient vehicle.',
-    uom: {
-      id: 'uom_001',
-      displayName: 'Chiếc',
-      description: 'Unit of measurement for a single car.',
-    },
-    thumbnailUrl:
-      'https://media.ed.edmunds-media.com/toyota/camry/2024/oem/2024_toyota_camry_sedan_trd_fq_oem_1_1600.jpg',
-    featuredImageUrls: [
-      'https://media.ed.edmunds-media.com/toyota/camry/2024/oem/2024_toyota_camry_sedan_trd_rq_oem_1_1600.jpg',
-      'https://media.ed.edmunds-media.com/toyota/camry/2024/oem/2024_toyota_camry_sedan_trd_fint_oem_1_1600.jpg',
-      'https://media.ed.edmunds-media.com/toyota/camry/2024/oem/2024_toyota_camry_sedan_trd_sint_oem_1_1600.jpg',
-    ],
+    id: 1,
+    name: 'Tesla Model 3',
+    type: 'Sedan',
+    range: '500km',
+    price: '2,500,000đ/ngày',
+    image:
+      'https://images.unsplash.com/photo-1560958089-b8a1929cea89?w=500&h=300&fit=crop',
+    features: ['Tự lái', 'Sạc nhanh', 'Premium'],
+  },
+  {
+    id: 2,
+    name: 'BMW i3',
+    type: 'Hatchback',
+    range: '300km',
+    price: '1,800,000đ/ngày',
+    image:
+      'https://images.unsplash.com/photo-1555215695-3004980ad54e?w=500&h=300&fit=crop',
+    features: ['Eco-friendly', 'Compact', 'Urban'],
+  },
+  {
+    id: 3,
+    name: 'VinFast VF8',
+    type: 'SUV',
+    range: '450km',
+    price: '2,200,000đ/ngày',
+    image:
+      'https://images.unsplash.com/photo-1593941707882-a5bac6861d75?w=500&h=300&fit=crop',
+    features: ['Spacious', 'Luxury', 'Vietnamese'],
   },
 ];
 
 export default function ThueXeTuLaiPage() {
   return (
-    <div className='bg-background max-w-[1440px] mx-auto'>
-      <div className='grid grid-cols-12 gap-5'>
-        <div className='col-span-3'>
+    <div className='mt-20 max-w-[1440px] mx-auto pb-20'>
+      <div className='grid grid-cols-12 gap-8'>
+        <div
+          className='col-span-3 bg-background rounded-lg h-fit sticky top-[100px]'
+          style={{
+            boxShadow:
+              'rgba(17, 17, 26, 0.05) 0px 1px 0px, rgba(17, 17, 26, 0.1) 0px 0px 8px',
+          }}
+        >
           <FilterBar />
         </div>
-        <div className='col-span-9 p-8 space-y-9'>
-          <LocationBar />
-          <CarList data={data} />
+        <div className='w-full col-span-9 space-y-9'>
+          <div className='relative w-full h-[150px] rounded-lg grid grid-cols-2 gap-8'>
+            <LocationCard title={'Điểm thuê'} />
+            <div className='absolute left-[50%] translate-x-[-50%] top-[50%] translate-y-[-50%]'>
+              <button className='cursor-pointer'>
+                <div
+                  className='size-14 rounded-lg bg-primary text-white flex items-center justify-center'
+                  style={{
+                    boxShadow: 'rgba(0, 0, 0, 0.24) 0px 3px 8px',
+                  }}
+                >
+                  <ArrowUpDown size={24} />
+                </div>
+              </button>
+            </div>
+            <LocationCard title={'Điểm trả'} />
+          </div>
+          <div className='size-full grid grid-cols-3 gap-8'>
+            {vehicles.map((car) => {
+              return <CarCard key={car.id} data={car} />;
+            })}
+          </div>
         </div>
       </div>
     </div>

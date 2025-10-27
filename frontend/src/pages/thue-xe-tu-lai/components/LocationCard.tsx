@@ -12,9 +12,10 @@ type Props = {
 export default function LocationCard({ title }: Props) {
   return (
     <div
-      className='rounded-lg p-6'
+      className='rounded-lg p-6 bg-background'
       style={{
-        boxShadow: 'rgba(149, 157, 165, 0.2) 0px 8px 24px',
+        boxShadow:
+          'rgba(17, 17, 26, 0.05) 0px 1px 0px, rgba(17, 17, 26, 0.1) 0px 0px 8px',
       }}
     >
       <div className='flex items-center justify-start gap-3'>
