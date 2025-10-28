@@ -5,6 +5,9 @@ const DecimalString = z.string().regex(/^\d+(?:\.\d{1,2})?$/, "Must be decimal w
 
 export const CreateCarDto = z.object({
 	regularPrice: DecimalString,
+	displayName: z.string(),
+	sku: z.string(),
+	slug: z.string(),
 	salePrice: DecimalString.nullable().optional(),
 	depositPrice: DecimalString.nullable().optional(),
 	quantity: z.number().int().nullable().optional(),

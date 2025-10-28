@@ -56,6 +56,10 @@ model CarSpecification {
 model Car {
   id String @id @default(uuid())
 
+  displayName String
+  sku         String
+  slug        String
+
   regularPrice Decimal  @db.Decimal(10, 2)
   salePrice    Decimal? @db.Decimal(10, 2)
   depositPrice Decimal? @db.Decimal(10, 2)

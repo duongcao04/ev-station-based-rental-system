@@ -66,7 +66,8 @@ INSERT INTO "Brand" (id, "displayName", "description", "thumbnailUrl") VALUES
 -- ───────────────────────────────────────────────
 INSERT INTO "Car" (
   id, "regularPrice", "salePrice", "depositPrice",
-  "quantity", "isInStock", "description", "thumbnailUrl", "brandId"
+  "quantity", "isInStock", "description", "thumbnailUrl",
+  "brandId", "slug", "sku"
 )
 SELECT
   gen_random_uuid(),
@@ -78,7 +79,9 @@ SELECT
   'A high-quality ' || b."displayName" ||
   ' vehicle, offering excellent performance, modern features, and a comfortable ride. Perfect for both city driving and long-distance journeys.',
   'https://loremflickr.com/640/480/' || replace(b."displayName", ' ', '%20') || ',car?lock=' || (100 + (random() * 1000)::int)::text,
-  b.id
+  b.id,
+  lower(replace(b."displayName", ' ', '-')) || '-' || (1000 + floor(random() * 9000))::text,
+  upper(left(b."displayName", 3)) || '-' || (100000 + floor(random() * 900000))::text
 FROM "Brand" b
 LIMIT 15;
 
