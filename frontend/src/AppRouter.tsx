@@ -33,6 +33,14 @@ export const router = createBrowserRouter([
           </MainLayout>
         ),
       },
+      {
+        path: '/chi-tiet-xe/:slug',
+        element: (
+          <MainLayout>
+            <ThueXeTuLaiPage />
+          </MainLayout>
+        ),
+      },
       // Catch-all
       { path: '*', element: <ErrorPage /> },
     ],

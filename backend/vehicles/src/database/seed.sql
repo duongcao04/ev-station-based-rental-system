@@ -65,11 +65,13 @@ INSERT INTO "Brand" (id, "displayName", "description", "thumbnailUrl") VALUES
 -- Car (15)
 -- ───────────────────────────────────────────────
 INSERT INTO "Car" (
-  id, "regularPrice", "salePrice", "depositPrice",
-  "quantity", "isInStock", "description", "thumbnailUrl", "brandId"
+  id, "displayName", "regularPrice", "salePrice", "depositPrice",
+  "quantity", "isInStock", "description", "thumbnailUrl",
+  "brandId", "slug", "sku"
 )
 SELECT
   gen_random_uuid(),
+  b."displayName" || ' Model ' || (100 + floor(random() * 900))::int,  -- displayName
   (30000 + random() * 70000)::numeric(10,2),
   (25000 + random() * 60000)::numeric(10,2),
   (5000 + random() * 5000)::numeric(10,2),
@@ -77,8 +79,14 @@ SELECT
   true,
   'A high-quality ' || b."displayName" ||
   ' vehicle, offering excellent performance, modern features, and a comfortable ride. Perfect for both city driving and long-distance journeys.',
-  'https://loremflickr.com/640/480/' || replace(b."displayName", ' ', '%20') || ',car?lock=' || (100 + (random() * 1000)::int)::text,
-  b.id
+  'https://loremflickr.com/640/480/' ||
+    replace(b."displayName", ' ', '%20') ||
+    ',car?lock=' || (100 + (random() * 1000)::int)::text,
+  b.id,
+  lower(replace(b."displayName", ' ', '-')) || '-' ||
+    (1000 + floor(random() * 9000))::int::text,
+  upper(left(b."displayName", 3)) || '-' ||
+    (100000 + floor(random() * 900000))::int::text
 FROM "Brand" b
 LIMIT 15;
 

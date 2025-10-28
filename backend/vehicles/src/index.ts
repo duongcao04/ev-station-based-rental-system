@@ -6,7 +6,10 @@ import { rootRouter } from "./routes";
 dotenv.config();
 const app = express();
 
-app.use(cors());
+app.use(cors({
+  origin: String(process.env.CLIENT_URL), // your frontend URL
+  credentials: true, // allow cookies / auth headers
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use('/api', rootRouter)
