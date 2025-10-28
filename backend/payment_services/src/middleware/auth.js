@@ -54,7 +54,7 @@ export const checkOwnership = (req, res, next) => {
     }
 
     if (req.user.role === 'renter') {
-        const requestedUserId = req.query.user_id || req.body.user_id;
+        const requestedUserId = req.params.user_id || req.query.user_id || req.body.user_id;
         if (requestedUserId && requestedUserId != req.user.id) {
             return res.status(403).json({ error: 'Can only access your own bookings' });
         }

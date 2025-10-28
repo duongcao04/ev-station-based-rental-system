@@ -9,7 +9,7 @@ export const BookingModel = {
       RETURNING *;
     `;
     const { rows } = await pool.query(q, [
-      user_id, vehicle_id, payment_id, start_station_id, end_station_id, start_date, end_date, total_amount, calculated_price_details,
+      user_id, vehicle_id, payment_id || null, start_station_id, end_station_id, start_date, end_date, total_amount, calculated_price_details,
     ]);
     return rows[0];
   },
@@ -65,6 +65,17 @@ export const BookingModel = {
       RETURNING *;
     `;
     const { rows } = await pool.query(q, [booking_id]);
+    return rows[0] || null;
+  },
+
+  updatePaymentId: async ({ booking_id, payment_id }) => {
+    const q = `
+      UPDATE bookings
+      SET payment_id = $2
+      WHERE booking_id = $1
+      RETURNING *;
+    `;
+    const { rows } = await pool.query(q, [booking_id, payment_id]);
     return rows[0] || null;
   },
 

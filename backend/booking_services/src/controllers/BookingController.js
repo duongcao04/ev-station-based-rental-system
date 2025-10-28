@@ -7,8 +7,9 @@ export const createBooking = async (req, res) => {
     const { vehicle_id, payment_id, start_station_id, end_station_id, start_date, end_date, total_amount, calculated_price_details } = req.body;
     const user_id = req.user.id;
 
-    if (!vehicle_id || !payment_id || !start_station_id || !end_station_id || !start_date || !end_date || !total_amount) {
-      return res.status(400).json({ error: "Missing required fields (vehicle_id, payment_id, start_station_id, end_station_id, start_date, end_date, total_amount)" });
+    // Allow creating booking without payment_id; it can be attached later
+    if (!vehicle_id || !start_station_id || !end_station_id || !start_date || !end_date || !total_amount) {
+      return res.status(400).json({ error: "Missing required fields (vehicle_id, start_station_id, end_station_id, start_date, end_date, total_amount)" });
     }
 
     const booking = await BookingModel.create({
@@ -165,6 +166,23 @@ export const getAllBookings = async (req, res) => {
 
     const { rows } = await pool.query(query, params);
     res.json(rows);
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: "Server error" });
+  }
+};
+// PUT /v1/api/bookings/:id/payment
+export const updateBookingPayment = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { payment_id } = req.body;
+    if (!payment_id) return res.status(400).json({ error: "payment_id is required" });
+
+    const existing = await BookingModel.getById(id);
+    if (!existing) return res.status(404).json({ error: "Booking not found" });
+
+    const updated = await BookingModel.updatePaymentId({ booking_id: id, payment_id });
+    return res.json({ booking: updated });
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: "Server error" });
