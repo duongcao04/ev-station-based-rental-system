@@ -12,7 +12,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 
-app.use("/v1/api", router);
+app.use("/api", router);
 
 
 const port = (process.env.PORT || 5000);
