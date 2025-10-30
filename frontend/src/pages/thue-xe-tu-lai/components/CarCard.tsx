@@ -39,7 +39,7 @@ export default function CarCard({ data }: Props) {
             <span className='text-sm font-bold !text-foreground'>/ ngày</span>
           </span>
           <Link
-            to='/thue-xe'
+            to={`/dat-xe/${data.id}`}
             className='bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors'
           >
             Thuê ngay

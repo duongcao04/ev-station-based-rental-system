@@ -4,6 +4,8 @@ import './index.css';
 
 import MainLayout from '@/components/layouts/MainLayout';
 import ThueXeTuLaiPage from './pages/thue-xe-tu-lai/ThueXeTuLaiPage';
+import ChiTietXePage from './pages/chi-tiet-xe/ChiTietXePage';
+import CreateBookingPage from './pages/dat-xe/CreateBookingPage';
 const HomePage = lazy(() => import('@/pages/home/HomePage'));
 const ErrorPage = lazy(() => import('@/pages/error/ErrorPage'));
 
@@ -37,7 +39,15 @@ export const router = createBrowserRouter([
         path: '/chi-tiet-xe/:slug',
         element: (
           <MainLayout>
-            <ThueXeTuLaiPage />
+            <ChiTietXePage />
+          </MainLayout>
+        ),
+      },
+      {
+        path: '/dat-xe/:vehicleId',
+        element: (
+          <MainLayout>
+            <CreateBookingPage />
           </MainLayout>
         ),
       },
