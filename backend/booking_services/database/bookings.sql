@@ -15,7 +15,12 @@ CREATE TABLE bookings (
     total_amount NUMERIC(12, 2) NOT NULL,
     calculated_price_details JSONB, 
     status VARCHAR(50) NOT NULL DEFAULT 'booked', 
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    
+    -- Deposit tracking
+    deposit_amount NUMERIC(12, 2),
+    late_fee NUMERIC(12, 2) DEFAULT 0,
+    refund_amount NUMERIC(12, 2) DEFAULT 0
 );
 
 CREATE INDEX idx_bookings_user_id ON bookings(user_id);
@@ -43,6 +48,15 @@ CHECK (end_date > start_date);
 
 ALTER TABLE bookings ADD CONSTRAINT chk_total_amount 
 CHECK (total_amount >= 0);
+
+ALTER TABLE bookings ADD CONSTRAINT chk_deposit_amount 
+CHECK (deposit_amount IS NULL OR deposit_amount >= 0);
+
+ALTER TABLE bookings ADD CONSTRAINT chk_late_fee 
+CHECK (late_fee >= 0);
+
+ALTER TABLE bookings ADD CONSTRAINT chk_refund_amount 
+CHECK (refund_amount >= 0);
 
 
 INSERT INTO bookings (user_id, vehicle_id, start_station_id, end_station_id, start_date, end_date, total_amount, calculated_price_details, status) VALUES

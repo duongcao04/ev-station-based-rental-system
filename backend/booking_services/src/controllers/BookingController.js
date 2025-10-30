@@ -12,6 +12,21 @@ export const createBooking = async (req, res) => {
       return res.status(400).json({ error: "Missing required fields (vehicle_id, start_station_id, end_station_id, start_date, end_date, total_amount)" });
     }
 
+    // Validate total_amount is positive number
+    if (isNaN(total_amount) || total_amount <= 0) {
+      return res.status(400).json({ error: "total_amount must be a positive number" });
+    }
+
+    // Validate date format
+    if (isNaN(Date.parse(start_date)) || isNaN(Date.parse(end_date))) {
+      return res.status(400).json({ error: "Invalid date format" });
+    }
+
+    // Validate start_date < end_date
+    if (new Date(start_date) >= new Date(end_date)) {
+      return res.status(400).json({ error: "end_date must be after start_date" });
+    }
+
     const booking = await BookingModel.create({
       user_id, vehicle_id, payment_id, start_station_id, end_station_id, start_date, end_date, total_amount, calculated_price_details,
     });
@@ -70,9 +85,9 @@ export const returnVehicle = async (req, res) => {
       return res.status(400).json({ error: "Request body is missing. Please send JSON data." });
     }
 
-    const { actual_return_date, actual_return_station_id, final_amount } = req.body;
+    const { actual_return_date, actual_return_station_id, penalty_fee } = req.body;
 
-    console.log('Return request:', { id, actual_return_date, actual_return_station_id, final_amount });
+    console.log('Return request:', { id, actual_return_date, actual_return_station_id, penalty_fee });
 
     if (!actual_return_date) {
       return res.status(400).json({ error: "actual_return_date is required" });
@@ -80,6 +95,11 @@ export const returnVehicle = async (req, res) => {
 
     if (!actual_return_station_id) {
       return res.status(400).json({ error: "actual_return_station_id is required" });
+    }
+
+    // Validate penalty_fee
+    if (penalty_fee !== undefined && (isNaN(penalty_fee) || penalty_fee < 0)) {
+      return res.status(400).json({ error: "penalty_fee must be a non-negative number" });
     }
 
     // booking hiện tại
@@ -94,17 +114,55 @@ export const returnVehicle = async (req, res) => {
       return res.status(400).json({ error: "Booking must be ongoing to return" });
     }
 
+    // ========== TÍNH TOÁN REFUND DEPOSIT ==========
+
+    // Phí phát sinh (Staff nhập thủ công)
+    const totalPenalty = Number(penalty_fee) || 0;
+
+    // Lấy deposit amount từ calculated_price_details nếu có
+    const depositAmount = current.calculated_price_details?.deposit || current.deposit_amount || 0;
+
+    // Tính refund amount
+    let refundAmount = 0;
+    let finalAmount = current.total_amount;
+
+    if (depositAmount > 0) {
+      if (totalPenalty === 0) {
+        // Không có phí phát sinh → hoàn full deposit
+        refundAmount = depositAmount;
+      } else if (totalPenalty < depositAmount) {
+        // Phí phát sinh < cọc → hoàn cọc trừ phí
+        refundAmount = depositAmount - totalPenalty;
+      } else {
+        // Phí phát sinh >= cọc → không hoàn, có thể phải thanh toán thêm
+        refundAmount = 0;
+        const additionalFee = totalPenalty - depositAmount;
+        finalAmount = current.total_amount + additionalFee;
+      }
+    }
+
     await client.query("BEGIN");
     const updated = await BookingModel.returnVehicle(client, {
       booking_id: id,
       actual_return_date,
       actual_return_station_id,
-      final_amount: final_amount || current.total_amount,
+      final_amount: finalAmount,
+      late_fee: totalPenalty,  // Lưu totalPenalty vào late_fee field
+      refund_amount: refundAmount,
     });
     await client.query("COMMIT");
 
     console.log('Return successful:', updated);
-    res.json({ booking: updated });
+    res.json({
+      booking: updated,
+      breakdown: {
+        deposit_amount: depositAmount,
+        penalty_fee: totalPenalty,
+        refund_amount: refundAmount,
+        final_amount: finalAmount,
+        additional_payment_required: totalPenalty > depositAmount ? totalPenalty - depositAmount : 0
+      }
+    });
   } catch (e) {
     await client.query("ROLLBACK");
     console.error('Return error:', e);

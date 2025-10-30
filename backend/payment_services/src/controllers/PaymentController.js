@@ -10,14 +10,38 @@ export const createPayment = async (req, res) => {
   const user_id = req.user?.id;
 
   // validation
-
   if (!booking_id || !amount || !type) {
     return res.status(400).json({
       error: "Missing required fields"
     })
   }
 
-  // crate payments
+  // Validate amount is positive number
+  if (isNaN(amount) || amount <= 0) {
+    return res.status(400).json({ error: "amount must be a positive number" });
+  }
+
+  // Validate type
+  const allowedTypes = ['rental_fee', 'deposit', 'extra_fee', 'refund'];
+  if (!allowedTypes.includes(type)) {
+    return res.status(400).json({
+      error: "Invalid type",
+      allowed: allowedTypes
+    });
+  }
+
+  // Validate payment_method (if provided)
+  if (payment_method) {
+    const allowedMethods = ['credit_card', 'e_wallet', 'bank_transfer', 'cash'];
+    if (!allowedMethods.includes(payment_method)) {
+      return res.status(400).json({
+        error: "Invalid payment_method",
+        allowed: allowedMethods
+      });
+    }
+  }
+
+  // Create payment
   return PaymentModel.create({
     booking_id,
     user_id,
@@ -35,6 +59,15 @@ export const createPayment = async (req, res) => {
     })
     .catch((err) => {
       console.error("createPayment error:", err);
+
+      // Handle unique constraint violations
+      if (err.code === '23505') {
+        return res.status(409).json({
+          error: "Payment already exists for this booking and type",
+          detail: err.detail
+        });
+      }
+
       return res.status(500).json({ error: "Internal server error" });
     });
 
