@@ -56,8 +56,13 @@ export default function CreateBookingPage() {
         },
         onSuccess: (response) => {
             console.log('Booking created:', response.data);
-            alert('Đặt xe thành công!');
-            navigate('/thue-xe-tu-lai');
+            const bookingId = response.data?.booking_id;
+            if (bookingId) {
+                navigate(`/thanh-toan/${bookingId}`);
+            } else {
+                alert('Đặt xe thành công!');
+                navigate('/thue-xe-tu-lai');
+            }
         },
         onError: (error: any) => {
             console.error('Booking error:', error);
