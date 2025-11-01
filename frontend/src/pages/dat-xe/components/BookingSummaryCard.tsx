@@ -59,7 +59,7 @@ export function BookingSummaryCard({
                         onClick={onSubmit}
                         disabled={isDisabled || isSubmitting}
                     >
-                        {isSubmitting ? '⏳ Đang xử lý...' : ' Xác nhận đặt xe'}
+                        {isSubmitting ? ' Đang xử lý...' : ' Xác nhận đặt xe'}
                     </Button>
                     <div className="text-xs text-center text-gray-500 mt-4">
                         <p>🛡️ Bảo mật thanh toán</p>
