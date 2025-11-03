@@ -59,18 +59,32 @@ export default function PaymentPage() {
         retry: false,
     });
 
-    // Create payment mutation
     const createPaymentMutation = useMutation({
-        mutationFn: (data: Parameters<typeof paymentApi.createPayment>[0]) => {
+        mutationFn: async (data: Parameters<typeof paymentApi.createPayment>[0]) => {
+            // Branch: VNPay -> call VNPay endpoint to get paymentUrl
+            if (selectedMethod === 'e_wallet' && selectedProvider === 'VNPay') {
+                return paymentApi.createVNPayPayment(data);
+            }
+            // Default: create standard payment
             return paymentApi.createPayment(data);
         },
-        onSuccess: () => {
+        onSuccess: (response) => {
+            // If VNPay, expect { paymentUrl } and redirect
+            if (selectedMethod === 'e_wallet' && selectedProvider === 'VNPay') {
+                const { paymentUrl } = response.data || {};
+                if (paymentUrl) {
+                    window.location.href = paymentUrl;
+                    return;
+                }
+            }
+            // Cash and other methods
             if (selectedMethod === 'cash') {
                 alert('Đặt xe thành công! Vui lòng thanh toán tiền mặt khi nhận xe.');
+                navigate('/thue-xe-tu-lai');
             } else {
                 alert('Thanh toán thành công! Đặt xe hoàn tất.');
+                navigate('/thue-xe-tu-lai');
             }
-            navigate('/thue-xe-tu-lai');
         },
         onError: (error: any) => {
             console.error('Payment error:', error);
@@ -92,6 +106,12 @@ export default function PaymentPage() {
             provider: selectedProvider || undefined,
             description: `Thanh toán đặt xe ${bookingData.vehicle_id}`,
         };
+
+        if (selectedMethod === 'cash') {
+            alert('Đặt xe thành công! Vui lòng thanh toán tiền mặt khi nhận xe.');
+            navigate('/thue-xe-tu-lai');
+            return;
+        }
 
         createPaymentMutation.mutate(paymentData);
     };
@@ -192,4 +212,3 @@ export default function PaymentPage() {
         </div>
     );
 }
-a
