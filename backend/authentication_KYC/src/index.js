@@ -10,6 +10,7 @@ import cors from "cors";
 dotenv.config();
 
 const app = express();
+app.use(express.urlencoded({ extended: true }));
 const PORT = process.env.PORT || 5001;
 
 //middlewares

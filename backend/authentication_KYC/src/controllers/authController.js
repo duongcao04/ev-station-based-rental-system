@@ -194,3 +194,47 @@ export const refreshToken = async (req, res) => {
       .json({ message: "Internal Error", error: error.message });
   }
 };
+
+export const changePassword = async (req, res) => {
+  try {
+    const { oldPassword, newPassword, confirmPassword } = req.body;
+    const { id } = req.params;
+
+    if (!oldPassword || !newPassword || !confirmPassword) {
+      return res
+        .status(400)
+        .json({ message: "Vui lòng nhập đầy đủ thông tin." });
+    }
+    if (newPassword != confirmPassword) {
+      return res
+        .status(400)
+        .json({ message: "Mật khẩu mới và xác nhận không khớp" });
+    }
+    if (newPassword === oldPassword) {
+      return res
+        .status(400)
+        .json({ message: "Mật khẩu mới không được trùng với mật khẩu cũ" });
+    }
+
+    const user = await User.findByPk(id);
+    if (!user) {
+      return res.status(401).json({ message: "Không tìmm thấy người dùng" });
+    }
+
+    const isMatch = await bcrypt.compare(oldPassword, user.password_hash);
+    if (!isMatch) {
+      return res.status(401).json({ message: "Mật khẩu cũ không đúng" });
+    }
+
+    const newHashPassword = await bcrypt.hash(newPassword, 10);
+    user.password_hash = newHashPassword;
+    await user.save();
+
+    return res.status(200).json({ message: "Đổi mật khẩu thành công" });
+  } catch (error) {
+    console.error("Error when calling changPassword");
+    return res
+      .status(500)
+      .json({ message: "Internal Error", error: error.message });
+  }
+};
