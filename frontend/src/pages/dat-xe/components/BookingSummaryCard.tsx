@@ -35,6 +35,16 @@ export function BookingSummaryCard({
                     </h2>
                 </div>
                 <div className="p-6 space-y-4">
+                    {/* Vehicle quick info merged here */}
+                    <div className="flex items-center gap-4 pb-4 border-b">
+                        {vehicle.thumbnailUrl && (
+                            <img src={vehicle.thumbnailUrl} alt={vehicle.displayName} className="w-16 h-16 object-cover rounded-lg" />
+                        )}
+                        <div className="flex-1">
+                            <div className="font-bold text-gray-900">{vehicle.displayName}</div>
+                            <div className="text-sm text-gray-600">{vehicle.brand?.displayName}</div>
+                        </div>
+                    </div>
                     <div className="flex justify-between items-center pb-3 border-b">
                         <span className="text-gray-600">Số ngày:</span>
                         <span className="font-bold text-lg">{days}</span>

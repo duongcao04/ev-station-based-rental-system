@@ -7,6 +7,10 @@ interface BookingInfoCardProps {
     startDate: string | null;
     endDate: string | null;
     totalAmount: number;
+    renterName?: string;
+    renterPhone?: string;
+    renterEmail?: string;
+    renterNote?: string;
 }
 
 export function BookingInfoCard({
@@ -14,6 +18,10 @@ export function BookingInfoCard({
     startDate,
     endDate,
     totalAmount,
+    renterName,
+    renterPhone,
+    renterEmail,
+    renterNote,
 }: BookingInfoCardProps) {
     return (
         <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
@@ -42,6 +50,22 @@ export function BookingInfoCard({
                         {formatVNDCurrency(totalAmount)}
                     </span>
                 </div>
+                {(renterName || renterPhone || renterEmail) && (
+                    <div className="pt-4 mt-2 border-t border-gray-100">
+                        <div className="text-sm text-gray-600 font-semibold mb-2">Người đặt</div>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-sm">
+                            {renterName && <div><span className="text-gray-500">Tên: </span><span className="font-medium text-gray-800">{renterName}</span></div>}
+                            {renterPhone && <div><span className="text-gray-500">SĐT: </span><span className="font-medium text-gray-800">{renterPhone}</span></div>}
+                            {renterEmail && <div className="md:col-span-1"><span className="text-gray-500">Email: </span><span className="font-medium text-gray-800 break-all">{renterEmail}</span></div>}
+                        </div>
+                        {renterNote && (
+                            <div className="mt-2 text-sm">
+                                <span className="text-gray-500">Ghi chú: </span>
+                                <span className="text-gray-800">{renterNote}</span>
+                            </div>
+                        )}
+                    </div>
+                )}
             </div>
         </div>
     );
