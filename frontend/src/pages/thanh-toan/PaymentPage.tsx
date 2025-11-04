@@ -25,8 +25,8 @@ const PAYMENT_METHODS: PaymentMethodOption[] = [
         id: 'e_wallet',
         name: 'Ví điện tử',
         icon: <div>📱</div>,
-        description: 'MoMo, ZaloPay, VNPay',
-        providers: ['MoMo', 'ZaloPay', 'VNPay'],
+        description: 'MoMo,  VNPay',
+        providers: ['MoMo', 'VNPay'],
     },
     {
         id: 'bank_transfer',
@@ -65,12 +65,16 @@ export default function PaymentPage() {
             if (selectedMethod === 'e_wallet' && selectedProvider === 'VNPay') {
                 return paymentApi.createVNPayPayment(data);
             }
+            // Branch: MoMo -> call MoMo endpoint to get paymentUrl
+            if (selectedMethod === 'e_wallet' && selectedProvider === 'MoMo') {
+                return paymentApi.createMoMoPayment(data);
+            }
             // Default: create standard payment
             return paymentApi.createPayment(data);
         },
         onSuccess: (response) => {
-            // If VNPay, expect { paymentUrl } and redirect
-            if (selectedMethod === 'e_wallet' && selectedProvider === 'VNPay') {
+            // If VNPay or MoMo, expect { paymentUrl } and redirect
+            if (selectedMethod === 'e_wallet' && (selectedProvider === 'VNPay' || selectedProvider === 'MoMo')) {
                 const { paymentUrl } = response.data || {};
                 if (paymentUrl) {
                     window.location.href = paymentUrl;

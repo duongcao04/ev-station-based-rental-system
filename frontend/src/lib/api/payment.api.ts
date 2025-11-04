@@ -21,6 +21,16 @@ export const paymentApi = {
         description?: string;
     }) => paymentAxiosClient.post('/v1/payments/vnpay', data),
 
+    // MoMo: create payment and receive redirect URL
+    createMoMoPayment: (data: {
+        booking_id: string;
+        amount: number;
+        type: 'rental_fee' | 'deposit' | 'extra_fee' | 'refund';
+        payment_method?: 'credit_card' | 'e_wallet' | 'bank_transfer' | 'cash';
+        provider?: string;
+        description?: string;
+    }) => paymentAxiosClient.post('/v1/payments/momo', data),
+
 
     getPayment: (id: string) => paymentAxiosClient.get(`/v1/payments/${id}`),
 
