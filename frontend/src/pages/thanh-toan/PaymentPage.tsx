@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { bookingApi } from '@/lib/api/booking.api';
@@ -49,6 +49,7 @@ export default function PaymentPage() {
 
     const [selectedMethod, setSelectedMethod] = useState<PaymentMethod | ''>('');
     const [selectedProvider, setSelectedProvider] = useState<string>('');
+    const [renterInfo, setRenterInfo] = useState<{ name?: string; phone?: string; email?: string; note?: string }>({});
 
     // Get booking details
     const { data: bookingData, isLoading, error } = useQuery({
@@ -58,6 +59,15 @@ export default function PaymentPage() {
         enabled: !!bookingId,
         retry: false,
     });
+
+    // Load renter info from localStorage saved at booking step
+    useEffect(() => {
+        if (!bookingId) return;
+        try {
+            const raw = localStorage.getItem(`booking:renter:${bookingId}`);
+            if (raw) setRenterInfo(JSON.parse(raw));
+        } catch (_) { }
+    }, [bookingId]);
 
     const createPaymentMutation = useMutation({
         mutationFn: async (data: Parameters<typeof paymentApi.createPayment>[0]) => {
@@ -117,6 +127,12 @@ export default function PaymentPage() {
             return;
         }
 
+
+        if (selectedMethod === 'credit_card' || selectedMethod === 'bank_transfer') {
+            alert('Phương thức này đang được cập nhật. Vui lòng chọn Ví điện tử (MoMo/VNPay) hoặc Tiền mặt.');
+            return;
+        }
+
         createPaymentMutation.mutate(paymentData);
     };
 
@@ -165,6 +181,10 @@ export default function PaymentPage() {
                             startDate={bookingData.start_date}
                             endDate={bookingData.end_date}
                             totalAmount={bookingData.total_amount}
+                            renterName={renterInfo.name}
+                            renterPhone={renterInfo.phone}
+                            renterEmail={renterInfo.email}
+                            renterNote={renterInfo.note}
                         />
 
                         {/* Payment Method Selection */}

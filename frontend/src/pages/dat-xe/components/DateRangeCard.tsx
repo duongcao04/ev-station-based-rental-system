@@ -26,6 +26,7 @@ export function DateRangeCard({ dateRange, onDateRangeChange, disabledDate }: Da
                     className="w-full"
                     format="DD/MM/YYYY"
                     disabledDate={disabledDate}
+                    value={dateRange}
                     onChange={(dates) => onDateRangeChange([dates?.[0] || null, dates?.[1] || null])}
                     placeholder={['Ngày bắt đầu', 'Ngày kết thúc']}
                 />

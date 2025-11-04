@@ -7,11 +7,12 @@ import { ArrowLeft } from 'lucide-react';
 import dayjs, { Dayjs } from 'dayjs';
 import type { RangePickerProps } from 'antd/es/date-picker';
 import { Button } from '@/components/ui/button';
-import { VehicleInfoCard } from './components/VehicleInfoCard';
 import { StationSelectionCard } from './components/StationSelectionCard';
 import { DateRangeCard } from './components/DateRangeCard';
 import { BookingSummaryCard } from './components/BookingSummaryCard';
 import { LoadingState } from './components/LoadingState';
+import { RenterInfoCard } from './components/RenterInfoCard';
+import { cookie } from '@/lib/cookie';
 
 export default function CreateBookingPage() {
     const { vehicleId } = useParams<{ vehicleId: string }>();
@@ -22,6 +23,10 @@ export default function CreateBookingPage() {
     const [endStation, setEndStation] = useState<string>('');
     const [dateRange, setDateRange] = useState<[Dayjs | null, Dayjs | null]>([null, null]);
     const [totalAmount, setTotalAmount] = useState<number>(0);
+    const [renterName, setRenterName] = useState<string>('');
+    const [renterPhone, setRenterPhone] = useState<string>('');
+    const [renterEmail, setRenterEmail] = useState<string>('');
+    const [renterNote, setRenterNote] = useState<string>('');
 
     // Get vehicle details
     const { data: vehicles, isLoading, error } = useQuery({
@@ -49,6 +54,25 @@ export default function CreateBookingPage() {
         }
     }, [error]);
 
+    // Prefill renter info from login token if available
+    useEffect(() => {
+        const token = cookie.get('authentication');
+        if (!token || typeof token !== 'string') return;
+        try {
+            const parts = token.split('.');
+            if (parts.length === 3) {
+                const base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+                const json = JSON.parse(decodeURIComponent(escape(window.atob(base64))));
+                const name = json.name || json.fullName || json.username || '';
+                const email = json.email || '';
+                if (name && !renterName) setRenterName(name);
+                if (email && !renterEmail) setRenterEmail(email);
+            }
+        } catch (_) {
+            // ignore decode errors
+        }
+    }, []);
+
     // Create booking mutation
     const createBookingMutation = useMutation({
         mutationFn: (data: Parameters<typeof bookingApi.createBooking>[0]) => {
@@ -58,6 +82,10 @@ export default function CreateBookingPage() {
             console.log('Booking created:', response.data);
             const bookingId = response.data?.booking_id;
             if (bookingId) {
+                try {
+                    const renter = { name: renterName, phone: renterPhone, email: renterEmail, note: renterNote };
+                    localStorage.setItem(`booking:renter:${bookingId}`, JSON.stringify(renter));
+                } catch (_) { }
                 navigate(`/thanh-toan/${bookingId}`);
             } else {
                 alert('Đặt xe thành công!');
@@ -80,6 +108,11 @@ export default function CreateBookingPage() {
     const handleSubmit = async () => {
         if (!vehicleId || !startStation || !endStation || !dateRange[0] || !dateRange[1]) {
             alert('Vui lòng điền đầy đủ thông tin');
+            return;
+        }
+
+        if (!renterName || !renterPhone || !renterEmail) {
+            alert('Vui lòng điền đầy đủ Thông tin người đặt (Họ tên, SĐT, Email).');
             return;
         }
 
@@ -137,7 +170,19 @@ export default function CreateBookingPage() {
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     {/* Left Column: Form */}
                     <div className="lg:col-span-2 space-y-6">
-                        <VehicleInfoCard vehicle={vehicle} />
+                        {/* Replace vehicle info with renter info */}
+                        <RenterInfoCard
+                            renterName={renterName}
+                            renterPhone={renterPhone}
+                            renterEmail={renterEmail}
+                            renterNote={renterNote}
+                            onChange={({ renterName: n, renterPhone: p, renterEmail: e, renterNote: note }) => {
+                                if (typeof n === 'string') setRenterName(n);
+                                if (typeof p === 'string') setRenterPhone(p);
+                                if (typeof e === 'string') setRenterEmail(e);
+                                if (typeof note === 'string') setRenterNote(note);
+                            }}
+                        />
 
                         <StationSelectionCard
                             startStation={startStation}

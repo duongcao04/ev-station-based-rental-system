@@ -147,7 +147,7 @@ export const returnVehicle = async (req, res) => {
       actual_return_date,
       actual_return_station_id,
       final_amount: finalAmount,
-      late_fee: totalPenalty,  // Lưu totalPenalty vào late_fee field
+      late_fee: totalPenalty,  
       refund_amount: refundAmount,
     });
     await client.query("COMMIT");
