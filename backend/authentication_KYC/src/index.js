@@ -4,6 +4,7 @@ import cookie from "cookie-parser";
 import { connectDB } from "./libs/db.js";
 import authRoute from "./routes/authRoute.js";
 import renterRoute from "./routes/renterRoute.js";
+import kycRoute from "./routes/kycRoute.js";
 import cors from "cors";
 
 dotenv.config();
@@ -21,6 +22,7 @@ app.use("/api/auth", authRoute);
 
 //private routes
 app.use("/api/renters", renterRoute);
+app.use("/api/kyc", kycRoute);
 
 await connectDB(
   process.env.DB_NAME,
