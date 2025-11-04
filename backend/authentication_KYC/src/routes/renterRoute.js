@@ -1,10 +1,5 @@
 import express from "express";
-import {
-  getKYCStatus,
-  getProfile,
-  updateProfile,
-  uploadKYC,
-} from "../controllers/renterController.js";
+import { getProfile, updateProfile } from "../controllers/renterController.js";
 import {
   authorize,
   checkOwnership,
@@ -17,7 +12,5 @@ router.use(protectedRoute, authorize("renter"));
 
 router.get("/me", getProfile);
 router.patch("/:id/update", checkOwnership, updateProfile);
-router.post("/upload-kyc", uploadKYC);
-router.get("/kyc-status", getKYCStatus);
 
 export default router;
