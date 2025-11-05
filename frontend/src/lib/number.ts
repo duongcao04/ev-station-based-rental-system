@@ -57,3 +57,32 @@ export const currencyFormatter = (
 		currency: regionMatch.currency,
 	}).format(numberValue)
 }
+
+// Format số tiền đẹp theo kiểu Việt Nam (1.000.000đ)
+export const formatVNDCurrency = (amount: number | string): string => {
+	const num = typeof amount === 'string' ? parseFloat(amount) : amount;
+	return new Intl.NumberFormat('vi-VN', {
+		style: 'currency',
+		currency: 'VND',
+		minimumFractionDigits: 0,
+		maximumFractionDigits: 0,
+	}).format(num);
+}
+
+// Format số tiền ngắn gọn hơn cho UI (1M, 1K, etc)
+export const formatCompactCurrency = (amount: number | string): string => {
+	const num = typeof amount === 'string' ? parseFloat(amount) : amount;
+	if (num >= 1000000) {
+		return `${(num / 1000000).toFixed(1)}M₫`;
+	}
+	if (num >= 1000) {
+		return `${(num / 1000).toFixed(0)}K₫`;
+	}
+	return `${num}₫`;
+}
+
+// Format số đẹp với dấu chấm phân cách (1.000.000)
+export const formatNumber = (num: number | string): string => {
+	const value = typeof num === 'string' ? parseFloat(num) : num;
+	return new Intl.NumberFormat('vi-VN').format(value);
+}

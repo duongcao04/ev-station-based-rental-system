@@ -1,8 +1,16 @@
 import express from "express";
-import { profile } from "../controllers/renterController.js";
+import { getProfile, updateProfile } from "../controllers/renterController.js";
+import {
+  authorize,
+  checkOwnership,
+  protectedRoute,
+} from "../middlewares/authMiddleware.js";
 
 const router = express.Router();
 
-router.post("/profile", profile);
+router.use(protectedRoute, authorize("renter"));
+
+router.get("/me", getProfile);
+router.patch("/:id/update", checkOwnership, updateProfile);
 
 export default router;

@@ -4,25 +4,28 @@ import cookie from "cookie-parser";
 import { connectDB } from "./libs/db.js";
 import authRoute from "./routes/authRoute.js";
 import renterRoute from "./routes/renterRoute.js";
-import { protectedRoute } from "./middlewares/authMiddleware.js";
+import kycRoute from "./routes/kycRoute.js";
+import cors from "cors";
 
 dotenv.config();
 
 const app = express();
+app.use(express.urlencoded({ extended: true }));
 const PORT = process.env.PORT || 5001;
 
 //middlewares
 app.use(express.json());
 app.use(cookie());
+app.use(cors({ origin: process.env.CLIENT_URL, credentials: true }));
 
 //public routes
 app.use("/api/auth", authRoute);
 
 //private routes
-app.use(protectedRoute);
 app.use("/api/renters", renterRoute);
+app.use("/api/kyc", kycRoute);
 
-connectDB(
+await connectDB(
   process.env.DB_NAME,
   process.env.DB_USER,
   String(process.env.DB_PASS)

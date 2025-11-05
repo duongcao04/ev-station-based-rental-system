@@ -21,7 +21,7 @@ app.use((req, res, next) => {
 
 const port = (process.env.PORT || 4000);
 
-app.use("/v1/api", router);
+app.use("/api", router);
 
 app.listen(port, () => {
   console.log(` Booking Service đang chạy tại http://localhost:${port}`);

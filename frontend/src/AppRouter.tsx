@@ -6,6 +6,10 @@ import MainLayout from '@/components/layouts/MainLayout';
 import ThueXeTuLaiPage from './pages/thue-xe-tu-lai/ThueXeTuLaiPage';
 import DashboardLayout from './components/layouts/DashboardLayout';
 import DashboardPage from './pages/dashboard/DashboardPage';
+import ChiTietXePage from './pages/chi-tiet-xe/ChiTietXePage';
+import CreateBookingPage from './pages/dat-xe/CreateBookingPage';
+import PaymentPage from './pages/thanh-toan/PaymentPage';
+import PaymentResultPage from './pages/thanh-toan/PaymentResultPage';
 const HomePage = lazy(() => import('@/pages/home/HomePage'));
 const ErrorPage = lazy(() => import('@/pages/error/ErrorPage'));
 
@@ -39,7 +43,31 @@ export const router = createBrowserRouter([
         path: '/chi-tiet-xe/:slug',
         element: (
           <MainLayout>
-            <ThueXeTuLaiPage />
+            <ChiTietXePage />
+          </MainLayout>
+        ),
+      },
+      {
+        path: '/dat-xe/:vehicleId',
+        element: (
+          <MainLayout>
+            <CreateBookingPage />
+          </MainLayout>
+        ),
+      },
+      {
+        path: '/thanh-toan/:bookingId',
+        element: (
+          <MainLayout>
+            <PaymentPage />
+          </MainLayout>
+        ),
+      },
+      {
+        path: '/thanh-toan/ket-qua',
+        element: (
+          <MainLayout>
+            <PaymentResultPage />
           </MainLayout>
         ),
       },

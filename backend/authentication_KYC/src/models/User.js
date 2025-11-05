@@ -59,6 +59,17 @@ const createUserModel = (sequelize) => {
     }
   );
 
+  User.afterCreate(async (user, options) => {
+    const RenterProfile = sequelize.models.RenterProfile;
+    if (user.role === "renter") {
+      await RenterProfile.create({
+        id: user.id,
+        verification_status: "pending",
+        is_risky: false,
+      });
+    }
+  });
+
   return User;
 };
 
