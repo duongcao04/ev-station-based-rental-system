@@ -4,6 +4,8 @@ import './index.css';
 
 import MainLayout from '@/components/layouts/MainLayout';
 import ThueXeTuLaiPage from './pages/thue-xe-tu-lai/ThueXeTuLaiPage';
+import DashboardLayout from './components/layouts/DashboardLayout';
+import DashboardPage from './pages/dashboard/DashboardPage';
 const HomePage = lazy(() => import('@/pages/home/HomePage'));
 const ErrorPage = lazy(() => import('@/pages/error/ErrorPage'));
 
@@ -39,6 +41,26 @@ export const router = createBrowserRouter([
           <MainLayout>
             <ThueXeTuLaiPage />
           </MainLayout>
+        ),
+      },
+      // Catch-all
+      { path: '*', element: <ErrorPage /> },
+    ],
+  },
+  {
+    path: '/dashboard',
+    errorElement: (
+      <Suspense fallback={null}>
+        <ErrorPage />
+      </Suspense>
+    ),
+    children: [
+      {
+        index: true,
+        element: (
+          <DashboardLayout>
+            <DashboardPage />
+          </DashboardLayout>
         ),
       },
       // Catch-all
