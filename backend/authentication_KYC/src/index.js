@@ -4,6 +4,7 @@ import cookie from "cookie-parser";
 import { connectDB } from "./libs/db.js";
 import authRoute from "./routes/authRoute.js";
 import renterRoute from "./routes/renterRoute.js";
+import adminRoute from "./routes/adminRoute.js";
 import kycRoute from "./routes/kycRoute.js";
 import cors from "cors";
 
@@ -22,6 +23,7 @@ app.use(cors({ origin: process.env.CLIENT_URL, credentials: true }));
 app.use("/api/auth", authRoute);
 
 //private routes
+app.use("/api/admin", adminRoute);
 app.use("/api/renters", renterRoute);
 app.use("/api/kyc", kycRoute);
 
