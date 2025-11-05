@@ -87,5 +87,7 @@ model CarImage {
   carId String
   car   Car    @relation(fields: [carId], references: [id])
 
+  stationIds String[] @default([])
+
   @@index([carId, sort])
 }
