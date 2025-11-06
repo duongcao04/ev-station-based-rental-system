@@ -7,8 +7,8 @@ const REFRESH_TOKEN_TTL = 14 * 24 * 60 * 60 * 1000; //14d
 
 const generateAccessToken = async (user) => {
   const token = jwt.sign(
-    { userId: user.id, role: user.role },
-    process.env.ACCESS_TOKEN_SECRET,
+  { userId: user.id, role: user.role },
+  process.env.AUTH_ACCESS_TOKEN_SECRET,
     {
       expiresIn: ACCESS_TOKEN_TTL,
     }
@@ -23,7 +23,7 @@ const authenticateToken = async (req, res, next) => {
   }
   jwt.verify(
     token,
-    "process.env.ACCESS_TOKEN_SECRET",
+    process.env.AUTH_ACCESS_TOKEN_SECRET,
     async (error, decoded) => {
       if (error) {
         return res.status(403).json("Token expired");
@@ -36,7 +36,7 @@ const authenticateToken = async (req, res, next) => {
 const generateRefreshToken = async (user) => {
   const token = jwt.sign(
     { userId: user.id, role: user.role },
-    process.env.REFRESH_TOKEN_SECRET,
+    process.env.AUTH_REFRESH_TOKEN_SECRET,
     {
       expiresIn: REFRESH_TOKEN_TTL,
     }

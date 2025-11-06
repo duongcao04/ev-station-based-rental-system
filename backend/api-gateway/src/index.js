@@ -4,7 +4,7 @@ import morgan from "morgan";
 import dotenv from "dotenv";
 import { createProxyMiddleware } from "http-proxy-middleware";
 
-dotenv.config();
+dotenv.config({ path: "../.env" });
 const app = express();
 
 app.use(cors());
@@ -19,7 +19,7 @@ app.use(
     createProxyMiddleware({
         target: TARGET,          // http://localhost:3000
         changeOrigin: true,
-    
+
         pathRewrite: (path, _req) => {
             const rewritten = path === "/" ? "/v1/api/bookings" : `/v1/api/bookings${path}`;
             console.log("[GW] rewrite:", path, "->", rewritten);
@@ -32,7 +32,7 @@ app.use(
             console.error("[GW->booking]", err.code, err.message);
             if (!res.headersSent) res.status(502).json({ error: "Bad gateway", code: err.code });
         },
-        
+
     })
 );
 // test
