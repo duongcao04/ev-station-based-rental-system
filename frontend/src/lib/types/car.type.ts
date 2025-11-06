@@ -12,6 +12,8 @@ export type TCarSpecification = {
 export type TCar = {
 	id: string,
 	displayName: string,
+	sku: string,
+	slug: string
 	depositPrice?: number
 	regularPrice: number,
 	salePrice: number,

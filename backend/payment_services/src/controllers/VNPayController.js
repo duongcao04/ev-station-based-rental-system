@@ -1,0 +1,93 @@
+import { PaymentModel } from '../models/PaymentModel.js';
+import { createVNPayService } from '../services/VNPayService.js';
+
+
+export const createPaymentVnpay = async (req, res) => {
+    const { booking_id, amount, type, payment_method, provider, description } = req.body;
+    const user_id = req.user?.id;
+
+
+    if (!booking_id || !amount || !type) {
+        return res.status(400).json({
+            error: 'Missing required fields'
+        });
+    }
+    // Use payment_id as vnp_TxnRef to be able to look it up on return
+
+    try {
+        const { createPaymentUrl } = createVNPayService();
+
+        const payment = await PaymentModel.create({
+            booking_id,
+            user_id,
+            amount,
+            type,
+            payment_method,
+            provider,
+            description,
+            status: 'init'
+        });
+
+        const rawId = String(payment.payment_id);
+        const txnRef = rawId.replace(/-/g, ''); // VNPay: use 32-char hex (alphanumeric)
+        const xff = req.headers['x-forwarded-for'];
+        const clientIp = Array.isArray(xff) ? xff[0] : (xff?.split(',')[0]?.trim() || req.ip || req.socket?.remoteAddress || '127.0.0.1');
+        const paymentUrl = await createPaymentUrl(
+            amount,
+            txnRef,
+            `Thanh toán cho đơn đặt ${booking_id}`,
+            clientIp,
+            'vn',
+            'other',
+        );
+        res.status(201).json({
+            message: 'Payment created successfully',
+            paymentUrl,
+        });
+    } catch (error) {
+        console.error('createPayment error:', error);
+        const message = (error && (error.message || error.error)) || 'Internal server error';
+        res.status(500).json({ error: message });
+    }
+};
+
+
+export const handleVnpayReturn = async (req, res) => {
+    const vnpayParams = req.query;
+
+    try {
+        const { verifyPayment } = createVNPayService();
+        const isValid = await verifyPayment(vnpayParams);
+
+        if (isValid) {
+
+            // Reconstruct UUID from 32-char hex if needed
+            const ref = String(vnpayParams.vnp_TxnRef || '');
+            const paymentId = ref.length === 32
+                ? `${ref.substring(0, 8)}-${ref.substring(8, 12)}-${ref.substring(12, 16)}-${ref.substring(16, 20)}-${ref.substring(20)}`
+                : ref;
+            const payment = await PaymentModel.getById(paymentId);
+            if (payment) {
+                await PaymentModel.updateStatus(payment.payment_id, 'succeeded', {
+                    processed_at: new Date(),
+                    completed_at: new Date()
+                });
+                const feBase = process.env.PAYMENT_RETURN_URL || 'http://localhost:5173';
+                const redirectUrl = `${feBase}/thanh-toan/ket-qua?status=success&paymentId=${encodeURIComponent(payment.payment_id)}&bookingId=${encodeURIComponent(payment.booking_id)}&amount=${encodeURIComponent(payment.amount)}`;
+                return res.redirect(302, redirectUrl);
+            } else {
+                const feBase = process.env.PAYMENT_RETURN_URL || 'http://localhost:5173';
+                const redirectUrl = `${feBase}/thanh-toan/ket-qua?status=not_found`;
+                return res.redirect(302, redirectUrl);
+            }
+        } else {
+            const feBase = process.env.PAYMENT_RETURN_URL || 'http://localhost:5173';
+            const redirectUrl = `${feBase}/thanh-toan/ket-qua?status=invalid`;
+            return res.redirect(302, redirectUrl);
+        }
+    } catch (error) {
+        console.error('Error processing VNPAY return:', error);
+        const message = (error && (error.message || error.error)) || 'Internal server error';
+        res.status(500).json({ error: message });
+    }
+};
