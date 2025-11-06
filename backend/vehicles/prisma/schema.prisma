@@ -5,7 +5,7 @@ generator client {
 datasource db {
   // Change provider & url to match your setup (e.g. postgresql, mysql, sqlite)
   provider = "postgresql"
-  url      = env("DATABASE_URL")
+  url      = env("VEHICLES_DATABASE_URL")
 }
 
 model SpecificationType {

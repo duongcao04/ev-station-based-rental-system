@@ -19,20 +19,24 @@ export const authenticate = (req, res, next) => {
         // Mock: Lấy user_id từ header (trong thực tế sẽ từ JWT)
         const user_id = req.headers['x-user-id'];
 
-        if (!user_id) {
-            return res.status(401).json({ error: 'Authentication required' });
+        // Convert to number if it's a string
+        const userIdNum = typeof user_id === 'string' ? parseInt(user_id, 10) : user_id;
+
+        if (!user_id || isNaN(userIdNum)) {
+            return res.status(401).json({ error: 'Authentication required', received: user_id });
         }
 
-        const user = mockUsers[user_id];
+        const user = mockUsers[userIdNum] || mockUsers[String(userIdNum)];
         if (!user) {
-            return res.status(401).json({ error: 'Invalid user' });
+            return res.status(401).json({ error: 'Invalid user', user_id: userIdNum, available: Object.keys(mockUsers) });
         }
 
         // Attach user info to request
         req.user = user;
         next();
     } catch (error) {
-        return res.status(401).json({ error: 'Invalid token' });
+        console.error('Authentication error:', error);
+        return res.status(401).json({ error: 'Invalid token', details: error.message });
     }
 };
 

@@ -8,16 +8,16 @@ import adminRoute from "./routes/adminRoute.js";
 import kycRoute from "./routes/kycRoute.js";
 import cors from "cors";
 
-dotenv.config();
+dotenv.config({ path: "../.env" });
 
 const app = express();
 app.use(express.urlencoded({ extended: true }));
-const PORT = process.env.PORT || 5001;
+const PORT = process.env.AUTH_PORT || 5001;
 
 //middlewares
 app.use(express.json());
 app.use(cookie());
-app.use(cors({ origin: process.env.CLIENT_URL, credentials: true }));
+app.use(cors({ origin: process.env.AUTH_CLIENT_URL, credentials: true }));
 
 //public routes
 app.use("/api/auth", authRoute);
@@ -28,9 +28,9 @@ app.use("/api/renters", renterRoute);
 app.use("/api/kyc", kycRoute);
 
 await connectDB(
-  process.env.DB_NAME,
-  process.env.DB_USER,
-  String(process.env.DB_PASS)
+  process.env.AUTH_DB_NAME,
+  process.env.AUTH_DB_USER,
+  String(process.env.AUTH_DB_PASSWORD)
 ).then(() => {
   app.listen(PORT, () => {
     console.log(`Server is listening on port ${PORT}...`);
