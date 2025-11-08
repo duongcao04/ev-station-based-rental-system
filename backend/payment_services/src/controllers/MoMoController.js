@@ -87,7 +87,7 @@ export const handleMomoReturn = async (req, res) => {
 };
 
 export const handleMomoNotify = async (req, res) => {
-    const momoParams = req.body; // IPN dùng POST body, không phải query
+    const momoParams = req.body; 
 
     try {
         const { verifyPayment } = createMoMoService();

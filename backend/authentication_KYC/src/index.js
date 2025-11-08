@@ -8,10 +8,9 @@ import adminRoute from "./routes/adminRoute.js";
 import kycRoute from "./routes/kycRoute.js";
 import cors from "cors";
 import path from "path";
-import { fileURLToPath } from "url";
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-dotenv.config({ path: path.join(__dirname, "../.env") });
+
+dotenv.config({ path: path.resolve(process.cwd(), "../.env") });
 
 const app = express();
 app.use(express.urlencoded({ extended: true }));
@@ -22,7 +21,7 @@ console.log(process.env.AUTH_PORT);
 //middlewares
 app.use(express.json());
 app.use(cookie());
-app.use(cors({ origin: process.env.AUTH_CLIENT_URL, credentials: true }));
+app.use(cors({ origin: process.env.CLIENT_URL, credentials: true }));
 
 //public routes
 app.use("/api/auth", authRoute);
