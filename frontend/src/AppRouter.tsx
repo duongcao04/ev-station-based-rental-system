@@ -14,6 +14,11 @@ import CreateBookingPage from './pages/dat-xe/CreateBookingPage';
 import PaymentPage from './pages/thanh-toan/PaymentPage';
 import PaymentResultPage from './pages/thanh-toan/PaymentResultPage';
 import QuanLyTramXePage from './pages/dashboard/QuanLyTramXePage';
+import AccountLayout from './components/layouts/AccountLayout';
+import ThongTinTaiKhoanPage from './pages/tai-khoan/ThongTinTaiKhoanPage';
+import XacThucKYC from './pages/tai-khoan/XacThucKYC';
+import { LichSuThueXePage } from './pages/tai-khoan/LichSuThueXePage';
+import { LichSuThueXeChiTietPage } from './pages/tai-khoan/LichSuThueXeChiTietPage';
 const HomePage = lazy(() => import('@/pages/home/HomePage'));
 const ErrorPage = lazy(() => import('@/pages/error/ErrorPage'));
 
@@ -92,6 +97,49 @@ export const router = createBrowserRouter([
         ),
       },
       // Catch-all
+      { path: '*', element: <ErrorPage /> },
+    ],
+  },
+  {
+    path: '/tai-khoan',
+    errorElement: (
+      <Suspense fallback={null}>
+        <ErrorPage />
+      </Suspense>
+    ),
+    children: [
+      {
+        index: true,
+        element: (
+          <AccountLayout>
+            <ThongTinTaiKhoanPage />
+          </AccountLayout>
+        ),
+      }, // /tai-khoan  -> Profile
+      {
+        path: 'lich-su-thue',
+        element: (
+          <AccountLayout>
+            <LichSuThueXePage />
+          </AccountLayout>
+        ),
+      },
+      {
+        path: 'lich-su-thue/*',
+        element: (
+          <AccountLayout>
+            <LichSuThueXeChiTietPage />
+          </AccountLayout>
+        ),
+      },
+      {
+        path: 'xac-thuc-kyc',
+        element: (
+          <AccountLayout>
+            <XacThucKYC />
+          </AccountLayout>
+        ),
+      }, // /tai-khoan/xac-thuc-kyc
       { path: '*', element: <ErrorPage /> },
     ],
   },

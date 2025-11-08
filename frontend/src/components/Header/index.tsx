@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Link, NavLink } from 'react-router-dom';
 import logo from '../../assets/logo.png';
 import { UserDropdown } from '../UserDropdown';
+import { NotificationDropdown } from '../NotificationDropdown';
 
 export default function Header() {
   const { data: profile } = useProfile();
@@ -26,7 +27,7 @@ export default function Header() {
       }}
     >
       {/* Main header */}
-      <div className='mx-auto flex h-20 max-w-[1440px] items-center justify-between px-5'>
+      <div className='container flex h-20 items-center justify-between'>
         <Link to='/' className='group flex items-center gap-4 no-underline'>
           <div
             className='relative flex size-14 cursor-pointer items-center justify-center overflow-hidden rounded-2xl bg-linear-to-br from-primary-500 to-primary-700 shadow-[0_8px_25px_rgba(5,150,105,0.2)] transition-transform duration-200 group-hover:scale-[1.05] group-hover:shadow-[0_12px_35px_rgba(5,150,105,0.3)]'
@@ -81,7 +82,10 @@ export default function Header() {
 
           {/* Login */}
           {profile ? (
-            <UserDropdown />
+            <div className='flex items-center justify-end gap-4'>
+              <UserDropdown />
+              <NotificationDropdown />
+            </div>
           ) : (
             <Link
               to='/login'

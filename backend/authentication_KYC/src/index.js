@@ -7,12 +7,17 @@ import renterRoute from "./routes/renterRoute.js";
 import adminRoute from "./routes/adminRoute.js";
 import kycRoute from "./routes/kycRoute.js";
 import cors from "cors";
+import path from "path";
+import { fileURLToPath } from "url";
 
-dotenv.config({ path: "../.env" });
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+dotenv.config({ path: path.join(__dirname, "../.env") });
 
 const app = express();
 app.use(express.urlencoded({ extended: true }));
-const PORT = process.env.AUTH_PORT || 5001;
+const PORT = process.env.AUTH_PORT;
+
+console.log(process.env.AUTH_PORT);
 
 //middlewares
 app.use(express.json());
@@ -30,7 +35,7 @@ app.use("/api/kyc", kycRoute);
 await connectDB(
   process.env.AUTH_DB_NAME,
   process.env.AUTH_DB_USER,
-  String(process.env.AUTH_DB_PASSWORD)
+  process.env.AUTH_DB_PASSWORD
 ).then(() => {
   app.listen(PORT, () => {
     console.log(`Server is listening on port ${PORT}...`);

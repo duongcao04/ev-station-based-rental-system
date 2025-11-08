@@ -16,8 +16,10 @@ import { useProfile } from '../lib/queries/useAuth';
 import { useAuthStore } from '../stores/useAuthStore';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { IdCard } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 export function UserDropdown() {
+  const navigate = useNavigate();
   const { data: profile } = useProfile();
 
   const { signOut } = useAuthStore();
@@ -48,7 +50,7 @@ export function UserDropdown() {
             <IdCard />
             Xác thực KYC
           </DropdownMenuItem>
-          <DropdownMenuItem>
+          <DropdownMenuItem onClick={() => navigate('/tai-khoan')}>
             Thông tin tài khoản
             <DropdownMenuShortcut>⇧⌘P</DropdownMenuShortcut>
           </DropdownMenuItem>
@@ -59,27 +61,19 @@ export function UserDropdown() {
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
-          <DropdownMenuItem>Lịch sử thuê</DropdownMenuItem>
+          <DropdownMenuItem onClick={() => navigate('/tai-khoan/lich-su-thue')}>
+            Lịch sử thuê
+          </DropdownMenuItem>
           <DropdownMenuSub>
-            <DropdownMenuSubTrigger>Invite users</DropdownMenuSubTrigger>
+            <DropdownMenuSubTrigger>Xe đang thuê</DropdownMenuSubTrigger>
             <DropdownMenuPortal>
               <DropdownMenuSubContent>
-                <DropdownMenuItem>Email</DropdownMenuItem>
-                <DropdownMenuItem>Message</DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem>More...</DropdownMenuItem>
+                <DropdownMenuItem>Xe 1</DropdownMenuItem>
+                <DropdownMenuItem>Xe 2</DropdownMenuItem>
               </DropdownMenuSubContent>
             </DropdownMenuPortal>
           </DropdownMenuSub>
-          <DropdownMenuItem>
-            New Team
-            <DropdownMenuShortcut>⌘+T</DropdownMenuShortcut>
-          </DropdownMenuItem>
         </DropdownMenuGroup>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem>GitHub</DropdownMenuItem>
-        <DropdownMenuItem>Support</DropdownMenuItem>
-        <DropdownMenuItem disabled>API</DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={() => signOut()}>
           Log out
