@@ -1,0 +1,20 @@
+# Node / Bun
+node_modules
+bun.lockb
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-store
+
+
+# Builds
+/dist
+/build
+/.turbo
+
+
+# Env & misc
+.env
+.env.local
+.DS_Store
+.git
