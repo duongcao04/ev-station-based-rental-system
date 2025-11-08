@@ -5,40 +5,84 @@ import { BookingModel } from "../models/BookingModel.js";
 export const createBooking = async (req, res) => {
   try {
     const { vehicle_id, payment_id, start_station_id, end_station_id, start_date, end_date, total_amount, calculated_price_details } = req.body;
-    const user_id = req.user.id;
+    const user_id = req.user?.id;
+
+    console.log('📝 Create booking request:', {
+      user_id,
+      vehicle_id,
+      start_station_id,
+      end_station_id,
+      start_date,
+      end_date,
+      total_amount,
+      has_calculated_price_details: !!calculated_price_details
+    });
 
     // Allow creating booking without payment_id; it can be attached later
     if (!vehicle_id || !start_station_id || !end_station_id || !start_date || !end_date || !total_amount) {
-      return res.status(400).json({ error: "Missing required fields (vehicle_id, start_station_id, end_station_id, start_date, end_date, total_amount)" });
+      return res.status(400).json({
+        error: "Missing required fields",
+        missing: {
+          vehicle_id: !vehicle_id,
+          start_station_id: !start_station_id,
+          end_station_id: !end_station_id,
+          start_date: !start_date,
+          end_date: !end_date,
+          total_amount: !total_amount
+        }
+      });
     }
 
     // Validate total_amount is positive number
-    if (isNaN(total_amount) || total_amount <= 0) {
-      return res.status(400).json({ error: "total_amount must be a positive number" });
+    const totalAmountNum = Number(total_amount);
+    if (isNaN(totalAmountNum) || totalAmountNum <= 0) {
+      return res.status(400).json({ error: "total_amount must be a positive number", received: total_amount });
     }
 
     // Validate date format
-    if (isNaN(Date.parse(start_date)) || isNaN(Date.parse(end_date))) {
-      return res.status(400).json({ error: "Invalid date format" });
+    const startDate = new Date(start_date);
+    const endDate = new Date(end_date);
+    if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+      return res.status(400).json({ error: "Invalid date format", start_date, end_date });
     }
 
-    // Validate start_date < end_date
-    if (new Date(start_date) >= new Date(end_date)) {
-      return res.status(400).json({ error: "end_date must be after start_date" });
+    // Validate start_date < end_date (cho phép cùng ngày nhưng end_date phải sau start_date về thời gian)
+    if (startDate >= endDate) {
+      return res.status(400).json({
+        error: "end_date must be after start_date",
+        start_date: startDate.toISOString(),
+        end_date: endDate.toISOString(),
+        message: "End date must be at least 1 second after start date"
+      });
     }
 
     const booking = await BookingModel.create({
-      user_id, vehicle_id, payment_id, start_station_id, end_station_id, start_date, end_date, total_amount, calculated_price_details,
+      user_id,
+      vehicle_id,
+      payment_id,
+      start_station_id,
+      end_station_id,
+      start_date: startDate.toISOString(),
+      end_date: endDate.toISOString(),
+      total_amount: totalAmountNum,
+      calculated_price_details: calculated_price_details || null,
     });
+
+    console.log(' Booking created successfully:', booking.booking_id);
     res.status(201).json(booking);
   } catch (e) {
+    console.error(' Create booking error:', e);
 
     if (e.code && e.code.startsWith("23")) {
-      return res.status(409).json({ error: "Vehicle time overlap or constraint violation" });
+      return res.status(409).json({ error: "Vehicle time overlap or constraint violation", details: e.message });
     }
 
-    console.error(e);
-    res.status(500).json({ error: "Server error" });
+    // Database constraint errors
+    if (e.code === '23503') {
+      return res.status(400).json({ error: "Invalid reference (vehicle_id, station_id, etc.)", details: e.message });
+    }
+
+    res.status(500).json({ error: "Server error", details: e.message, code: e.code });
   }
 };
 
@@ -147,7 +191,7 @@ export const returnVehicle = async (req, res) => {
       actual_return_date,
       actual_return_station_id,
       final_amount: finalAmount,
-      late_fee: totalPenalty,  
+      late_fee: totalPenalty,
       refund_amount: refundAmount,
     });
     await client.query("COMMIT");

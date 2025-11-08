@@ -3,7 +3,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 import router from "./routes/index.js";
 
-dotenv.config();
+dotenv.config({ path: "../.env" });
 const app = express();
 
 // Middleware setup - Order matters!
@@ -19,10 +19,11 @@ app.use((req, res, next) => {
   next();
 });
 
-const port = (process.env.PORT || 4000);
+const port = (process.env.BOOKING_PORT || 4000);
 
 app.use("/api", router);
 
 app.listen(port, () => {
   console.log(` Booking Service đang chạy tại http://localhost:${port}`);
+ 
 });

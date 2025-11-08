@@ -2,7 +2,7 @@ import axios from 'axios';
 import crypto from 'crypto';
 
 function createMoMoService() {
-    const required = ['MOMO_PARTNER_CODE', 'MOMO_ACCESS_KEY', 'MOMO_SECRET_KEY', 'MOMO_RETURN_URL', 'MOMO_NOTIFY_URL'];
+    const required = ['PAY_MOMO_PARTNER_CODE', 'PAY_MOMO_ACCESS_KEY', 'PAY_MOMO_SECRET_KEY', 'PAY_MOMO_RETURN_URL', 'PAY_MOMO_NOTIFY_URL'];
     const missing = required.filter((key) => !process.env[key]);
     if (missing.length) {
         const message = `Missing MoMo env: ${missing.join(', ')}`;
@@ -27,11 +27,11 @@ function createMoMoService() {
                 throw new Error('Invalid amount value');
             }
 
-            const partnerCode = process.env.MOMO_PARTNER_CODE;
-            const accessKey = process.env.MOMO_ACCESS_KEY;
-            const secretKey = process.env.MOMO_SECRET_KEY;
+            const partnerCode = process.env.PAY_MOMO_PARTNER_CODE;
+            const accessKey = process.env.PAY_MOMO_ACCESS_KEY;
+            const secretKey = process.env.PAY_MOMO_SECRET_KEY;
 
-            const rawSignature = `accessKey=${accessKey}&amount=${Math.round(numericAmount)}&extraData=&ipnUrl=${process.env.MOMO_NOTIFY_URL}&orderId=${orderId}&orderInfo=${orderInfo}&partnerCode=${partnerCode}&redirectUrl=${process.env.MOMO_RETURN_URL}&requestId=${orderId}&requestType=${requestType}`;
+            const rawSignature = `accessKey=${accessKey}&amount=${Math.round(numericAmount)}&extraData=&ipnUrl=${process.env.PAY_MOMO_NOTIFY_URL}&orderId=${orderId}&orderInfo=${orderInfo}&partnerCode=${partnerCode}&redirectUrl=${process.env.PAY_MOMO_RETURN_URL}&requestId=${orderId}&requestType=${requestType}`;
 
             const signature = crypto
                 .createHmac('sha256', secretKey)
@@ -41,14 +41,14 @@ function createMoMoService() {
            
             const requestBody = {
                 partnerCode: partnerCode,
-                partnerName: process.env.MOMO_PARTNER_NAME || 'Test',
-                storeId: process.env.MOMO_STORE_ID || 'MomoTestStore',
+                partnerName: process.env.PAY_MOMO_PARTNER_NAME || 'Test',
+                storeId: process.env.PAY_MOMO_STORE_ID || 'MomoTestStore',
                 requestId: orderId,
                 amount: Math.round(numericAmount),
                 orderId: orderId,
                 orderInfo: orderInfo,
-                redirectUrl: process.env.MOMO_RETURN_URL,
-                ipnUrl: process.env.MOMO_NOTIFY_URL,
+                redirectUrl: process.env.PAY_MOMO_RETURN_URL,
+                ipnUrl: process.env.PAY_MOMO_NOTIFY_URL,
                 lang: 'vi',
                 extraData: '',
                 requestType: requestType,
@@ -89,7 +89,7 @@ function createMoMoService() {
                 .join('&');
 
             // Create signature using HMAC SHA256
-            const hmac = crypto.createHmac('sha256', process.env.MOMO_SECRET_KEY || '');
+            const hmac = crypto.createHmac('sha256', process.env.PAY_MOMO_SECRET_KEY || '');
             const signed = hmac.update(rawSignature).digest('hex');
 
             return signed.toLowerCase() === signature.toLowerCase();

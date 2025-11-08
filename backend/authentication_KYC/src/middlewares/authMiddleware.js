@@ -17,7 +17,7 @@ export const protectedRoute = (req, res, next) => {
 
 
     //confirm token
-    jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, async (err, decoded) => {
+    jwt.verify(token, process.env.AUTH_ACCESS_TOKEN_SECRET, async (err, decoded) => {
       if (err) {
         console.log(err);
 

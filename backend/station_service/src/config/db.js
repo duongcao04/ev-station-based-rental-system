@@ -2,15 +2,15 @@ import pkg from "pg";
 import dotenv from "dotenv";
 const { Pool } = pkg;
 
-dotenv.config({ path: "../.env" });
+dotenv.config();
 
 // Database configuration for Booking Service
 const pool = new Pool({
-  user: process.env.PAY_DB_USER || 'postgres',
-  host: process.env.PAY_DB_HOST || 'localhost',
-  database: process.env.PAY_DB_NAME || 'payment_service_db',
-  password: process.env.PAY_DB_PASSWORD || 'root1234',
-  port: process.env.PAY_DB_PORT || 5432,
+  user: process.env.DB_USER || 'postgres',
+  host: process.env.DB_HOST || 'localhost',
+  database: process.env.DB_DATABASE || 'stations_services_db',
+  password: process.env.DB_PASSWORD || 'root1234',
+  port: process.env.DB_PORT || 5432,
 });
 
 // Test database connection

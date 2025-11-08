@@ -160,7 +160,7 @@ export const refreshToken = async (req, res) => {
     //check expired or not
     jwt.verify(
       refreshToken,
-      process.env.REFRESH_TOKEN_SECRET,
+      process.env.AUTH_REFRESH_TOKEN_SECRET,
       async (error, decoded) => {
         if (error) {
           return res.status(403).json("Invalid token");
