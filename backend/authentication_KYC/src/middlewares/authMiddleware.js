@@ -4,16 +4,23 @@ import { User } from "../libs/db.js";
 export const protectedRoute = (req, res, next) => {
   try {
     //get token from header
-    const authHeader = req.headers["authorization"];
-    const token = authHeader && authHeader.split(" ")[1];
+    // const authHeader = req.headers["authorization"];
+    // const token = authHeader && authHeader.split(" ")[1];
+
+    const token = req.cookies?.accessToken
 
     if (!token) {
       return res.status(401).json({ message: "access token not found" });
     }
 
+    console.log("token:", token);
+
+
     //confirm token
     jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, async (err, decoded) => {
       if (err) {
+        console.log(err);
+
         return res.status(403).json({ message: "Token expired" });
       }
 

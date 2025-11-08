@@ -6,51 +6,30 @@ import {
   generateAccessToken,
   generateRefreshToken,
   REFRESH_TOKEN_TTL,
+  registerUser,
 } from "../services/auth.js";
 
 export const register = async (req, res) => {
   try {
     const { email, phone_number, password } = req.body;
 
-    if (!email || !phone_number || !password) {
-      return res
-        .status(400)
-        .json({ message: "Không thể thiếu email, số điện thoại và mật khẩu" });
-    }
-
-    //check if user exists
-    const EmailExists = await User.findOne({ where: { email: email } });
-    const PhoneNBExists = await User.findOne({
-      where: { phone_number: phone_number },
+    const user = await registerUser({
+      email,
+      phone_number,
+      password,
+      role: "renter",
     });
 
-    if (EmailExists != null || PhoneNBExists != null) {
-      return res
-        .status(409)
-        .json({ message: "Email hoặc số điện thoại đã tồn tại" });
-    } else {
-      //hash password
-      const hashPassword = await bcrypt.hash(password, 10); //salt = 10
-
-      //create new user
-      const user = await User.create({
-        email,
-        phone_number,
-        password_hash: hashPassword,
-      });
-
-      //return
-      return res.status(201).json({
-        message: "Đăng ký thành công",
-        email,
-        phone_number,
-      });
-    }
+    return res.status(201).json({
+      message: "Dăng ký thành công",
+      email: user.email,
+      phone_number: user.phone_number,
+      role: user.role,
+    });
   } catch (error) {
-    console.error("Error when calling register");
-    return res
-      .status(500)
-      .json({ message: "Internal Error", error: error.message });
+    const status = error.statusCode || 500;
+    const message = error.message || "Internal Error";
+    return res.status(status).json({ message });
   }
 };
 
@@ -96,6 +75,12 @@ export const login = async (req, res) => {
         sameSite: isProduction ? "none" : "lax",
         maxAge: REFRESH_TOKEN_TTL,
       });
+      res.cookie("accessToken", accessToken, {
+        httpOnly: true,
+        secure: isProduction,
+        sameSite: isProduction ? "none" : "lax",
+        maxAge: REFRESH_TOKEN_TTL,
+      });
 
       let stationId = null;
       if (exist.role === "staff") {
@@ -132,11 +117,9 @@ export const login = async (req, res) => {
 
 export const logout = async (req, res) => {
   try {
-    //get refresh token from cookie
+    // remove refresh token if exist
     const refreshToken = req.cookies.refreshToken;
-    if (!refreshToken) {
-      return res.status(403).json({ message: "token is empty" });
-    }
+
     //delete refresh token in db
     const user = await User.findOne({ where: { refreshtoken: refreshToken } });
     if (user != null) {
@@ -145,6 +128,7 @@ export const logout = async (req, res) => {
 
     //delete cookie
     res.clearCookie("refreshToken");
+    res.clearCookie("accessToken");
     return res.status(200).json({ message: "Đăng xuất thành công" });
   } catch (error) {
     console.error("Error when calling login");

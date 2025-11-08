@@ -1,7 +1,10 @@
 import { lazy, Suspense } from 'react';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import './index.css';
+import { Toaster } from 'sonner';
 
+const LoginPage = lazy(() => import('@/pages/auth/LoginPage'));
+const RegisterPage = lazy(() => import('@/pages/auth/RegisterPage'));
 import MainLayout from '@/components/layouts/MainLayout';
 import ThueXeTuLaiPage from './pages/thue-xe-tu-lai/ThueXeTuLaiPage';
 import DashboardLayout from './components/layouts/DashboardLayout';
@@ -10,6 +13,7 @@ import ChiTietXePage from './pages/chi-tiet-xe/ChiTietXePage';
 import CreateBookingPage from './pages/dat-xe/CreateBookingPage';
 import PaymentPage from './pages/thanh-toan/PaymentPage';
 import PaymentResultPage from './pages/thanh-toan/PaymentResultPage';
+import QuanLyTramXePage from './pages/dashboard/QuanLyTramXePage';
 const HomePage = lazy(() => import('@/pages/home/HomePage'));
 const ErrorPage = lazy(() => import('@/pages/error/ErrorPage'));
 
@@ -37,6 +41,22 @@ export const router = createBrowserRouter([
           <MainLayout>
             <ThueXeTuLaiPage />
           </MainLayout>
+        ),
+      },
+      {
+        path: '/login',
+        element: (
+          <Suspense fallback={null}>
+            <LoginPage />
+          </Suspense>
+        ),
+      },
+      {
+        path: '/register',
+        element: (
+          <Suspense fallback={null}>
+            <RegisterPage />
+          </Suspense>
         ),
       },
       {
@@ -91,6 +111,14 @@ export const router = createBrowserRouter([
           </DashboardLayout>
         ),
       },
+      {
+        path: '/dashboard/tram-xe',
+        element: (
+          <DashboardLayout>
+            <QuanLyTramXePage />
+          </DashboardLayout>
+        ),
+      },
       // Catch-all
       { path: '*', element: <ErrorPage /> },
     ],
@@ -98,5 +126,10 @@ export const router = createBrowserRouter([
 ]);
 
 export default function AppRouter() {
-  return <RouterProvider router={router} />;
+  return (
+    <>
+      <RouterProvider router={router} />
+      <Toaster position='top-right' richColors />
+    </>
+  );
 }

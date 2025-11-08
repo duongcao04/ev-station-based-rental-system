@@ -1,7 +1,7 @@
 import { bookingAxiosClient } from '@/lib/axios';
 
 export const bookingApi = {
-  
+
     createBooking: (data: {
         vehicle_id: string;
         start_station_id: string;
@@ -16,17 +16,17 @@ export const bookingApi = {
 
     getBooking: (id: string) => bookingAxiosClient.get(`/v1/bookings/${id}`),
 
-   
+
     getMyBookings: () => bookingAxiosClient.get('/v1/bookings/me/history'),
 
-    
+
     cancelBooking: (id: string) => bookingAxiosClient.put(`/v1/bookings/${id}/cancel`),
 
 
     getAllBookings: (params?: { status?: string; station_id?: string; limit?: number; offset?: number }) =>
         bookingAxiosClient.get('/v1/bookings/all', { params }),
 
- 
+
     checkinBooking: (id: string) => bookingAxiosClient.put(`/v1/bookings/${id}/checkin`),
 
 
