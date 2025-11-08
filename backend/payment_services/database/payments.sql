@@ -3,7 +3,7 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE TABLE IF NOT EXISTS payments (
   payment_id     UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   booking_id     UUID        NOT NULL,                          
-  user_id        INTEGER     NOT NULL,
+  user_id        UUID        NOT NULL,        -- Changed from INTEGER to UUID to match Auth service
   type           VARCHAR(20) NOT NULL DEFAULT 'rental_fee',      
   status         VARCHAR(20) NOT NULL DEFAULT 'init',            
   amount         NUMERIC(12,2) NOT NULL CHECK (amount >= 0),
@@ -125,12 +125,13 @@ CREATE INDEX IF NOT EXISTS idx_outbox_topic_sent ON outbox(topic, sent);
 -- =============================================
 -- OPTIONAL: Sample data for local testing
 -- (Comment out in production)
+-- user_id must be valid UUIDs from Auth service
 -- =============================================
 -- INSERT INTO payments (booking_id, user_id, amount, type, status, payment_method, provider, provider_ref, description)
 -- VALUES
--- ('550e8400-e29b-41d4-a716-446655440001', 1001, 400.00, 'rental_fee', 'succeeded', 'e_wallet', 'momo',   'momo_123456789',   'Thanh toán phí thuê xe điện'),
--- ('550e8400-e29b-41d4-a716-446655440002', 1002, 200.00, 'rental_fee', 'pending',   'credit_card', 'stripe','stripe_987654321', 'Thanh toán phí thuê xe điện'),
--- ('550e8400-e29b-41d4-a716-446655440003', 1003, 100.00, 'rental_fee', 'failed',    'bank_transfer','vnpay','vnpay_456789123',  'Thanh toán phí thuê xe điện');
+-- ('550e8400-e29b-41d4-a716-446655440001', '6eaaf37f-0acf-43b1-8609-9c9724a42e43', 400.00, 'rental_fee', 'succeeded', 'e_wallet', 'momo',   'momo_123456789',   'Thanh toán phí thuê xe điện'),
+-- ('550e8400-e29b-41d4-a716-446655440002', '6eaaf37f-0acf-43b1-8609-9c9724a42e44', 200.00, 'rental_fee', 'pending',   'credit_card', 'stripe','stripe_987654321', 'Thanh toán phí thuê xe điện'),
+-- ('550e8400-e29b-41d4-a716-446655440003', '6eaaf37f-0acf-43b1-8609-9c9724a42e45', 100.00, 'rental_fee', 'failed',    'bank_transfer','vnpay','vnpay_456789123',  'Thanh toán phí thuê xe điện');
 
 -- UPDATE payments
 --   SET processed_at = created_at + INTERVAL '5 minutes',

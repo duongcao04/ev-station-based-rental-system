@@ -3,7 +3,7 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 CREATE TABLE bookings (
     booking_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    user_id INTEGER NOT NULL,     
+    user_id UUID NOT NULL,        -- Changed from INTEGER to UUID to match Auth service
     vehicle_id UUID NOT NULL,     
     payment_id UUID,              
     start_station_id VARCHAR(50) NOT NULL,  
@@ -59,12 +59,14 @@ ALTER TABLE bookings ADD CONSTRAINT chk_refund_amount
 CHECK (refund_amount >= 0);
 
 
-INSERT INTO bookings (user_id, vehicle_id, start_station_id, end_station_id, start_date, end_date, total_amount, calculated_price_details, status) VALUES
-(1001, '550e8400-e29b-41d4-a716-446655440001', 'station-001', 'station-001', '2024-01-15 09:00:00+07', '2024-01-15 17:00:00+07', 400.00, 
- '{"pricing_type": "daily", "price_per_day": 50.00, "duration_days": 8, "base_cost": 400.00}', 'booked'),
- 
-(1002, '550e8400-e29b-41d4-a716-446655440002', 'station-002', 'station-002', '2024-01-16 08:00:00+07', '2024-01-20 18:00:00+07', 200.00,
- '{"pricing_type": "daily", "price_per_day": 50.00, "duration_days": 4, "base_cost": 200.00}', 'ongoing'),
- 
-(1003, '550e8400-e29b-41d4-a716-446655440003', 'station-003', 'station-001', '2024-01-10 10:00:00+07', '2024-01-12 16:00:00+07', 100.00,
- '{"pricing_type": "daily", "price_per_day": 50.00, "duration_days": 2, "base_cost": 100.00}', 'completed');
+-- Sample data (user_id must be valid UUIDs from Auth service)
+-- Uncomment and update with actual user UUIDs when needed
+-- INSERT INTO bookings (user_id, vehicle_id, start_station_id, end_station_id, start_date, end_date, total_amount, calculated_price_details, status) VALUES
+-- ('6eaaf37f-0acf-43b1-8609-9c9724a42e43', '550e8400-e29b-41d4-a716-446655440001', 'station-001', 'station-001', '2024-01-15 09:00:00+07', '2024-01-15 17:00:00+07', 400.00, 
+--  '{"pricing_type": "daily", "price_per_day": 50.00, "duration_days": 8, "base_cost": 400.00}', 'booked'),
+-- 
+-- ('6eaaf37f-0acf-43b1-8609-9c9724a42e44', '550e8400-e29b-41d4-a716-446655440002', 'station-002', 'station-002', '2024-01-16 08:00:00+07', '2024-01-20 18:00:00+07', 200.00,
+--  '{"pricing_type": "daily", "price_per_day": 50.00, "duration_days": 4, "base_cost": 200.00}', 'ongoing'),
+-- 
+-- ('6eaaf37f-0acf-43b1-8609-9c9724a42e45', '550e8400-e29b-41d4-a716-446655440003', 'station-003', 'station-001', '2024-01-10 10:00:00+07', '2024-01-12 16:00:00+07', 100.00,
+--  '{"pricing_type": "daily", "price_per_day": 50.00, "duration_days": 2, "base_cost": 100.00}', 'completed');

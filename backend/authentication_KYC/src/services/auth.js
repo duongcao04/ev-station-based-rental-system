@@ -7,8 +7,8 @@ const REFRESH_TOKEN_TTL = 14 * 24 * 60 * 60 * 1000; //14d
 
 const generateAccessToken = async (user) => {
   const token = jwt.sign(
-  { userId: user.id, role: user.role },
-  process.env.AUTH_ACCESS_TOKEN_SECRET,
+    { userId: user.id, role: user.role },
+    process.env.AUTH_ACCESS_TOKEN_SECRET,
     {
       expiresIn: ACCESS_TOKEN_TTL,
     }

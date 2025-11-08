@@ -1,22 +1,49 @@
-// Cho phép role đến từ header khi mock (ưu tiên header nếu có)
-const mockUsers = {
-    "1001": { id: "1001", role: "renter", name: "John Doe" },
-    "1002": { id: "1002", role: "staff", name: "Jane Staff" },
-    "1003": { id: "1003", role: "admin", name: "Admin User" },
-    "1004": { id: "1004", role: "staff", name: "Another Staff" }
-};
+// Authentication & Authorization Middleware
+import jwt from 'jsonwebtoken';
+import dotenv from 'dotenv';
+import path from 'path';
 
+dotenv.config({ path: path.resolve(process.cwd(), "../.env") });
+
+// Middleware để verify JWT token từ Auth Service
 export const authenticate = (req, res, next) => {
-    const userId = String(req.headers["x-user-id"] || "");
-    if (!userId) return res.status(401).json({ error: "x-user-id required" });
+    try {
+        // Lấy token từ HTTP-only cookie (ưu tiên) hoặc Authorization header (fallback)
+        let token = req.cookies?.accessToken;
 
-    const requestedRole = String(req.headers["x-role"] || "").toLowerCase();
-    const baseUser = mockUsers[userId] || { id: userId, role: "renter", name: "Mock User" };
-    const validRoles = ["renter", "staff", "admin"];
-    const role = validRoles.includes(requestedRole) ? requestedRole : baseUser.role;
+        // Fallback: Nếu không có trong cookie, thử lấy từ Authorization header
+        if (!token) {
+            const authHeader = req.headers['authorization'];
+            token = authHeader && authHeader.split(' ')[1];
+        }
 
-    req.user = { id: String(baseUser.id), role, name: baseUser.name };
-    next();
+        if (!token) {
+            return res.status(401).json({ error: 'Authentication required', message: 'Token not provided' });
+        }
+
+        // Verify JWT token với secret từ Auth Service
+        jwt.verify(token, process.env.AUTH_ACCESS_TOKEN_SECRET, (err, decoded) => {
+            if (err) {
+                console.error('JWT verification error:', err.message);
+                if (err.name === 'TokenExpiredError') {
+                    return res.status(403).json({ error: 'Token expired', message: 'Please login again' });
+                }
+                return res.status(403).json({ error: 'Invalid token', message: err.message });
+            }
+
+            // Token hợp lệ, lấy thông tin user từ decoded token
+            // Token payload: { userId: user.id, role: user.role }
+            req.user = {
+                id: decoded.userId,
+                role: decoded.role
+            };
+
+            next();
+        });
+    } catch (error) {
+        console.error('Authentication error:', error);
+        return res.status(401).json({ error: 'Authentication failed', details: error.message });
+    }
 };
 
 export const authorize = (...allowedRoles) => {
@@ -32,14 +59,29 @@ export const authorize = (...allowedRoles) => {
 export const ensureStationOwnership = (req, res, next) => {
     const isAdmin = req.user?.role === "admin";
     const isStaff = req.user?.role === "staff";
-    if (!isStaff && !isAdmin) return res.status(403).json({ error: "Only staff/admin can modify stations" });
-
-    if (isAdmin) return next();
-
-    const targetUserId = String(req.params.user_id ?? req.body.user_id ?? "");
-    if (!targetUserId) return res.status(400).json({ error: "user_id is required" });
-    if (targetUserId !== String(req.user.id)) {
-        return res.status(403).json({ error: "You can only modify your own station" });
+    if (!isStaff && !isAdmin) {
+        return res.status(403).json({ error: "Only staff/admin can modify stations" });
     }
+
+    // Admin có thể modify tất cả stations
+    if (isAdmin) {
+        return next();
+    }
+
+    // Staff chỉ có thể modify station của mình
+    const targetUserId = req.params.user_id ?? req.body.user_id;
+    if (!targetUserId) {
+        return res.status(400).json({ error: "user_id is required" });
+    }
+
+    // So sánh user_id (có thể là UUID hoặc string)
+    if (String(targetUserId) !== String(req.user.id)) {
+        return res.status(403).json({
+            error: "You can only modify your own station",
+            requested: targetUserId,
+            current: req.user.id
+        });
+    }
+
     next();
 };

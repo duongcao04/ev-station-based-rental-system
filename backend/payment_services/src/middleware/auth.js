@@ -1,30 +1,48 @@
+// Authentication & Authorization Middleware
+import jwt from 'jsonwebtoken';
+import dotenv from 'dotenv';
+import path from 'path';
 
+dotenv.config({ path: path.resolve(process.cwd(), "../.env") });
 
-// Mock user data (trong thực tế sẽ lấy từ Auth Service)
-const mockUsers = {
-    1001: { id: 1001, role: 'renter', name: 'John Doe' },
-    1002: { id: 1002, role: 'staff', name: 'Jane Staff', station_id: 'station-001' },
-    1003: { id: 1003, role: 'admin', name: 'Admin User' }
-};
-
+// Middleware để verify JWT token từ Auth Service
 export const authenticate = (req, res, next) => {
     try {
-        // Mock: Lấy user_id từ header (trong thực tế sẽ từ JWT)
-        const user_id = req.headers['x-user-id'];
+        // Lấy token từ HTTP-only cookie (ưu tiên) hoặc Authorization header (fallback)
+        let token = req.cookies?.accessToken;
 
-        if (!user_id) {
-            return res.status(401).json({ error: 'Authentication required' });
+        // Fallback: Nếu không có trong cookie, thử lấy từ Authorization header
+        if (!token) {
+            const authHeader = req.headers['authorization'];
+            token = authHeader && authHeader.split(' ')[1];
         }
 
-        const user = mockUsers[user_id];
-        if (!user) {
-            return res.status(401).json({ error: 'Invalid user' });
+        if (!token) {
+            return res.status(401).json({ error: 'Authentication required', message: 'Token not provided' });
         }
 
-        req.user = user;
-        next();
+        // Verify JWT token với secret từ Auth Service
+        jwt.verify(token, process.env.AUTH_ACCESS_TOKEN_SECRET, (err, decoded) => {
+            if (err) {
+                console.error('JWT verification error:', err.message);
+                if (err.name === 'TokenExpiredError') {
+                    return res.status(403).json({ error: 'Token expired', message: 'Please login again' });
+                }
+                return res.status(403).json({ error: 'Invalid token', message: err.message });
+            }
+
+            // Token hợp lệ, lấy thông tin user từ decoded token
+            // Token payload: { userId: user.id, role: user.role }
+            req.user = {
+                id: decoded.userId,
+                role: decoded.role
+            };
+
+            next();
+        });
     } catch (error) {
-        return res.status(401).json({ error: 'Invalid token' });
+        console.error('Authentication error:', error);
+        return res.status(401).json({ error: 'Authentication failed', details: error.message });
     }
 };
 

@@ -1,13 +1,16 @@
 import express from "express";
 import cors from "cors";
+import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
+import path from "path";
 import router from "./routes/index.js";
 
-dotenv.config({ path: "../.env" });
+dotenv.config({ path: path.resolve(process.cwd(), "../.env") });
 const app = express();
 
 // Middleware setup - Order matters!
-app.use(cors());
+app.use(cors({ origin: process.env.CLIENT_URL || '*', credentials: true }));
+app.use(cookieParser()); // Parse HTTP-only cookies
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -25,5 +28,5 @@ app.use("/api", router);
 
 app.listen(port, () => {
   console.log(` Booking Service đang chạy tại http://localhost:${port}`);
- 
+
 });

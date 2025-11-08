@@ -98,7 +98,8 @@ export const getPaymentsByUser = async (req, res) => {
     const { user_id } = req.params;
     const { status, limit, offset } = req.query;
 
-    const payments = await PaymentModel.getByUserId(Number(user_id), {
+    // user_id is UUID, no need to convert to Number
+    const payments = await PaymentModel.getByUserId(user_id, {
       status,
       limit: Number(limit) || 50,
       offset: Number(offset) || 0,
@@ -187,15 +188,21 @@ export const confirmCashPayment = async (req, res) => {
 
     // Đồng bộ payment_id với Booking Service
     try {
-      const baseUrl = process.env.BOOKING_SERVICE_URL || 'http://localhost:4000/v1/api';
+      const baseUrl = process.env.BOOKING_SERVICE_URL || 'http://localhost:4000/api/v1';
+      const headers = {
+        'Content-Type': 'application/json',
+      };
+
+      // Forward JWT token nếu có (để Booking Service verify được)
+      if (req.headers['authorization']) {
+        headers['authorization'] = req.headers['authorization'];
+      }
+
       await axios.put(
         `${baseUrl}/bookings/${payment.booking_id}/payment`,
         { payment_id: id },
         {
-          headers: {
-            'Content-Type': 'application/json',
-            'x-user-id': req.headers['x-user-id'] || '',
-          },
+          headers,
           timeout: 5000,
         }
       );

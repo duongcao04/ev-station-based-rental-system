@@ -1,12 +1,13 @@
 import cors from "cors";
 import dotenv from "dotenv";
 import express from "express";
+import path from "path";
 import rootRouter from "./routes";
 
-dotenv.config({ path: "../.env" });
+dotenv.config({ path: path.resolve(process.cwd(), "../.env") });
 const app = express();
 
-app.use(cors());
+app.use(cors({ origin: process.env.CLIENT_URL || '*', credentials: true }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use('/api', rootRouter)

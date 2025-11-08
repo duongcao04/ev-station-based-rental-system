@@ -1,13 +1,16 @@
 import express from 'express';
+import cookieParser from 'cookie-parser';
 import dotenv from "dotenv";
+import path from "path";
 import router from "./routes/index.js";
 import cors from "cors"
 
-dotenv.config({ path: "../.env" });
+dotenv.config({ path: path.resolve(process.cwd(), "../.env") });
 
 const app = express();
 
-app.use(cors());
+app.use(cors({ origin: process.env.CLIENT_URL || '*', credentials: true }));
+app.use(cookieParser()); // Parse HTTP-only cookies
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
