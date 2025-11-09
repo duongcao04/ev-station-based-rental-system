@@ -17,7 +17,8 @@ export const bookingApi = {
 
     getMyBookings: () => axiosClient.get('/v1/bookings/me/history'),
 
-    cancelBooking: (id: string) => axiosClient.put(`/v1/bookings/${id}/cancel`),
+    cancelBooking: (id: string, penalty_fee?: number) =>
+        axiosClient.put(`/v1/bookings/${id}/cancel`, penalty_fee !== undefined ? { penalty_fee } : {}),
 
     getAllBookings: (params?: { status?: string; station_id?: string; limit?: number; offset?: number }) =>
         axiosClient.get('/v1/bookings/all', { params }),
@@ -29,5 +30,8 @@ export const bookingApi = {
         actual_return_station_id: string;
         penalty_fee?: number;
     }) => axiosClient.put(`/v1/bookings/${id}/return`, data),
+
+    updateBookingPayment: (bookingId: string, paymentId: string) =>
+        axiosClient.put(`/v1/bookings/${bookingId}/payment`, { payment_id: paymentId }),
 };
 

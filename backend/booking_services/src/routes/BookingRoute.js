@@ -20,12 +20,12 @@ router.use(authenticate);
 router.post("/", authorize('renter'), createBooking);
 router.get("/me/history", authorize('renter'), myBookings);
 router.put("/:id/cancel", authorize('renter'), checkOwnership, cancelBooking);
+router.put("/:id/payment", authorize('renter', 'staff', 'admin'), checkOwnership, updateBookingPayment);
 
 // Staff routes
 router.put("/:id/checkin", authorize('staff', 'admin'), checkCheckinPermission, checkin);
 router.put("/:id/return", authorize('staff', 'admin'), checkReturnPermission, returnVehicle);
 router.get("/all", authorize('staff', 'admin'), getAllBookings);
-router.put("/:id/payment", authorize('staff', 'admin'), updateBookingPayment);
 
 // Admin routes
 router.get("/:id", authorize('renter', 'staff', 'admin'), checkOwnership, getBooking);

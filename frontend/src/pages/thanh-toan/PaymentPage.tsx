@@ -1,19 +1,17 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useMutation, useQuery } from '@tanstack/react-query';
 import { bookingApi } from '@/lib/api/booking.api';
 import { paymentApi } from '@/lib/api/payment.api';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { BookingInfoCard } from './components/BookingInfoCard';
-import { PaymentMethodCard, type PaymentMethod } from './components/PaymentMethodCard';
+import { PaymentMethodCard } from './components/PaymentMethodCard';
 import { ProviderSelection } from './components/ProviderSelection';
 import { CashPaymentInfo } from './components/CashPaymentInfo';
 import { PaymentSummaryCard } from './components/PaymentSummaryCard';
 import { LoadingState } from '../dat-xe/components/LoadingState';
-import type { PaymentMethodOption } from './components/PaymentMethodCard';
 
-const PAYMENT_METHODS: PaymentMethodOption[] = [
+const PAYMENT_METHODS = [
     {
         id: 'credit_card',
         name: 'Thẻ tín dụng/Ghi nợ',
@@ -44,21 +42,41 @@ const PAYMENT_METHODS: PaymentMethodOption[] = [
 ];
 
 export default function PaymentPage() {
-    const { bookingId } = useParams<{ bookingId: string }>();
+    const { bookingId } = useParams();
     const navigate = useNavigate();
 
-    const [selectedMethod, setSelectedMethod] = useState<PaymentMethod | ''>('');
-    const [selectedProvider, setSelectedProvider] = useState<string>('');
-    const [renterInfo, setRenterInfo] = useState<{ name?: string; phone?: string; email?: string; note?: string }>({});
+    const [selectedMethod, setSelectedMethod] = useState('');
+    const [selectedProvider, setSelectedProvider] = useState('');
+    const [renterInfo, setRenterInfo] = useState({});
+    const [bookingData, setBookingData] = useState(null);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [isProcessing, setIsProcessing] = useState(false);
 
-    // Get booking details
-    const { data: bookingData, isLoading, error } = useQuery({
-        queryKey: ['booking', bookingId],
-        queryFn: () => bookingApi.getBooking(bookingId!),
-        select: (res) => res.data,
-        enabled: !!bookingId,
-        retry: false,
-    });
+    // Load booking data
+    useEffect(() => {
+        if (!bookingId) {
+            setIsLoading(false);
+            return;
+        }
+
+        const loadBookingData = async () => {
+            try {
+                setIsLoading(true);
+                setError(null);
+                const response = await bookingApi.getBooking(bookingId);
+                setBookingData(response.data);
+            } catch (err) {
+                console.error('Error loading booking:', err);
+                const errorMessage = (err as any)?.response?.data?.error || (err as any)?.message || 'Không thể tải thông tin booking';
+                setError(errorMessage);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        loadBookingData();
+    }, [bookingId]);
 
     // Load renter info from localStorage saved at booking step
     useEffect(() => {
@@ -69,28 +87,58 @@ export default function PaymentPage() {
         } catch (_) { }
     }, [bookingId]);
 
-    const createPaymentMutation = useMutation({
-        mutationFn: async (data: Parameters<typeof paymentApi.createPayment>[0]) => {
+    const handleSubmitPayment = async () => {
+        if (!selectedMethod || !bookingId || !bookingData) {
+            alert('Vui lòng chọn phương thức thanh toán');
+            return;
+        }
+
+        if (selectedMethod === 'cash') {
+            alert('Đặt xe thành công! Vui lòng thanh toán tiền mặt khi nhận xe.');
+            navigate('/thue-xe-tu-lai');
+            return;
+        }
+
+        if (selectedMethod === 'credit_card' || selectedMethod === 'bank_transfer') {
+            alert('Phương thức này đang được cập nhật. Vui lòng chọn Ví điện tử (MoMo/VNPay) hoặc Tiền mặt.');
+            return;
+        }
+
+        const paymentData: any = {
+            booking_id: bookingId,
+            amount: (bookingData as any).total_amount,
+            type: 'rental_fee',
+            payment_method: selectedMethod,
+            provider: selectedProvider || undefined,
+            description: `Thanh toán đặt xe ${(bookingData as any).vehicle_id}`,
+        };
+
+        try {
+            setIsProcessing(true);
+            let response;
+
             // Branch: VNPay -> call VNPay endpoint to get paymentUrl
             if (selectedMethod === 'e_wallet' && selectedProvider === 'VNPay') {
-                return paymentApi.createVNPayPayment(data);
+                response = await paymentApi.createVNPayPayment(paymentData);
             }
             // Branch: MoMo -> call MoMo endpoint to get paymentUrl
-            if (selectedMethod === 'e_wallet' && selectedProvider === 'MoMo') {
-                return paymentApi.createMoMoPayment(data);
+            else if (selectedMethod === 'e_wallet' && selectedProvider === 'MoMo') {
+                response = await paymentApi.createMoMoPayment(paymentData);
             }
-            // Default: create standard payment
-            return paymentApi.createPayment(data);
-        },
-        onSuccess: (response) => {
+          
+            else {
+                response = await paymentApi.createPayment(paymentData);
+            }
+
             // If VNPay or MoMo, expect { paymentUrl } and redirect
             if (selectedMethod === 'e_wallet' && (selectedProvider === 'VNPay' || selectedProvider === 'MoMo')) {
-                const { paymentUrl } = response.data || {};
+                const paymentUrl = response?.data?.paymentUrl;
                 if (paymentUrl) {
                     window.location.href = paymentUrl;
                     return;
                 }
             }
+
             // Cash and other methods
             if (selectedMethod === 'cash') {
                 alert('Đặt xe thành công! Vui lòng thanh toán tiền mặt khi nhận xe.');
@@ -99,44 +147,16 @@ export default function PaymentPage() {
                 alert('Thanh toán thành công! Đặt xe hoàn tất.');
                 navigate('/thue-xe-tu-lai');
             }
-        },
-        onError: (error: any) => {
-            console.error('Payment error:', error);
-            alert(error?.error || 'Thanh toán thất bại. Vui lòng thử lại.');
-        },
-    });
-
-    const handleSubmitPayment = () => {
-        if (!selectedMethod || !bookingId || !bookingData) {
-            alert('Vui lòng chọn phương thức thanh toán');
-            return;
+        } catch (err) {
+            console.error('Payment error:', err);
+            const errorMessage = (err as any)?.response?.data?.error || (err as any)?.error || (err as any)?.message || 'Thanh toán thất bại. Vui lòng thử lại.';
+            alert(errorMessage);
+        } finally {
+            setIsProcessing(false);
         }
-
-        const paymentData = {
-            booking_id: bookingId,
-            amount: bookingData.total_amount,
-            type: 'rental_fee' as const,
-            payment_method: selectedMethod,
-            provider: selectedProvider || undefined,
-            description: `Thanh toán đặt xe ${bookingData.vehicle_id}`,
-        };
-
-        if (selectedMethod === 'cash') {
-            alert('Đặt xe thành công! Vui lòng thanh toán tiền mặt khi nhận xe.');
-            navigate('/thue-xe-tu-lai');
-            return;
-        }
-
-
-        if (selectedMethod === 'credit_card' || selectedMethod === 'bank_transfer') {
-            alert('Phương thức này đang được cập nhật. Vui lòng chọn Ví điện tử (MoMo/VNPay) hoặc Tiền mặt.');
-            return;
-        }
-
-        createPaymentMutation.mutate(paymentData);
     };
 
-    const handleMethodSelect = (methodId: PaymentMethod) => {
+    const handleMethodSelect = (methodId: string) => {
         setSelectedMethod(methodId);
         const method = PAYMENT_METHODS.find((m) => m.id === methodId);
         if (method?.providers && method.providers.length > 0) {
@@ -153,14 +173,27 @@ export default function PaymentPage() {
         return <LoadingState message="Đang tải thông tin thanh toán..." />;
     }
 
-    if (error || !bookingData) {
+    if (error) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 via-blue-50 to-purple-50 p-6">
+                <div className="text-center">
+                    <p className="text-red-600 mb-4">{error}</p>
+                    <Button onClick={() => window.location.reload()} variant="outline">
+                        Thử lại
+                    </Button>
+                </div>
+            </div>
+        );
+    }
+
+    if (!bookingData) {
         return null;
     }
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-purple-50 py-12">
             <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-                {/* Header */}
+
                 <div className="mb-8 flex items-center gap-4">
                     <Button variant="ghost" onClick={() => navigate(-1)} className="hover:bg-white/80">
                         <ArrowLeft className="mr-2" size={20} />
@@ -173,21 +206,21 @@ export default function PaymentPage() {
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    {/* Left Column: Payment Methods */}
+
                     <div className="lg:col-span-2 space-y-6">
-                        {/* Booking Info */}
+
                         <BookingInfoCard
-                            bookingId={bookingId!}
-                            startDate={bookingData.start_date}
-                            endDate={bookingData.end_date}
-                            totalAmount={bookingData.total_amount}
-                            renterName={renterInfo.name}
-                            renterPhone={renterInfo.phone}
-                            renterEmail={renterInfo.email}
-                            renterNote={renterInfo.note}
+                            bookingId={bookingId || ''}
+                            startDate={(bookingData as any)?.start_date}
+                            endDate={(bookingData as any)?.end_date}
+                            totalAmount={(bookingData as any)?.total_amount}
+                            renterName={(renterInfo as any)?.name}
+                            renterPhone={(renterInfo as any)?.phone}
+                            renterEmail={(renterInfo as any)?.email}
+                            renterNote={(renterInfo as any)?.note}
                         />
 
-                        {/* Payment Method Selection */}
+
                         <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
                             <div className="bg-gradient-to-r from-purple-500 to-pink-600 p-6 text-white">
                                 <h2 className="text-2xl font-bold flex items-center gap-2">
@@ -200,14 +233,14 @@ export default function PaymentPage() {
                                     {PAYMENT_METHODS.map((method) => (
                                         <PaymentMethodCard
                                             key={method.id}
-                                            method={method}
+                                            method={method as any}
                                             isSelected={selectedMethod === method.id}
-                                            onSelect={handleMethodSelect}
+                                            onSelect={handleMethodSelect as any}
                                         />
                                     ))}
                                 </div>
 
-                                {/* Provider Selection */}
+
                                 {selectedMethodOption?.providers && (
                                     <ProviderSelection
                                         providers={selectedMethodOption.providers}
@@ -216,18 +249,18 @@ export default function PaymentPage() {
                                     />
                                 )}
 
-                                {/* Cash payment info */}
+
                                 {selectedMethod === 'cash' && <CashPaymentInfo />}
                             </div>
                         </div>
                     </div>
 
-                    {/* Right Column: Summary */}
+
                     <div className="lg:col-span-1">
                         <PaymentSummaryCard
-                            totalAmount={bookingData.total_amount}
-                            selectedMethod={selectedMethod}
-                            isProcessing={createPaymentMutation.isPending}
+                            totalAmount={(bookingData as any)?.total_amount}
+                            selectedMethod={selectedMethod as any}
+                            isProcessing={isProcessing}
                             onSubmit={handleSubmitPayment}
                         />
                     </div>
