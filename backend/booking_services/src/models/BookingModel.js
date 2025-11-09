@@ -61,14 +61,46 @@ export const BookingModel = {
     return rows;
   },
 
-  cancel: async (booking_id) => {
-    const q = `
-      UPDATE bookings
-      SET status = 'cancelled'
-      WHERE booking_id = $1 AND status = 'booked'
-      RETURNING *;
-    `;
-    const { rows } = await pool.query(q, [booking_id]);
+  cancel: async (booking_id, { refund_amount = null, late_fee = null } = {}) => {
+   
+    let q;
+    const params = [];
+
+    if (refund_amount !== null && late_fee !== null) {
+      q = `
+        UPDATE bookings
+        SET status = 'cancelled', refund_amount = $2, late_fee = $3
+        WHERE booking_id = $1 AND status IN ('booked', 'ongoing')
+        RETURNING *;
+      `;
+      params.push(booking_id, refund_amount, late_fee);
+    } else if (refund_amount !== null) {
+      q = `
+        UPDATE bookings
+        SET status = 'cancelled', refund_amount = $2
+        WHERE booking_id = $1 AND status IN ('booked', 'ongoing')
+        RETURNING *;
+      `;
+      params.push(booking_id, refund_amount);
+    } else if (late_fee !== null) {
+      q = `
+        UPDATE bookings
+        SET status = 'cancelled', late_fee = $2
+        WHERE booking_id = $1 AND status IN ('booked', 'ongoing')
+        RETURNING *;
+      `;
+      params.push(booking_id, late_fee);
+    } else {
+      q = `
+        UPDATE bookings
+        SET status = 'cancelled'
+        WHERE booking_id = $1 AND status IN ('booked', 'ongoing')
+        RETURNING *;
+      `;
+      params.push(booking_id);
+    }
+
+    const { rows } = await pool.query(q, params);
     return rows[0] || null;
   },
 

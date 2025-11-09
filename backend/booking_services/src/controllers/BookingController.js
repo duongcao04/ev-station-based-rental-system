@@ -294,21 +294,82 @@ export const updateBookingPayment = async (req, res) => {
 export const cancelBooking = async (req, res) => {
   try {
     const { id } = req.params;
+    const { penalty_fee } = req.body;
 
     const booking = await BookingModel.getById(id);
     if (!booking) return res.status(404).json({ error: "Booking not found" });
 
-    if (booking.status !== "booked") {
-      return res.status(400).json({ error: "Only booked bookings can be cancelled" });
+
+    if (booking.status !== "booked" && booking.status !== "ongoing") {
+      return res.status(400).json({ error: "Only booked or ongoing bookings can be cancelled" });
+    }
+
+
+    if (penalty_fee !== undefined && (isNaN(penalty_fee) || penalty_fee < 0)) {
+      return res.status(400).json({ error: "penalty_fee must be a non-negative number" });
+    }
+
+
+    const depositAmount = booking.calculated_price_details?.deposit || booking.deposit_amount || 0;
+    const totalAmount = Number(booking.total_amount) || 0;
+
+
+    let refundAmount = 0;
+    let lateFee = 0;
+    let additionalPaymentRequired = 0;
+
+
+    if (booking.status === "booked") {
+      // Chưa check-in: hoàn toàn bộ tổng tiền (total_amount) vì chưa sử dụng xe
+      // total_amount bao gồm cả tiền thuê và tiền cọc
+      if (totalAmount > 0) {
+        refundAmount = totalAmount;
+      }
+      lateFee = 0;
+    }
+
+    else if (booking.status === "ongoing") {
+
+      const totalPenalty = Number(penalty_fee) || 0;
+      lateFee = totalPenalty;
+
+      if (depositAmount > 0) {
+        if (totalPenalty === 0) {
+
+          refundAmount = depositAmount;
+        } else if (totalPenalty < depositAmount) {
+
+          refundAmount = depositAmount - totalPenalty;
+        } else {
+
+          refundAmount = 0;
+          additionalPaymentRequired = totalPenalty - depositAmount;
+        }
+      } else {
+
+        if (totalPenalty > 0) {
+          additionalPaymentRequired = totalPenalty;
+        }
+      }
     }
 
     // Ownership đã được kiểm tra bởi middleware checkOwnership
-    const cancelled = await BookingModel.cancel(id);
+    const cancelled = await BookingModel.cancel(id, { refund_amount: refundAmount, late_fee: lateFee });
     if (!cancelled) {
-      return res.status(400).json({ error: "Cancel failed (state changed or not booked)" });
+      return res.status(400).json({ error: "Cancel failed (state changed or booking not found)" });
     }
 
-    return res.json({ message: "Booking cancelled successfully", booking: cancelled });
+    return res.json({
+      message: "Booking cancelled successfully",
+      booking: cancelled,
+      breakdown: {
+        total_amount: totalAmount,
+        deposit_amount: depositAmount,
+        penalty_fee: lateFee,
+        refund_amount: refundAmount,
+        additional_payment_required: additionalPaymentRequired
+      }
+    });
   } catch (e) {
     console.error("cancelBooking error:", e);
     res.status(500).json({ error: e.message || "Server error" });

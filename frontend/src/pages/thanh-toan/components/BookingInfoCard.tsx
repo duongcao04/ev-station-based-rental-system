@@ -1,3 +1,4 @@
+
 import { CheckCircle } from 'lucide-react';
 import dayjs from 'dayjs';
 import { formatVNDCurrency } from '@/lib/number';
@@ -33,7 +34,7 @@ export function BookingInfoCard({
             </div>
             <div className="p-6 space-y-3">
                 <div className="flex justify-between">
-                    <span className="text-gray-600">Mã đặt xe:</span>
+                    <span className="text-gray-600">Mã booking:</span>
                     <span className="font-bold">{bookingId.slice(0, 8).toUpperCase()}</span>
                 </div>
                 <div className="flex justify-between">
@@ -52,7 +53,7 @@ export function BookingInfoCard({
                 </div>
                 {(renterName || renterPhone || renterEmail) && (
                     <div className="pt-4 mt-2 border-t border-gray-100">
-                        <div className="text-sm text-gray-600 font-semibold mb-2">Người đặt</div>
+                        <div className="text-sm text-gray-600 font-semibold mb-2">Thông tin người thuê</div>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-sm">
                             {renterName && <div><span className="text-gray-500">Tên: </span><span className="font-medium text-gray-800">{renterName}</span></div>}
                             {renterPhone && <div><span className="text-gray-500">SĐT: </span><span className="font-medium text-gray-800">{renterPhone}</span></div>}

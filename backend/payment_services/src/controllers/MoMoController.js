@@ -28,7 +28,7 @@ export const createPaymentMomo = async (req, res) => {
         });
 
         const rawId = String(payment.payment_id);
-        const orderId = rawId.replace(/-/g, ''); 
+        const orderId = rawId.replace(/-/g, '');
         const paymentUrl = await createPaymentUrl(
             amount,
             orderId,
@@ -55,7 +55,7 @@ export const handleMomoReturn = async (req, res) => {
         const isValid = await verifyPayment(momoParams);
 
         if (isValid && momoParams.resultCode === '0') {
-           
+
             const ref = String(momoParams.orderId || '');
             const paymentId = ref.length === 32
                 ? `${ref.substring(0, 8)}-${ref.substring(8, 12)}-${ref.substring(12, 16)}-${ref.substring(16, 20)}-${ref.substring(20)}`
@@ -87,7 +87,7 @@ export const handleMomoReturn = async (req, res) => {
 };
 
 export const handleMomoNotify = async (req, res) => {
-    const momoParams = req.body; 
+    const momoParams = req.body;
 
     try {
         const { verifyPayment } = createMoMoService();

@@ -69,7 +69,7 @@ export const formatVNDCurrency = (amount: number | string): string => {
 	}).format(num);
 }
 
-// Format số tiền ngắn gọn hơn cho UI (1M, 1K, etc)
+
 export const formatCompactCurrency = (amount: number | string): string => {
 	const num = typeof amount === 'string' ? parseFloat(amount) : amount;
 	if (num >= 1000000) {
