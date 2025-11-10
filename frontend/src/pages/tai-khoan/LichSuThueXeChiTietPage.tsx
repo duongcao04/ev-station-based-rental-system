@@ -6,6 +6,7 @@ import { Car, CreditCard, ArrowLeft, X } from 'lucide-react';
 import { bookingApi } from '@/lib/api/booking.api';
 import { vehicleApi } from '@/lib/api/vehicle.api';
 import { paymentApi } from '@/lib/api/payment.api';
+import { stationApi } from '@/lib/api/station.api';
 import { formatVNDCurrency } from '@/lib/number';
 import { BookingInfoCard } from '@/pages/thanh-toan/components/BookingInfoCard';
 
@@ -21,6 +22,9 @@ export function LichSuThueXeChiTietPage() {
   const [vehicleData, setVehicleData] = useState(null);
   const [paymentData, setPaymentData] = useState(null);
   const [renterInfo, setRenterInfo] = useState(null);
+  const [startStation, setStartStation] = useState<any>(null);
+  const [endStation, setEndStation] = useState<any>(null);
+  const [actualReturnStation, setActualReturnStation] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isCancelling, setIsCancelling] = useState(false);
@@ -40,6 +44,32 @@ export function LichSuThueXeChiTietPage() {
         const bookingResponse = await bookingApi.getBooking(bookingId);
         const booking = bookingResponse.data;
         setBookingData(booking);
+
+        // Load station info
+        if ((booking as any)?.start_station_id) {
+          try {
+            const stationResponse = await stationApi.getStationByUserId((booking as any).start_station_id);
+            setStartStation(stationResponse.data);
+          } catch (e) {
+            console.error('Error loading start station:', e);
+          }
+        }
+        if ((booking as any)?.end_station_id) {
+          try {
+            const stationResponse = await stationApi.getStationByUserId((booking as any).end_station_id);
+            setEndStation(stationResponse.data);
+          } catch (e) {
+            console.error('Error loading end station:', e);
+          }
+        }
+        if ((booking as any)?.actual_return_station_id) {
+          try {
+            const stationResponse = await stationApi.getStationByUserId((booking as any).actual_return_station_id);
+            setActualReturnStation(stationResponse.data);
+          } catch (e) {
+            console.error('Error loading actual return station:', e);
+          }
+        }
 
         try {
           const raw = localStorage.getItem(`booking:renter:${bookingId}`);
@@ -469,19 +499,25 @@ export function LichSuThueXeChiTietPage() {
                     {(bookingData as any)?.start_station_id && (
                       <div className="flex justify-between items-center">
                         <span className="text-sm text-muted-foreground">Trạm nhận xe:</span>
-                        <span className="font-semibold text-sm">{(bookingData as any).start_station_id}</span>
+                        <span className="font-semibold text-sm">
+                          {startStation?.display_name || (bookingData as any).start_station_id}
+                        </span>
                       </div>
                     )}
                     {(bookingData as any)?.end_station_id && (
                       <div className="flex justify-between items-center">
                         <span className="text-sm text-muted-foreground">Trạm trả xe dự kiến:</span>
-                        <span className="font-semibold text-sm">{(bookingData as any).end_station_id}</span>
+                        <span className="font-semibold text-sm">
+                          {endStation?.display_name || (bookingData as any).end_station_id}
+                        </span>
                       </div>
                     )}
                     {(bookingData as any)?.actual_return_station_id && (
                       <div className="flex justify-between items-center">
                         <span className="text-sm text-muted-foreground">Trạm trả xe thực tế:</span>
-                        <span className="font-semibold text-sm text-blue-600">{(bookingData as any).actual_return_station_id}</span>
+                        <span className="font-semibold text-sm text-blue-600">
+                          {actualReturnStation?.display_name || (bookingData as any).actual_return_station_id}
+                        </span>
                       </div>
                     )}
                   </div>

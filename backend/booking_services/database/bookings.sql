@@ -6,9 +6,9 @@ CREATE TABLE bookings (
     user_id UUID NOT NULL,        -- Changed from INTEGER to UUID to match Auth service
     vehicle_id UUID NOT NULL,     
     payment_id UUID,              
-    start_station_id VARCHAR(50) NOT NULL,  
-    end_station_id VARCHAR(50) NOT NULL,    
-    actual_return_station_id VARCHAR(50),   
+    start_station_id UUID NOT NULL,  
+    end_station_id UUID NOT NULL,    
+    actual_return_station_id UUID,      
     start_date TIMESTAMP WITH TIME ZONE NOT NULL,
     end_date TIMESTAMP WITH TIME ZONE NOT NULL,
     actual_return_date TIMESTAMP WITH TIME ZONE,

@@ -186,28 +186,27 @@ export const confirmCashPayment = async (req, res) => {
       completed_at: now,
     });
 
-    // Đồng bộ payment_id với Booking Service
+    // Đồng bộ payment_id với Booking Service qua API Gateway
     try {
-      const baseUrl = process.env.BOOKING_SERVICE_URL || 'http://localhost:4000/api/v1';
+      // Gọi Booking Service qua API Gateway (không gọi trực tiếp)
+      const apiGatewayUrl = process.env.API_GATEWAY_URL || 'http://localhost:8000';
+      const internalSecret = process.env.INTERNAL_SERVICE_SECRET || 'internal-secret-key-change-in-production';
       const headers = {
         'Content-Type': 'application/json',
+        'x-internal-secret': internalSecret, // Internal secret để verify service-to-service request
       };
 
-      // Forward JWT token nếu có (để Booking Service verify được)
-      if (req.headers['authorization']) {
-        headers['authorization'] = req.headers['authorization'];
-      }
-
       await axios.put(
-        `${baseUrl}/bookings/${payment.booking_id}/payment`,
+        `${apiGatewayUrl}/api/v1/bookings/internal/${payment.booking_id}/payment`,
         { payment_id: id },
         {
           headers,
-          timeout: 5000,
+          timeout: 10000, // Tăng timeout vì phải qua gateway
         }
       );
+      console.log(`✅ Payment ${id} synced with Booking ${payment.booking_id} via API Gateway`);
     } catch (syncErr) {
-      console.error('Booking sync failed:', syncErr?.response?.data || syncErr.message);
+      console.error('Booking sync failed via API Gateway:', syncErr?.response?.data || syncErr.message);
       // Do not fail the confirmation if sync fails; client can retry sync later
     }
 

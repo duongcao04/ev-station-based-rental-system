@@ -9,11 +9,15 @@ import {
   getAllBookings,
   updateBookingPayment,
 } from "../controllers/BookingController.js";
-import { authenticate, authorize, checkOwnership, checkCheckinPermission, checkReturnPermission } from "../middleware/auth.js";
+import { authenticate, authorize, checkOwnership, checkCheckinPermission, checkReturnPermission, verifyInternalRequest } from "../middleware/auth.js";
 
 const router = express.Router();
 
-// Apply authentication to all routes
+// Internal routes (for service-to-service communication) - NO authentication required
+// These routes use internal secret key instead
+router.put("/internal/:id/payment", verifyInternalRequest, updateBookingPayment);
+
+// Apply authentication to all other routes
 router.use(authenticate);
 
 // Renter routes
