@@ -1,5 +1,6 @@
 import { PaymentModel } from '../models/PaymentModel.js';
 import { createVNPayService } from '../services/VNPayService.js';
+import axios from 'axios';
 
 
 export const createPaymentVnpay = async (req, res) => {
@@ -72,6 +73,28 @@ export const handleVnpayReturn = async (req, res) => {
                     processed_at: new Date(),
                     completed_at: new Date()
                 });
+
+                // Đồng bộ payment_id với Booking Service qua API Gateway
+                try {
+                    const apiGatewayUrl = process.env.API_GATEWAY_URL || 'http://localhost:8000';
+                    const internalSecret = process.env.INTERNAL_SERVICE_SECRET || 'internal-secret-key-change-in-production';
+                    await axios.put(
+                        `${apiGatewayUrl}/api/v1/bookings/internal/${payment.booking_id}/payment`,
+                        { payment_id: payment.payment_id },
+                        {
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'x-internal-secret': internalSecret,
+                            },
+                            timeout: 10000,
+                        }
+                    );
+                    console.log(`✅ VNPay Payment ${payment.payment_id} synced with Booking ${payment.booking_id} via API Gateway`);
+                } catch (syncErr) {
+                    console.error('Booking sync failed via API Gateway:', syncErr?.response?.data || syncErr.message);
+                    // Do not fail the redirect if sync fails
+                }
+
                 const feBase = process.env.PAYMENT_RETURN_URL || 'http://localhost:5173';
                 const redirectUrl = `${feBase}/thanh-toan/ket-qua?status=success&paymentId=${encodeURIComponent(payment.payment_id)}&bookingId=${encodeURIComponent(payment.booking_id)}&amount=${encodeURIComponent(payment.amount)}`;
                 return res.redirect(302, redirectUrl);

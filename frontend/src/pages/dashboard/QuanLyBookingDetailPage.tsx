@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { bookingApi } from '@/lib/api/booking.api';
 import { vehicleApi } from '@/lib/api/vehicle.api';
+import { stationApi } from '@/lib/api/station.api';
 import { formatVNDCurrency } from '@/lib/number';
 import { BookingInfoCard, InfoRow } from './components/BookingInfoCard';
 import { StatusBadge } from './components/StatusBadge';
@@ -13,6 +14,9 @@ export default function QuanLyBookingDetailPage() {
     const navigate = useNavigate();
     const [booking, setBooking] = useState<any>(null);
     const [vehicle, setVehicle] = useState<any>(null);
+    const [startStation, setStartStation] = useState<any>(null);
+    const [endStation, setEndStation] = useState<any>(null);
+    const [actualReturnStation, setActualReturnStation] = useState<any>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<any>(null);
     const [showCheckinModal, setShowCheckinModal] = useState(false);
@@ -38,6 +42,32 @@ export default function QuanLyBookingDetailPage() {
             const bookingResponse = await bookingApi.getBooking(bookingId);
             const bookingData = bookingResponse.data;
             setBooking(bookingData);
+
+            // Load station info
+            if (bookingData.start_station_id) {
+                try {
+                    const stationResponse = await stationApi.getStationByUserId(bookingData.start_station_id);
+                    setStartStation(stationResponse.data);
+                } catch (err) {
+                    console.error('Error loading start station:', err);
+                }
+            }
+            if (bookingData.end_station_id) {
+                try {
+                    const stationResponse = await stationApi.getStationByUserId(bookingData.end_station_id);
+                    setEndStation(stationResponse.data);
+                } catch (err) {
+                    console.error('Error loading end station:', err);
+                }
+            }
+            if (bookingData.actual_return_station_id) {
+                try {
+                    const stationResponse = await stationApi.getStationByUserId(bookingData.actual_return_station_id);
+                    setActualReturnStation(stationResponse.data);
+                } catch (err) {
+                    console.error('Error loading actual return station:', err);
+                }
+            }
 
             if (bookingData.vehicle_id) {
                 try {
@@ -340,19 +370,16 @@ export default function QuanLyBookingDetailPage() {
                 <BookingInfoCard title="Thông tin Trạm">
                     <InfoRow
                         label="Trạm nhận"
-                        value={booking?.start_station_id?.substring(0, 8).toUpperCase() || '-'}
-                        valueStyle={{ fontFamily: 'monospace', fontSize: '12px' }}
+                        value={startStation?.display_name || booking?.start_station_id?.substring(0, 8).toUpperCase() || '-'}
                     />
                     <InfoRow
                         label="Trạm trả"
-                        value={booking?.end_station_id?.substring(0, 8).toUpperCase() || '-'}
-                        valueStyle={{ fontFamily: 'monospace', fontSize: '12px' }}
+                        value={endStation?.display_name || booking?.end_station_id?.substring(0, 8).toUpperCase() || '-'}
                     />
                     {booking?.actual_return_station_id && (
                         <InfoRow
                             label="Trạm trả thực tế"
-                            value={booking.actual_return_station_id.substring(0, 8).toUpperCase()}
-                            valueStyle={{ fontFamily: 'monospace', fontSize: '12px' }}
+                            value={actualReturnStation?.display_name || booking.actual_return_station_id.substring(0, 8).toUpperCase()}
                         />
                     )}
                 </BookingInfoCard>

@@ -178,3 +178,31 @@ export const checkReturnPermission = (req, res, next) => {
 
     next();
 };
+
+// Middleware để verify internal service-to-service requests
+// Sử dụng internal secret key để xác thực requests từ Payment Service
+export const verifyInternalRequest = (req, res, next) => {
+    try {
+        const internalSecret = process.env.INTERNAL_SERVICE_SECRET || 'internal-secret-key-change-in-production';
+        const providedSecret = req.headers['x-internal-secret'];
+
+        if (!providedSecret) {
+            return res.status(401).json({
+                error: 'Internal request requires x-internal-secret header'
+            });
+        }
+
+        if (providedSecret !== internalSecret) {
+            return res.status(403).json({
+                error: 'Invalid internal secret'
+            });
+        }
+
+        // Mark request as internal (skip ownership checks)
+        req.isInternal = true;
+        next();
+    } catch (error) {
+        console.error('verifyInternalRequest error:', error);
+        return res.status(500).json({ error: 'Internal verification failed' });
+    }
+};
