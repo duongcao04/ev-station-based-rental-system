@@ -14,6 +14,8 @@ import CreateBookingPage from './pages/dat-xe/CreateBookingPage';
 import PaymentPage from './pages/thanh-toan/PaymentPage';
 import PaymentResultPage from './pages/thanh-toan/PaymentResultPage';
 import QuanLyTramXePage from './pages/dashboard/QuanLyTramXePage';
+import QuanLyBookingPage from './pages/dashboard/QuanLyBookingPage';
+import QuanLyBookingDetailPage from './pages/dashboard/QuanLyBookingDetailPage';
 import AccountLayout from './components/layouts/AccountLayout';
 import ThongTinTaiKhoanPage from './pages/tai-khoan/ThongTinTaiKhoanPage';
 import XacThucKYC from './pages/tai-khoan/XacThucKYC';
@@ -145,6 +147,7 @@ export const router = createBrowserRouter([
   },
   {
     path: '/dashboard',
+
     errorElement: (
       <Suspense fallback={null}>
         <ErrorPage />
@@ -164,6 +167,22 @@ export const router = createBrowserRouter([
         element: (
           <DashboardLayout>
             <QuanLyTramXePage />
+          </DashboardLayout>
+        ),
+      },
+      {
+        path: '/dashboard/bookings',
+        element: (
+          <DashboardLayout>
+            <QuanLyBookingPage />
+          </DashboardLayout>
+        ),
+      },
+      {
+        path: '/dashboard/bookings/:bookingId',
+        element: (
+          <DashboardLayout>
+            <QuanLyBookingDetailPage />
           </DashboardLayout>
         ),
       },
