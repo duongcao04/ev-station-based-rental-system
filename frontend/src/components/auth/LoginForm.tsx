@@ -1,14 +1,15 @@
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { z } from "zod";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Label } from "@radix-ui/react-label";
-import { useAuthStore } from "@/stores/useAuthStore";
-import { useNavigate } from "react-router";
-import logo from "../../assets/logo.png";
+import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { z } from 'zod';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Label } from '@radix-ui/react-label';
+import { useAuthStore } from '@/stores/useAuthStore';
+import { useNavigate } from 'react-router';
+import logo from '../../assets/logo.png';
+import { useLogin } from '../../lib/queries/useAuth';
 
 const signInSchema = z.object({
   username: z.string().min(1, "Tài khoản là email hoặc số điện thoại"),
@@ -22,6 +23,7 @@ export function LoginForm({
   ...props
 }: React.ComponentProps<"div">) {
   const { signIn } = useAuthStore();
+  const { mutateAsync: loginMutate } = useLogin();
   const navigate = useNavigate();
 
   const {
@@ -34,33 +36,24 @@ export function LoginForm({
 
   const onSubmit = async (data: SignInFormValues) => {
     const { username, password } = data;
-    const ok = await signIn(username, password);
-    if (ok) {
-      // Sau khi signIn thành công, user đã được fetch trong store
-      const user = useAuthStore.getState().user;
-      console.log("User after signIn:", user);
+    const result = await loginMutate({ username, password });
 
-      if (user?.role) {
-        let targetPath = "/"; // default
-        switch (user.role) {
-          case "admin":
-            targetPath = "/dashboard";
-            break;
-          case "staff":
-            targetPath = "/staff/dashboard";
-            break;
-          case "renter":
-            targetPath = "/";
-            break;
-        }
-        console.log("Navigating to:", targetPath);
-        // Sử dụng navigate với replace để thay thế history entry
-        navigate(targetPath, { replace: true });
-      } else {
-        // Fallback nếu không có role
-        console.log("No role found, navigating to default");
-        navigate("/", { replace: true });
+    if (result.role) {
+      let targetPath = '/'; // default
+      switch (result.role) {
+        case 'admin':
+          targetPath = '/dashboard';
+          break;
+        case 'staff':
+          targetPath = '/staff/dashboard';
+          break;
+        case 'renter':
+          targetPath = '/';
+          break;
       }
+      console.log('Navigating to:', targetPath);
+      // Sử dụng navigate với replace để thay thế history entry
+      navigate(targetPath, { replace: true });
     }
   };
 

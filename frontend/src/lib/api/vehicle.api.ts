@@ -5,6 +5,7 @@ export const vehicleApi = {
 	// Vehicles
 	getVehicles: () => axiosClient.get<TCar[]>('/v1/vehicles'),
 	getVehicle: (id: string | number) => axiosClient.get(`/v1/vehicles/${id}`),
+	getVehicleBySlug: (slug: string) => axiosClient.get(`/v1/vehicles/slug/${slug}`),
 	createVehicle: (data: any) => axiosClient.post('/v1/vehicles', data),
 	updateVehicle: (id: string | number, data: any) =>
 		axiosClient.put(`/v1/vehicles/${id}`, data),

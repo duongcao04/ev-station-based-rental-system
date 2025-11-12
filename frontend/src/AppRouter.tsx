@@ -3,6 +3,27 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import "./index.css";
 import { Toaster } from "sonner";
 
+const LoginPage = lazy(() => import('@/pages/auth/LoginPage'));
+const RegisterPage = lazy(() => import('@/pages/auth/RegisterPage'));
+import MainLayout from '@/components/layouts/MainLayout';
+import ThueXeTuLaiPage from './pages/thue-xe-tu-lai/ThueXeTuLaiPage';
+import DashboardLayout from './components/layouts/DashboardLayout';
+import DashboardPage from './pages/dashboard/DashboardPage';
+import ChiTietXePage from './pages/chi-tiet-xe/ChiTietXePage';
+import CreateBookingPage from './pages/dat-xe/CreateBookingPage';
+import PaymentPage from './pages/thanh-toan/PaymentPage';
+import PaymentResultPage from './pages/thanh-toan/PaymentResultPage';
+import QuanLyTramXePage from './pages/dashboard/QuanLyTramXePage';
+import QuanLyBookingPage from './pages/dashboard/QuanLyBookingPage';
+import QuanLyBookingDetailPage from './pages/dashboard/QuanLyBookingDetailPage';
+import AccountLayout from './components/layouts/AccountLayout';
+import ThongTinTaiKhoanPage from './pages/tai-khoan/ThongTinTaiKhoanPage';
+import XacThucKYC from './pages/tai-khoan/XacThucKYC';
+import { LichSuThueXePage } from './pages/tai-khoan/LichSuThueXePage';
+import { LichSuThueXeChiTietPage } from './pages/tai-khoan/LichSuThueXeChiTietPage';
+import ProtectedRoute from './components/auth/ProtectedRoute';
+const HomePage = lazy(() => import('@/pages/home/HomePage'));
+const ErrorPage = lazy(() => import('@/pages/error/ErrorPage'));
 const LoginPage = lazy(() => import("@/pages/auth/LoginPage"));
 const RegisterPage = lazy(() => import("@/pages/auth/RegisterPage"));
 import MainLayout from "@/components/layouts/MainLayout";
@@ -131,8 +152,21 @@ export const router = createBrowserRouter([
     ],
   },
   {
-    path: "/tai-khoan",
-    element: <ProtectedRoute allowedRoles={["renter"]} />,
+    path: '/xe/:slug',
+    element: (
+      <MainLayout>
+        <ChiTietXePage />
+      </MainLayout>
+    ),
+    errorElement: (
+      <Suspense fallback={null}>
+        <ErrorPage />
+      </Suspense>
+    ),
+  },
+  {
+    path: '/tai-khoan',
+    element: <ProtectedRoute allowedRoles={['renter']} />,
     errorElement: (
       <Suspense fallback={null}>
         <ErrorPage />
@@ -175,8 +209,7 @@ export const router = createBrowserRouter([
     ],
   },
   {
-    path: "/dashboard",
-
+    path: '/dashboard',
     errorElement: (
       <Suspense fallback={null}>
         <ErrorPage />
@@ -200,7 +233,7 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: "/dashboard/bookings",
+        path: '/dashboard/bookings',
         element: (
           <DashboardLayout>
             <QuanLyBookingPage />
@@ -208,6 +241,7 @@ export const router = createBrowserRouter([
         ),
       },
       {
+        path: '/dashboard/bookings/:bookingId',
         path: "/dashboard/bookings/:bookingId",
         element: (
           <DashboardLayout>

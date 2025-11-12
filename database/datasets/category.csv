@@ -1,0 +1,21 @@
+﻿id,displayName,description,thumbnailUrl
+c9e8f7a6-5b4d-3c2b-1a0f-e9d8c7b6a5a4,SUV,"Xe thể thao đa dụng, gầm cao, phù hợp nhiều địa hình.",/images/categories/suv.jpg
+b8d7c6a5-4a3c-2b1a-0f9e-d8c7b6a5b4c3,Sedan,"Xe 4 cửa, 5 chỗ, cốp sau tách biệt, phù hợp cho gia đình.",/images/categories/sedan.jpg
+a7c6b5a4-3b2a-1f0e-9d8c-7b6a5b4c3d2e,Xe điện (EV),"Xe chạy hoàn toàn bằng điện, không phát thải.",/images/categories/ev.jpg
+f6b5a4c3-2a1f-0e9d-8c7b-6a5b4c3d2e1f,Hatchback,"Xe có cửa cốp sau mở lên, nhỏ gọn và linh hoạt trong thành phố.",/images/categories/hatchback.jpg
+e5a4b3c2-1f0e-9d8c-7b6a-5b4c3d2e1f0a,Xe thể thao (Sports Car),"Xe hiệu suất cao, 2 cửa, thiết kế khí động học.",/images/categories/sports.jpg
+d4b3c2a1-0e9d-8c7b-6a5b-4c3d2e1f0a9b,Bán tải (Pickup),Xe có cabin và thùng chở hàng phía sau.,/images/categories/pickup.jpg
+c3a2b1f0-9d8c-7b6a-5b4c-3d2e1f0a9b8c,MPV (Đa dụng),"Xe 7 chỗ, rộng rãi, tập trung vào sự thoải mái cho gia đình.",/images/categories/mpv.jpg
+b2f1e0d9-8c7b-6a5b-4c3d-2e1f0a9b8c7d,Xe sang (Luxury),Xe cao cấp với vật liệu và công nghệ hàng đầu.,/images/categories/luxury.jpg
+a1e0d9c8-7b6a-5b4c-3d2e-1f0a9b8c7d6e,Xe đô thị (City Car),"Xe cỡ nhỏ, tiết kiệm nhiên liệu, dễ dàng di chuyển trong phố.",/images/categories/city-car.jpg
+f0d9c8b7-6a5b-4c3d-2e1f-0a9b8c7d6e5f,Off-road (Địa hình),"Xe chuyên dụng cho địa hình khó, dẫn động 4 bánh.",/images/categories/offroad.jpg
+e9c8b7a6-5b4c-3d2e-1f0a-9b8c7d6e5f4a,Hybrid,"Xe lai, kết hợp động cơ xăng và động cơ điện.",/images/categories/hybrid.jpg
+d8b7a6f5-4c3d-2e1f-0a9b-8c7d6e5f4a3b,Convertible (Mui trần),Xe có thể đóng/mở mui (cứng hoặc mềm).,/images/categories/convertible.jpg
+c7a6f5e4-3d2e-1f0a-9b8c-7d6e5f4a3b2c,Coupe,"Xe 2 cửa, mui cứng, kiểu dáng thể thao.",/images/categories/coupe.jpg
+b6f5e4d3-2e1f-0a9b-8c7d-6e5f4a3b2c1d,Van/Minivan,"Xe chở người hoặc hàng hóa, cửa hông trượt.",/images/categories/van.jpg
+a5e4d3c2-1f0a-9b8c-7d6e-5f4a3b2c1d0e,Xe cho gia đình,"Tuyển chọn các xe rộng rãi, an toàn, phù hợp gia đình.",/images/categories/family.jpg
+94d3c2b1-0a9b-8c7d-6e5f-4a3b2c1d0e9f,Tiết kiệm nhiên liệu,Các mẫu xe có mức tiêu thụ nhiên liệu thấp.,/images/categories/eco.jpg
+83c2b1a0-9b8c-7d6e-5f4a-3b2c1d0e9f8a,Hiệu suất cao,Các mẫu xe tập trung vào tốc độ và trải nghiệm lái.,/images/categories/performance.jpg
+72b1a0f9-8c7d-6e5f-4a3b-2c1d0e9f8a7b,Xe nhập khẩu,Các dòng xe được nhập khẩu nguyên chiếc.,(null)
+61a0f9e8-7d6e-5f4a-3b2c-1d0e9f8a7b6c,Xe lắp ráp trong nước,"Các dòng xe được sản xuất, lắp ráp tại Việt Nam.",(null)
+50f9e8d7-6e5f-4a3b-2c1d-0e9f8a7b6c5d,Xe 7 chỗ,"Tổng hợp tất cả các dòng xe có 7 chỗ ngồi (SUV, MPV).",/images/categories/7-seater.jpg

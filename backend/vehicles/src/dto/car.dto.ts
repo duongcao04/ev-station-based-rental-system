@@ -24,3 +24,5 @@ export const UpdateCarDto = CreateCarDto.partial();
 export type UpdateCarDto = z.infer<typeof UpdateCarDto>;
 
 export const CarIdParamDto = z.object({ id: z.string().uuid() });
+
+export const CarSlugParamDto = z.object({ slug: z.string() });

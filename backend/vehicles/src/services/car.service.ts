@@ -10,6 +10,15 @@ export const CarService = {
 			featuredImages: true,
 		},
 	}),
+	findBySlug: (slug: string) => prisma.car.findFirst({
+		where: { slug },
+		include: {
+			brand: true,
+			categories: true,
+			specifications: { include: { specificationType: true } },
+			featuredImages: true,
+		},
+	}),
 	findOne: (id: string) => prisma.car.findUnique({
 		where: { id },
 		include: {

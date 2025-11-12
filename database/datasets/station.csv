@@ -1,0 +1,21 @@
+﻿id,user_id,display_name,address,latitude,longitude,count_vehicle,created_at,updated_at
+7baa3a8d-13a4-4e0b-93f4-33a4f895ea90,e8f4b0f0-a7d1-4b8a-9c7f-3a4b6c8d9e0f,Trạm Bến Thành,"123 Đường Lê Lợi, P. Bến Thành, Quận 1, TP.HCM",10.7725,106.698,5,2025-11-01T09:00:00Z,2025-11-01T09:00:00Z
+d6d63473-584d-4f6f-b0e2-57c967fa3d2f,f4b0e8f0-d1a7-8a4b-7f9c-6c8d3a4b9e0f,Trạm Sân Bay TSN,"456 Đường Trường Sơn, P. 2, Q. Tân Bình, TP.HCM",10.8189,106.6585,8,2025-11-02T14:30:00Z,2025-11-02T14:30:00Z
+ba84a3d6-106a-4cef-a00f-b158d6db9967,a7d1b8a4-9c7f-e8f0-4b0f-b6c8d3a4e9f0,Trạm Phú Mỹ Hưng,"789 Đường Nguyễn Văn Linh, P. Tân Phong, Quận 7, TP.HCM",10.7303,106.7118,3,2025-11-03T11:15:00Z,2025-11-03T11:15:00Z
+2d475495-05cb-4c4f-b44a-e631040f8847,c3d4e5f6-7890-a1b2-b2c3-d4e5f67890a1,Trạm Gigamall,"240 Phạm Văn Đồng, P. Hiệp Bình Chánh, TP. Thủ Đức",10.829,106.7118,10,2025-11-04T18:00:00Z,2025-11-04T18:00:00Z
+a0d62168-f8a3-4e4e-86fc-7c9e7b8e6c41,b2a1c3d4-e5f6-7890-a1b2-c3d4e5f67890,Trạm Sư Vạn Hạnh,"555 Đường Sư Vạn Hạnh, P. 12, Quận 10, TP.HCM",10.7714,106.6698,0,2025-11-05T08:00:00Z,2025-11-05T08:00:00Z
+b7e9e0b2-3a2f-4f91-a6b1-1bcd2a049b9d,1a2b3c4d-5e6f-7a8b-9c0d-1e2f3a4b5c6d,Trạm Hồ Gươm,"1 Phố Đinh Tiên Hoàng, P. Hàng Trống, Q. Hoàn Kiếm, Hà Nội",21.0288,105.8522,7,2025-11-06T10:00:00Z,2025-11-06T10:00:00Z
+c17b64d8-0e35-4a43-932d-048e9731c4af,2b3c4d5e-6f7a-8b9c-0d1e-2f3a4b5c6d7e,Trạm Cầu Rồng,"2 Đường Trần Hưng Đạo, P. An Hải Tây, Q. Sơn Trà, Đà Nẵng",16.0612,108.2272,6,2025-11-07T12:00:00Z,2025-11-07T12:00:00Z
+d9d1c47c-bc70-4e3a-94a0-3b3948ef77ab,3c4d5e6f-7a8b-9c0d-1e2f-3a4b5c6d7e8f,Trạm Mỹ Đình,"1 Đường Lê Quang Đạo, P. Phú Đô, Q. Nam Từ Liêm, Hà Nội",21.02,105.7689,12,2025-11-08T15:00:00Z,2025-11-08T15:00:00Z
+e1b55e1a-f7cb-47d8-9c08-446f49011d56,4d5e6f7a-8b9c-0d1e-2f3a-4b5c6d7e8f9a,Trạm Sân Bay Đà Nẵng,"50 Đường Nguyễn Văn Linh, P. Hòa Thuận Tây, Q. Hải Châu, Đà Nẵng",16.0544,108.2022,9,2025-11-09T09:30:00Z,2025-11-09T09:30:00Z
+f0e6a4d7-c4b3-4ac3-8a7c-0b5a7b942f8a,5e6f7a8b-9c0d-1e2f-3a4b-5c6d7e8f9a0b,Trạm Landmark 81,"720A Đường Điện Biên Phủ, P. 22, Q. Bình Thạnh, TP.HCM",10.7951,106.7219,15,2025-11-10T11:00:00Z,2025-11-10T11:00:00Z
+09c69f25-f444-463f-aec0-cd41717ff4b5,6f7a8b9c-0d1e-2f3a-4b5c-6d7e8f9a0b1c,Trạm Hồ Tây,"45 Đường Thanh Niên, P. Trúc Bạch, Q. Ba Đình, Hà Nội",21.0463,105.838,4,2025-11-11T16:00:00Z,2025-11-11T16:00:00Z
+10f25b89-8b27-41d9-995f-6a9ec5ffdc38,7a8b9c0d-1e2f-3a4b-5c6d-7e8f9a0b1c2d,Trạm Bà Nà Hills,"Thôn An Sơn, Xã Hòa Ninh, Huyện Hòa Vang, Đà Nẵng",15.9961,107.9908,2,2025-11-12T08:45:00Z,2025-11-12T08:45:00Z
+2234e2ce-c5db-4037-99d0-d7ab1a3c53c3,8b9c0d1e-2f3a-4b5c-6d7e-8f9a0b1c2d3e,Trạm Aeon Long Biên,"27 Đường Cổ Linh, P. Long Biên, Q. Long Biên, Hà Nội",21.0232,105.8966,11,2025-11-13T19:00:00Z,2025-11-13T19:00:00Z
+36a2b71e-f3bb-4704-9f88-4988e9fd24c8,9c0d1e2f-3a4b-5c6d-7e8f-9a0b1c2d3e4f,Trạm ĐH Bách Khoa HCM,"268 Đường Lý Thường Kiệt, P. 14, Quận 10, TP.HCM",10.7729,106.6584,1,2025-11-14T13:20:00Z,2025-11-14T13:20:00Z
+4876c73a-f8a4-4f27-bd3f-382830a3c8a0,0d1e2f3a-4b5c-6d7e-8f9a-0b1c2d3e4f5a,Trạm Chùa Linh Ứng,"Bán đảo Sơn Trà, P. Thọ Quang, Q. Sơn Trà, Đà Nẵng",16.1004,108.2505,0,2025-11-15T07:00:00Z,2025-11-15T07:00:00Z
+5e1c14e0-6655-4b47-8e9c-19a4421a9620,1e2f3a4b-5c6d-7e8f-9a0b-1c2d3e4f5a6b,Trạm Times City,"458 Đường Minh Khai, P. Vĩnh Tuy, Q. Hai Bà Trưng, Hà Nội",21.0062,105.8679,14,2025-11-16T17:30:00Z,2025-11-16T17:30:00Z
+6a9c80a1-598c-41de-bcf0-40567a320a7d,2f3a4b5c-6d7e-8f9a-0b1c-2d3e4f5a6b7c,Trạm Sân Bay Nội Bài,"Sân bay Quốc tế Nội Bài, Xã Phú Minh, Huyện Sóc Sơn, Hà Nội",21.2212,105.807,20,2025-11-17T05:00:00Z,2025-11-17T05:00:00Z
+7f4e2f31-9ef5-4c64-8f53-745208d4a032,3a4b5c6d-7e8f-9a0b-1c2d-3e4f5a6b7c8d,Trạm Cresent Mall,"101 Tôn Dật Tiên, P. Tân Phú, Quận 7, TP.HCM",10.7285,106.7115,7,2025-11-18T14:10:00Z,2025-11-18T14:10:00Z
+82b28e23-3e38-48ee-935c-38d2df302fe8,4b5c6d7e-8f9a-0b1c-2d3e-4f5a6b7c8d9e,Trạm Cầu Sông Hàn,"155 Đường Trần Hưng Đạo, P. An Hải Bắc, Q. Sơn Trà, Đà Nẵng",16.0691,108.2274,3,2025-11-19T21:00:00Z,2025-11-19T21:00:00Z
+f6bfed73-62d0-4ac6-aba6-90d4dcf73703,5c6d7e8f-9a0b-1c2d-3e4f-5a6b7c8d9e0f,Trạm Lotte Center,"54 Phố Liễu Giai, P. Cống Vị, Q. Ba Đình, Hà Nội",21.0355,105.8148,9,2025-11-20T10:45:00Z,2025-11-20T10:45:00Z
