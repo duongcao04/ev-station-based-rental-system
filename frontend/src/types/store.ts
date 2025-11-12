@@ -18,4 +18,20 @@ export interface AuthState {
   signOut: () => Promise<void>;
   fetchMe: () => Promise<void>;
   refresh: () => Promise<void>;
+  changePassword: (
+    userId: string,
+    oldPassword: string,
+    newPassword: string,
+    confirmPassword: string
+  ) => Promise<boolean>;
+}
+
+export interface adminState {
+  loading: boolean;
+  createAccount: (
+    email: string,
+    phone_number: string,
+    password: string,
+    role: string
+  ) => Promise<boolean>;
 }

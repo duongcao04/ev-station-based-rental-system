@@ -18,16 +18,20 @@ import {
 import { ChangePasswordForm } from "@/components/auth/change-password-form";
 import { CreateAccountForm } from "@/components/auth/create-account-form";
 import { Lock, LogOut, UserPlus } from "lucide-react";
+import { useAuthStore } from "@/stores/useAuthStore";
+import { useNavigate } from "react-router-dom";
 
 export function Settings() {
   const [activeDialog, setActiveDialog] = useState<
     "changePassword" | "createAccount" | null
   >(null);
 
-  const handleLogout = () => {
-    // Handle logout logic here
-    console.log("User logged out");
-    // You can redirect to login page or clear session
+  const { signOut } = useAuthStore();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    await signOut();
+    navigate("/login");
   };
 
   const handleCreateAccountSuccess = (data: any) => {

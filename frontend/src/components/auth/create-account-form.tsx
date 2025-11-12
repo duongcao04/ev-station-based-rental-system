@@ -20,6 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { AlertCircle, CheckCircle } from "lucide-react";
+import { useAdminStore } from "@/stores/useAdminStore";
 
 interface CreateAccountFormProps {
   onClose?: () => void;
@@ -30,6 +31,8 @@ export function CreateAccountForm({
   onClose,
   onSuccess,
 }: CreateAccountFormProps) {
+  const { createAccount } = useAdminStore();
+
   const [formData, setFormData] = useState({
     email: "",
     phone_number: "",
@@ -87,34 +90,22 @@ export function CreateAccountForm({
     e.preventDefault();
     setSuccess(false);
 
-    if (!validateForm()) {
-      return;
-    }
+    if (!validateForm()) return;
 
     setLoading(true);
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      setSuccess(true);
-
-      if (onSuccess) {
-        onSuccess(formData);
+      const ok = await createAccount(
+        formData.email,
+        formData.phone_number,
+        formData.password,
+        formData.role
+      );
+      if (ok) {
+        setSuccess(true);
+        onSuccess?.(formData);
+        setFormData({ email: "", phone_number: "", password: "", role: "" });
+        if (onClose) setTimeout(onClose, 1500);
       }
-
-      setFormData({
-        email: "",
-        phone_number: "",
-        password: "",
-        role: "",
-      });
-      setErrors({});
-
-      // Close dialog after success
-      if (onClose) {
-        setTimeout(onClose, 1500);
-      }
-    } catch (error) {
-      setErrors({ submit: "Có lỗi xảy ra. Vui lòng thử lại." });
     } finally {
       setLoading(false);
     }

@@ -13,12 +13,15 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { AlertCircle, CheckCircle } from "lucide-react";
+import { useAuthStore } from "@/stores/useAuthStore";
 
 interface ChangePasswordFormProps {
   onClose?: () => void;
 }
 
 export function ChangePasswordForm({ onClose }: ChangePasswordFormProps) {
+  const { user, changePassword } = useAuthStore();
+
   const [formData, setFormData] = useState({
     oldPassword: "",
     newPassword: "",
@@ -63,28 +66,30 @@ export function ChangePasswordForm({ onClose }: ChangePasswordFormProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSuccess(false);
-
-    if (!validateForm()) {
-      return;
-    }
+    if (!validateForm()) return;
 
     setLoading(true);
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      setSuccess(true);
-      setFormData({
-        oldPassword: "",
-        newPassword: "",
-        confirmPassword: "",
-      });
-      setErrors({});
-
-      // Close dialog after success
-      if (onClose) {
-        setTimeout(onClose, 1500);
+      if (!user?._id) {
+        setErrors({ submit: "Người dùng chưa đăng nhập" });
+        return;
       }
-    } catch (error) {
+
+      const ok = await changePassword(
+        user?._id,
+        formData.oldPassword,
+        formData.newPassword,
+        formData.confirmPassword
+      );
+      if (ok) {
+        setSuccess(true);
+        setFormData({ oldPassword: "", newPassword: "", confirmPassword: "" });
+        setErrors({});
+        if (onClose) setTimeout(onClose, 1500);
+      } else {
+        setErrors({ submit: "Đổi mật khẩu thất bại. Vui lòng thử lại." });
+      }
+    } catch {
       setErrors({ submit: "Có lỗi xảy ra. Vui lòng thử lại." });
     } finally {
       setLoading(false);

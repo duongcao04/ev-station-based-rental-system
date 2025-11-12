@@ -43,7 +43,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       set({ loading: true });
       //call api
 
-      const { accessToken, role } = await authApi.signIn(username, password);
+      const { accessToken, role, user } = await authApi.signIn(
+        username,
+        password
+      );
 
       get().setAccessToken(accessToken);
       await new Promise((resolve) => setTimeout(resolve, 0));
@@ -87,7 +90,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       set({ loading: true });
       const user = await authApi.fetchMe();
 
-      set({ user });
+      const userData = { ...user, _id: user._id || user.id || user.user_id };
+      set({ user: userData });
     } catch (error) {
       console.error(error);
       toast.error("Lỗi khi lấy dữ liệu người dùng. Thử lại!");
@@ -110,6 +114,27 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       console.error(error);
       toast.error("Phiên đăng nhập đã hết hạn vui lòng đăng nhập lại");
       get().clearState();
+    } finally {
+      set({ loading: false });
+    }
+  },
+  changePassword: async (userId, oldPassword, newPassword, confirmPassword) => {
+    try {
+      set({ loading: true });
+      const res = await authApi.changePassword(
+        userId,
+        oldPassword,
+        newPassword,
+        confirmPassword
+      );
+      toast.success(res.message || "Đổi mật khẩu thành công");
+      return true;
+    } catch (error) {
+      console.error(error);
+      const message =
+        (error as any)?.response?.data?.message || "Đổi mật khẩu thất bại";
+      toast.error(message);
+      return false;
     } finally {
       set({ loading: false });
     }
