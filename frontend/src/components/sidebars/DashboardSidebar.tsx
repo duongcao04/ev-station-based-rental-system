@@ -38,7 +38,7 @@ const items = [
   },
   {
     title: "Thành viên",
-    url: "#",
+    url: "/dashboard/menbers",
     icon: Inbox,
   },
   {

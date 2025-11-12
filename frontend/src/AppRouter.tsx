@@ -28,6 +28,7 @@ import HuongDanThueXe from "./pages/huong-dan-thue-xe/HuongDanThueXe";
 import LienHePage from "./pages/lien-he/LienHePage";
 import TramXePage from "./pages/tram-xe/TramXePage";
 import SettingsPage from "./pages/dashboard/SettingPage";
+import MenbersManagementPage from "./pages/dashboard/MenbersManagemetPage";
 
 // eslint-disable-next-line react-refresh/only-export-components
 export const router = createBrowserRouter([
@@ -228,6 +229,14 @@ export const router = createBrowserRouter([
             element: (
               <DashboardLayout>
                 <QuanLyBookingDetailPage />
+              </DashboardLayout>
+            ),
+          },
+          {
+            path: "/dashboard/menbers",
+            element: (
+              <DashboardLayout>
+                <MenbersManagementPage />
               </DashboardLayout>
             ),
           },
