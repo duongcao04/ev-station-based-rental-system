@@ -22,6 +22,9 @@ import XacThucKYC from "./pages/tai-khoan/XacThucKYC";
 import { LichSuThueXePage } from "./pages/tai-khoan/LichSuThueXePage";
 import { LichSuThueXeChiTietPage } from "./pages/tai-khoan/LichSuThueXeChiTietPage";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
+import HuongDanThueXe from "./pages/huong-dan-thue-xe/HuongDanThueXe";
+import LienHePage from "./pages/lien-he/LienHePage";
+import TramXePage from "./pages/tram-xe/TramXePage";
 const HomePage = lazy(() => import("@/pages/home/HomePage"));
 const ErrorPage = lazy(() => import("@/pages/error/ErrorPage"));
 
@@ -48,6 +51,30 @@ export const router = createBrowserRouter([
         element: (
           <MainLayout>
             <ThueXeTuLaiPage />
+          </MainLayout>
+        ),
+      },
+      {
+        path: "/huong-dan-thue-xe",
+        element: (
+          <MainLayout>
+            <HuongDanThueXe />
+          </MainLayout>
+        ),
+      },
+      {
+        path: "/lien-he",
+        element: (
+          <MainLayout>
+            <LienHePage />
+          </MainLayout>
+        ),
+      },
+      {
+        path: "/tram-xe",
+        element: (
+          <MainLayout>
+            <TramXePage />
           </MainLayout>
         ),
       },

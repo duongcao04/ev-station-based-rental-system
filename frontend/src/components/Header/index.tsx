@@ -14,7 +14,8 @@ export default function Header() {
   const navItems = [
     { to: '/', label: 'Trang chủ' },
     { to: '/thue-xe-tu-lai', label: 'Thuê xe tự lái' },
-    { to: '/ve-chung-toi', label: 'Về chúng tôi' },
+    { to: '/tram-xe', label: 'Trạm xe' },
+    { to: '/huong-dan-thue-xe', label: 'Hướng dẫn thuê xe' },
     { to: '/lien-he', label: 'Liên hệ' },
   ];
 
@@ -26,7 +27,7 @@ export default function Header() {
           'rgba(0, 0, 0, 0.05) 0px 6px 24px 0px, rgba(0, 0, 0, 0.08) 0px 0px 0px 1px',
       }}
     >
-      {/* Main header */}
+      
       <div className='container flex h-20 items-center justify-between'>
         <Link to='/' className='group flex items-center gap-4 no-underline'>
           <div
@@ -49,8 +50,7 @@ export default function Header() {
           </div>
         </Link>
 
-        {/* Desktop Navigation */}
-        <nav className='hidden items-center gap-10 md:flex'>
+        <nav className='hidden items-center gap-4 md:flex'>
           {navItems.map((item) => (
             <NavLink
               key={item.to}
@@ -69,9 +69,8 @@ export default function Header() {
           ))}
         </nav>
 
-        {/* Right side actions */}
         <div className='flex items-center gap-5'>
-          {/* Search */}
+      
           <button
             type='button'
             className='rounded-lg bg-gray-100 p-2 text-gray-500 transition hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-primary-500/30'
@@ -80,7 +79,7 @@ export default function Header() {
             <Search size={20} />
           </button>
 
-          {/* Login */}
+      
           {profile ? (
             <div className='flex items-center justify-end gap-4'>
               <UserDropdown />
@@ -96,16 +95,16 @@ export default function Header() {
             </Link>
           )}
 
-          {/* Rent button */}
+        
           <Link
-            to='/thue-xe-tu-lai'
+            to=''
             className='inline-flex items-center gap-2 rounded-lg bg-primary-600 px-6 py-3 text-[16px] font-bold text-white shadow-[0_4px_12px_rgba(5,150,105,0.3)] transition hover:bg-primary-700'
           >
             <Car size={18} />
             <span>Thuê xe ngay</span>
           </Link>
 
-          {/* Mobile menu button */}
+         
           <button
             type='button'
             onClick={() => setMobileOpen((s) => !s)}
@@ -118,7 +117,7 @@ export default function Header() {
         </div>
       </div>
 
-      {/* Mobile menu */}
+      
       <div
         className={`border-t border-gray-200 bg-white px-5 py-5 md:hidden ${
           mobileOpen ? 'block' : 'hidden'

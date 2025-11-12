@@ -42,7 +42,7 @@ export default function HomePage() {
       range: '450km',
       price: '2,200,000đ/ngày',
       image:
-        'https://images.unsplash.com/photo-1593941707882-a5bac6861d75?w=500&h=300&fit=crop',
+        'https://vinfast-vn.vn/wp-content/uploads/2023/10/vinfast-vf8-1-1-1024x426.png',
       features: ['Spacious', 'Luxury', 'Vietnamese'],
     },
   ];
@@ -80,7 +80,7 @@ export default function HomePage() {
   return (
     <div className='min-h-screen bg-white'>
       <HeroSection />
-      {/* Hero Section */}
+   
       <section className='relative bg-gradient-to-br from-green-50 to-blue-50 py-20'>
         <div className='max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8'>
           <div className='grid grid-cols-1 lg:grid-cols-2 gap-12 items-center'>
@@ -95,7 +95,7 @@ export default function HomePage() {
               </p>
               <div className='flex flex-col sm:flex-row gap-4'>
                 <Link
-                  to='/thue-xe'
+                  to='/thue-xe-tu-lai'
                   className='bg-green-600 hover:bg-green-700 text-white px-8 py-4 rounded-lg font-semibold text-lg transition-all duration-300 flex items-center justify-center group'
                 >
                   Thuê xe ngay
@@ -263,7 +263,7 @@ export default function HomePage() {
                       {vehicle.price}
                     </span>
                     <Link
-                      to='/thue-xe'
+                      to='/thue-xe-tu-lai'
                       className='bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors'
                     >
                       Thuê ngay
@@ -288,7 +288,7 @@ export default function HomePage() {
           </p>
           <div className='flex flex-col sm:flex-row gap-4 justify-center'>
             <Link
-              to='/thue-xe'
+              to='/thue-xe-tu-lai'
               className='bg-white text-green-600 hover:bg-gray-100 px-8 py-4 rounded-lg font-semibold text-lg transition-all duration-300'
             >
               Thuê xe ngay

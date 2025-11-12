@@ -5,5 +5,7 @@ export const stationApi = {
     getAllStations: () => axiosClient.get('/v1/stations'),
 
     getStationByUserId: (userId: string) => axiosClient.get(`/v1/stations/${userId}`),
+
+    getStationVehicles: (userId: string) => axiosClient.get(`/v1/stations/${userId}/vehicles`),
 };
 
