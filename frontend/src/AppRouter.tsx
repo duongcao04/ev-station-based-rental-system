@@ -3,27 +3,6 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import "./index.css";
 import { Toaster } from "sonner";
 
-const LoginPage = lazy(() => import('@/pages/auth/LoginPage'));
-const RegisterPage = lazy(() => import('@/pages/auth/RegisterPage'));
-import MainLayout from '@/components/layouts/MainLayout';
-import ThueXeTuLaiPage from './pages/thue-xe-tu-lai/ThueXeTuLaiPage';
-import DashboardLayout from './components/layouts/DashboardLayout';
-import DashboardPage from './pages/dashboard/DashboardPage';
-import ChiTietXePage from './pages/chi-tiet-xe/ChiTietXePage';
-import CreateBookingPage from './pages/dat-xe/CreateBookingPage';
-import PaymentPage from './pages/thanh-toan/PaymentPage';
-import PaymentResultPage from './pages/thanh-toan/PaymentResultPage';
-import QuanLyTramXePage from './pages/dashboard/QuanLyTramXePage';
-import QuanLyBookingPage from './pages/dashboard/QuanLyBookingPage';
-import QuanLyBookingDetailPage from './pages/dashboard/QuanLyBookingDetailPage';
-import AccountLayout from './components/layouts/AccountLayout';
-import ThongTinTaiKhoanPage from './pages/tai-khoan/ThongTinTaiKhoanPage';
-import XacThucKYC from './pages/tai-khoan/XacThucKYC';
-import { LichSuThueXePage } from './pages/tai-khoan/LichSuThueXePage';
-import { LichSuThueXeChiTietPage } from './pages/tai-khoan/LichSuThueXeChiTietPage';
-import ProtectedRoute from './components/auth/ProtectedRoute';
-const HomePage = lazy(() => import('@/pages/home/HomePage'));
-const ErrorPage = lazy(() => import('@/pages/error/ErrorPage'));
 const LoginPage = lazy(() => import("@/pages/auth/LoginPage"));
 const RegisterPage = lazy(() => import("@/pages/auth/RegisterPage"));
 import MainLayout from "@/components/layouts/MainLayout";
@@ -43,11 +22,12 @@ import XacThucKYC from "./pages/tai-khoan/XacThucKYC";
 import { LichSuThueXePage } from "./pages/tai-khoan/LichSuThueXePage";
 import { LichSuThueXeChiTietPage } from "./pages/tai-khoan/LichSuThueXeChiTietPage";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
+const HomePage = lazy(() => import("@/pages/home/HomePage"));
+const ErrorPage = lazy(() => import("@/pages/error/ErrorPage"));
 import HuongDanThueXe from "./pages/huong-dan-thue-xe/HuongDanThueXe";
 import LienHePage from "./pages/lien-he/LienHePage";
 import TramXePage from "./pages/tram-xe/TramXePage";
-const HomePage = lazy(() => import("@/pages/home/HomePage"));
-const ErrorPage = lazy(() => import("@/pages/error/ErrorPage"));
+import SettingsPage from "./pages/dashboard/SettingPage";
 
 // eslint-disable-next-line react-refresh/only-export-components
 export const router = createBrowserRouter([
@@ -152,7 +132,7 @@ export const router = createBrowserRouter([
     ],
   },
   {
-    path: '/xe/:slug',
+    path: "/xe/:slug",
     element: (
       <MainLayout>
         <ChiTietXePage />
@@ -165,8 +145,8 @@ export const router = createBrowserRouter([
     ),
   },
   {
-    path: '/tai-khoan',
-    element: <ProtectedRoute allowedRoles={['renter']} />,
+    path: "/tai-khoan",
+    element: <ProtectedRoute allowedRoles={["renter"]} />,
     errorElement: (
       <Suspense fallback={null}>
         <ErrorPage />
@@ -209,48 +189,60 @@ export const router = createBrowserRouter([
     ],
   },
   {
-    path: '/dashboard',
-    errorElement: (
-      <Suspense fallback={null}>
-        <ErrorPage />
-      </Suspense>
-    ),
+    element: <ProtectedRoute allowedRoles={["admin"]} />,
     children: [
       {
-        index: true,
-        element: (
-          <DashboardLayout>
-            <DashboardPage />
-          </DashboardLayout>
+        path: "/dashboard",
+        errorElement: (
+          <Suspense fallback={null}>
+            <ErrorPage />
+          </Suspense>
         ),
+        children: [
+          {
+            index: true,
+            element: (
+              <DashboardLayout>
+                <DashboardPage />
+              </DashboardLayout>
+            ),
+          },
+          {
+            path: "/dashboard/tram-xe",
+            element: (
+              <DashboardLayout>
+                <QuanLyTramXePage />
+              </DashboardLayout>
+            ),
+          },
+          {
+            path: "/dashboard/bookings",
+            element: (
+              <DashboardLayout>
+                <QuanLyBookingPage />
+              </DashboardLayout>
+            ),
+          },
+          {
+            path: "/dashboard/bookings/:bookingId",
+            element: (
+              <DashboardLayout>
+                <QuanLyBookingDetailPage />
+              </DashboardLayout>
+            ),
+          },
+          {
+            path: "/dashboard/setting",
+            element: (
+              <DashboardLayout>
+                <SettingsPage />
+              </DashboardLayout>
+            ),
+          },
+          // Catch-all
+          { path: "*", element: <ErrorPage /> },
+        ],
       },
-      {
-        path: "/dashboard/tram-xe",
-        element: (
-          <DashboardLayout>
-            <QuanLyTramXePage />
-          </DashboardLayout>
-        ),
-      },
-      {
-        path: '/dashboard/bookings',
-        element: (
-          <DashboardLayout>
-            <QuanLyBookingPage />
-          </DashboardLayout>
-        ),
-      },
-      {
-        path: '/dashboard/bookings/:bookingId',
-        path: "/dashboard/bookings/:bookingId",
-        element: (
-          <DashboardLayout>
-            <QuanLyBookingDetailPage />
-          </DashboardLayout>
-        ),
-      },
-      // Catch-all
-      { path: "*", element: <ErrorPage /> },
     ],
   },
 ]);
