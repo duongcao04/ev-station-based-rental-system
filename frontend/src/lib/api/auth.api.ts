@@ -22,62 +22,68 @@ export const authApi = {
       username,
       password,
     });
-    // Backend set HTTP-only cookie, không cần trả về token trong response
-    const accessToken = res.data?.accessToken;
-    const role = res.data?.role;
-    const user_id = res.data?.user_id;
-    const email = res.data?.email;
-    const station_id = res.data?.station_id;
-    const user = {
-      id: user_id,
-      email: email,
-      role: role,
-      station_id: station_id,
-      phone_number: "",
-    };
-    return { accessToken, role, user };
+    return res.data;
   },
 
   signOut: async () => {
-    return axiosClient.post("/v1/auth/logout", {});
+    const res = await axiosClient.post("/v1/auth/logout", {});
+    return res.data;
   },
 
   fetchMe: async () => {
-    try {
-      // Thử endpoint renter trước
-      const res = await axiosClient.get("/v1/renters/me", {
-        withCredentials: true,
-      });
-      console.log("User is renter");
-      return { ...res.data, role: "renter" };
-    } catch (renterError) {
-      console.log("User is not renter, checking admin/staff...");
+    const profileRes = await axiosClient.get("/v1/auth/profile", {
+      withCredentials: true,
+    });
+    const baseProfile = profileRes.data;
 
+    if (!baseProfile?.id) {
+      throw new Error("Không thể lấy thông tin người dùng");
+    }
+
+    const normalizedProfile = {
+      ...baseProfile,
+      _id: baseProfile.id,
+      user_id: baseProfile.id,
+    };
+
+    if (baseProfile.role === "renter") {
       try {
-        // Thử endpoint admin
-        const adminRes = await axiosClient.get("/v1/admin/users", {
+        const renterRes = await axiosClient.get("/v1/renters/me", {
           withCredentials: true,
         });
-        console.log("User is admin");
-        return { ...adminRes.data, role: "admin" };
-      } catch (adminError) {
-        try {
-          // Thử endpoint staff
-          const staffRes = await axiosClient.get("/v1/kyc/submissions", {
-            withCredentials: true,
-          });
-          console.log("User is staff");
-          return { ...staffRes.data, role: "staff" };
-        } catch (staffError) {
-          // Nếu tất cả đều thất bại, ném lỗi
-          throw new Error("Cannot fetch user profile from any role endpoint");
-        }
+        return {
+          ...renterRes.data,
+          ...normalizedProfile,
+          role: "renter",
+        };
+      } catch (error) {
+        console.warn("Không thể lấy thông tin renter chi tiết:", error);
+        return normalizedProfile;
       }
     }
+
+    return {
+      ...normalizedProfile,
+      role: baseProfile.role,
+    };
   },
 
   refresh: async () => {
     const res = await axiosClient.post("/v1/auth/refresh", {});
     return res.data.accessToken;
+  },
+
+  changePassword: async (
+    userId: string,
+    oldPassword: string,
+    newPassword: string,
+    confirmPassword: string
+  ) => {
+    const res = await axiosClient.patch(
+      `/v1/auth/${userId}/change-password`,
+      { oldPassword, newPassword, confirmPassword },
+      { withCredentials: true }
+    );
+    return res.data;
   },
 };

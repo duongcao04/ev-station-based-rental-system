@@ -2,6 +2,7 @@ import type { AuthState } from "@/types/store";
 import { toast } from "sonner";
 import { create } from "zustand";
 import { authApi } from "@/lib/api/auth.api";
+import { getErrorMessage } from "@/lib/utils/error";
 
 export const useAuthStore = create<AuthState>((set, get) => ({
   accessToken: null,
@@ -21,16 +22,13 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       set({ loading: true });
 
       //call api
-      await authApi.signUp(email, phone_number, password);
+      const res = await authApi.signUp(email, phone_number, password);
 
-      toast.success("Đăng ký thành công");
+      toast.success(res?.message || "Đăng ký thành công");
       return true;
     } catch (error) {
       console.error(error);
-      const message =
-        (error as any)?.response?.data?.message ||
-        (error as any)?.response?.data?.msg ||
-        "Đăng ký thất bại";
+      const message = getErrorMessage(error, "Đăng ký thất bại");
       toast.error(message);
       return false;
     } finally {
@@ -43,22 +41,26 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       set({ loading: true });
       //call api
 
-      const { accessToken, role } = await authApi.signIn(username, password);
+      const data = await authApi.signIn(
+        username,
+        password
+      );
 
-      get().setAccessToken(accessToken);
+      const accessToken = data?.accessToken ?? null;
+      const message = data?.message;
+      if (accessToken) {
+        get().setAccessToken(accessToken);
+      }
       await new Promise((resolve) => setTimeout(resolve, 0));
 
       await get().fetchMe();
 
-      toast.success("Đăng nhập thành công");
+      toast.success(message || "Đăng nhập thành công");
       return true;
     } catch (error) {
       console.error(error);
 
-      const message =
-        (error as any)?.response?.data?.message ||
-        (error as any)?.response?.data?.msg ||
-        "Đăng nhập thất bại";
+      const message = getErrorMessage(error, "Đăng nhập thất bại");
 
       toast.error(message);
       return false;
@@ -70,14 +72,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   signOut: async () => {
     try {
       get().clearState();
-      await authApi.signOut();
-      toast.success("Đăng xuất thành công");
+      const res = await authApi.signOut();
+      toast.success(res?.message || "Đăng xuất thành công");
     } catch (error) {
       console.error(error);
-      const message =
-        (error as any)?.response?.data?.message ||
-        (error as any)?.response?.data?.msg ||
-        "Đăng xuất thất bại";
+      const message = getErrorMessage(error, "Đăng xuất thất bại");
       toast.error(message);
     }
   },
@@ -87,7 +86,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       set({ loading: true });
       const user = await authApi.fetchMe();
 
-      set({ user });
+      const userData = { ...user, _id: user._id || user.id || user.user_id };
+      set({ user: userData });
     } catch (error) {
       console.error(error);
       toast.error("Lỗi khi lấy dữ liệu người dùng. Thử lại!");
@@ -110,6 +110,26 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       console.error(error);
       toast.error("Phiên đăng nhập đã hết hạn vui lòng đăng nhập lại");
       get().clearState();
+    } finally {
+      set({ loading: false });
+    }
+  },
+  changePassword: async (userId, oldPassword, newPassword, confirmPassword) => {
+    try {
+      set({ loading: true });
+      const res = await authApi.changePassword(
+        userId,
+        oldPassword,
+        newPassword,
+        confirmPassword
+      );
+      toast.success(res.message || "Đổi mật khẩu thành công");
+      return true;
+    } catch (error) {
+      console.error(error);
+      const message = getErrorMessage(error, "Đổi mật khẩu thất bại");
+      toast.error(message);
+      return false;
     } finally {
       set({ loading: false });
     }

@@ -1,5 +1,12 @@
-import { Calendar, Home, Inbox, Search, Settings, BookOpen } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import {
+  Calendar,
+  Home,
+  Inbox,
+  Search,
+  Settings,
+  BookOpen,
+} from "lucide-react";
+import { Link } from "react-router-dom";
 
 import {
   Sidebar,
@@ -10,43 +17,43 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-} from '@/components/ui/sidebar';
+} from "@/components/ui/sidebar";
 
 // Menu items.
 const items = [
   {
-    title: 'Dashboard',
-    url: '/dashboard',
+    title: "Dashboard",
+    url: "/dashboard",
     icon: Home,
   },
   {
-    title: 'Trạm xe',
-    url: '/dashboard/tram-xe',
+    title: "Trạm xe",
+    url: "/dashboard/tram-xe",
     icon: Home,
   },
   {
-    title: 'Booking',
-    url: '/dashboard/bookings',
+    title: "Booking",
+    url: "/dashboard/bookings",
     icon: BookOpen,
   },
   {
-    title: 'Thành viên',
-    url: '#',
+    title: "Thành viên",
+    url: "#",
     icon: Inbox,
   },
   {
-    title: 'Xe',
-    url: '#',
+    title: "Xe",
+    url: "#",
     icon: Calendar,
   },
   {
-    title: 'Báo cáo',
-    url: '#',
+    title: "Báo cáo",
+    url: "#",
     icon: Search,
   },
   {
-    title: 'Cài đặt',
-    url: '#',
+    title: "Cài đặt",
+    url: "/dashboard/setting",
     icon: Settings,
   },
 ];
