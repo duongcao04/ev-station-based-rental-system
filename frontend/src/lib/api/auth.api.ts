@@ -22,24 +22,12 @@ export const authApi = {
       username,
       password,
     });
-    // Backend set HTTP-only cookie, không cần trả về token trong response
-    const accessToken = res.data?.accessToken;
-    const role = res.data?.role;
-    const user_id = res.data?.user_id;
-    const email = res.data?.email;
-    const station_id = res.data?.station_id;
-    const user = {
-      id: user_id,
-      email: email,
-      role: role,
-      station_id: station_id,
-      phone_number: "",
-    };
-    return { accessToken, role, user };
+    return res.data;
   },
 
   signOut: async () => {
-    return axiosClient.post("/v1/auth/logout", {});
+    const res = await axiosClient.post("/v1/auth/logout", {});
+    return res.data;
   },
 
   fetchMe: async () => {

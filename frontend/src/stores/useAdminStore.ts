@@ -2,6 +2,7 @@ import type { adminState } from "@/types/store";
 import { toast } from "sonner";
 import { create } from "zustand";
 import { adminApi } from "@/lib/api/admin.api";
+import { getErrorMessage } from "@/lib/utils/error";
 
 export const useAdminStore = create<adminState>((set, get) => ({
   loading: false,
@@ -19,8 +20,7 @@ export const useAdminStore = create<adminState>((set, get) => ({
       return true;
     } catch (error) {
       console.error(error);
-      const message =
-        (error as any)?.response?.data?.message || "Tạo tài khoản thất bại";
+      const message = getErrorMessage(error, "Tạo tài khoản thất bại");
       toast.error(message);
       return false;
     } finally {
