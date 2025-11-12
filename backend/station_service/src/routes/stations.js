@@ -4,14 +4,13 @@ import { authenticate, authorize, ensureStationOwnership } from "../middleware/a
 
 const router = express.Router();
 
-// Public endpoint để seed stations (chỉ dùng trong development)
-// TODO: Xóa hoặc bảo vệ endpoint này trong production
+
 if (process.env.NODE_ENV !== 'production') {
     router.post("/seed", StationController.seedSampleStations);
 }
 
 router.get("/", StationController.list);
-router.get("/vehicles/:vehicle_id/stations", StationController.getStationsByVehicleId); // Lấy stations chứa vehicle
+router.get("/vehicles/:vehicle_id/stations", StationController.getStationsByVehicleId); 
 router.get("/:user_id", StationController.getByUserId);
 
 

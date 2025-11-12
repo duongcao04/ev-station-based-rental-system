@@ -116,6 +116,19 @@ export default function CreateBookingPage() {
     });
 
 
+    // Validation functions
+    const validatePhone = (phone: string): boolean => {
+        // Kiểm tra số điện thoại phải đúng 10 số và bắt đầu từ số 0
+        const phoneRegex = /^0\d{9}$/;
+        return phoneRegex.test(phone.replace(/\s/g, ''));
+    };
+
+    const validateEmail = (email: string): boolean => {
+        // Kiểm tra email đúng format
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return emailRegex.test(email);
+    };
+
     const handleSubmit = async () => {
         if (!vehicleId || !startStation || !endStation || !dateRange[0] || !dateRange[1]) {
             alert('Vui lòng điền đầy đủ thông tin');
@@ -124,6 +137,18 @@ export default function CreateBookingPage() {
 
         if (!renterName || !renterPhone || !renterEmail) {
             alert('Vui lòng điền đầy đủ Thông tin người đặt (Họ tên, SĐT, Email).');
+            return;
+        }
+
+        // Validate phone number
+        if (!validatePhone(renterPhone)) {
+            alert('Số điện thoại phải đúng 10 số và bắt đầu từ số 0');
+            return;
+        }
+
+        // Validate email
+        if (!validateEmail(renterEmail)) {
+            alert('Email không đúng định dạng');
             return;
         }
 
