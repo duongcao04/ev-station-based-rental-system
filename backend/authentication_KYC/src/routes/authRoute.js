@@ -1,10 +1,11 @@
 import express from "express";
 import {
   changePassword,
+  getProfile,
   login,
   logout,
   refreshToken,
-  register,
+  register
 } from "../controllers/authController.js";
 import {
   checkOwnership,
@@ -13,6 +14,7 @@ import {
 
 const router = express.Router();
 
+router.get("/profile", protectedRoute, getProfile);
 router.post("/register", register);
 router.post("/login", login);
 router.post("/logout", logout);

@@ -3,18 +3,15 @@ generator client {
 }
 
 datasource db {
-  // Change provider & url to match your setup (e.g. postgresql, mysql, sqlite)
   provider = "postgresql"
   url      = env("VEHICLES_DATABASE_URL")
 }
 
 model SpecificationType {
-  id          String  @id @default(uuid())
-  label       String
-  icon        String?
-  description String?
-
-  // Backref
+  id             String             @id @default(uuid())
+  label          String
+  icon           String?
+  description    String?
   specifications CarSpecification[]
 }
 
@@ -23,9 +20,7 @@ model Category {
   displayName  String
   description  String
   thumbnailUrl String?
-
-  // Many-to-many with Car (implicit join table)
-  cars Car[]
+  cars         Car[]   @relation("CarToCategory")
 }
 
 model Brand {
@@ -33,61 +28,45 @@ model Brand {
   displayName  String
   description  String
   thumbnailUrl String?
-
-  // One-to-many to Car
-  cars Car[]
+  cars         Car[]
 }
 
 model CarSpecification {
-  id    String @id @default(uuid())
-  value String
-
-  // Relations
-  carId String
-  car   Car    @relation(fields: [carId], references: [id])
-
+  id                  String            @id @default(uuid())
+  value               String
+  carId               String
   specificationTypeId String
+  car                 Car               @relation(fields: [carId], references: [id])
   specificationType   SpecificationType @relation(fields: [specificationTypeId], references: [id])
 
-  // Prevent duplicate spec type per car
   @@unique([carId, specificationTypeId])
 }
 
 model Car {
-  id String @id @default(uuid())
-
-  displayName String
-  sku         String
-  slug        String
-
-  regularPrice Decimal  @db.Decimal(10, 2)
-  salePrice    Decimal? @db.Decimal(10, 2)
-  depositPrice Decimal? @db.Decimal(10, 2)
-
-  quantity  Int?
-  isInStock Boolean
-
-  description  String?
-  thumbnailUrl String
-
-  // Relations
-  brandId String?
-  brand   Brand?  @relation(fields: [brandId], references: [id])
-
-  categories     Category[] // M:N implicit
-  specifications CarSpecification[] // 1:N
-  featuredImages CarImage[] // 1:N
+  id             String             @id @default(uuid())
+  regularPrice   Decimal            @db.Decimal(10, 2)
+  salePrice      Decimal?           @db.Decimal(10, 2)
+  depositPrice   Decimal?           @db.Decimal(10, 2)
+  quantity       Int?
+  isInStock      Boolean
+  description    String?
+  thumbnailUrl   String
+  brandId        String?
+  displayName    String
+  sku            String
+  slug           String
+  brand          Brand?             @relation(fields: [brandId], references: [id])
+  featuredImages CarImage[]
+  specifications CarSpecification[]
+  categories     Category[]         @relation("CarToCategory")
 }
 
 model CarImage {
-  id   String @id @default(uuid())
-  url  String
-  sort Int? // optional for ordering
-
+  id    String @id @default(uuid())
+  url   String
+  sort  Int?
   carId String
   car   Car    @relation(fields: [carId], references: [id])
-
-  stationIds String[] @default([])
 
   @@index([carId, sort])
 }

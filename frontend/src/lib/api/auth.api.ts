@@ -1,12 +1,30 @@
 import { axiosClient } from "../axios";
 
 export const authApi = {
+<<<<<<< Updated upstream
 	signUp: async (email: string, phone_number: string, password: string) => {
 		const res = await axiosClient.post(
 			"/auth/register",
 			{ email, phone_number, password },
 			{ withCredentials: true }
 		);
+=======
+  getProfile: async () => {
+    const res = await axiosClient.get("/v1/auth/profile");
+    return res.data;
+  },
+
+  // Token được lưu trong HTTP-only cookie bởi backend
+  // Browser tự động gửi cookie với withCredentials: true (đã set ở axiosClient)
+  signUp: async (email: string, phone_number: string, password: string) => {
+    const res = await axiosClient.post("/v1/auth/register", {
+      email,
+      phone_number,
+      password,
+    });
+    return res.data;
+  },
+>>>>>>> Stashed changes
 
 		return res.data;
 	},

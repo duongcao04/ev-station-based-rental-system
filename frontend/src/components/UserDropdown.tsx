@@ -30,8 +30,8 @@ export function UserDropdown() {
         <Avatar className='ring-2 ring-primary-500 p-0.5 size-10'>
           <AvatarImage
             src='https://res.cloudinary.com/dqx1guyc0/image/upload/v1762496668/.temp/empty_avatar_wai3iw.webp'
-            alt={profile.user.email}
-            title={profile.user.email}
+            alt={profile.email}
+            title={profile.email}
             className='cursor-pointer rounded-full'
           />
           <AvatarFallback>CN</AvatarFallback>
@@ -42,7 +42,7 @@ export function UserDropdown() {
           <p>
             <span className='font-normal text-gray-600 text-xs'>Tài khoản</span>
             <br />
-            <span>{profile.user.email}</span>
+            <span>{profile.email}</span>
           </p>
         </DropdownMenuLabel>
         <DropdownMenuGroup>

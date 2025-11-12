@@ -6,18 +6,26 @@ type Props = {
   data: TCar;
 };
 export default function CarCard({ data }: Props) {
+  const chiTietXeUrl = `/xe/${data.slug}`;
   return (
     <div className='bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow h-fit'>
-      <img
-        src={data.thumbnailUrl}
-        alt={data.displayName}
-        className='w-full h-48 object-cover'
-      />
+      <Link
+        to={chiTietXeUrl}
+        className='w-full h-48 inline-block group overflow-hidden'
+      >
+        <img
+          src={data.thumbnailUrl}
+          alt={data.displayName}
+          className='w-full h-48 object-cover group-hover:scale-105 transition duration-100'
+        />
+      </Link>
       <div className='p-6'>
         <div className='flex items-center justify-between mb-2'>
-          <h3 className='text-xl font-semibold text-gray-900'>
-            {data.displayName}
-          </h3>
+          <Link to={chiTietXeUrl} className='inline-block group'>
+            <h3 className='text-xl font-semibold text-gray-900 group-hover:text-blue-600! transition duration-100'>
+              {data.displayName}
+            </h3>
+          </Link>
           <span className='text-sm text-gray-500'>
             {data.brand?.displayName}
           </span>
@@ -36,7 +44,7 @@ export default function CarCard({ data }: Props) {
         <div className='flex items-center justify-between'>
           <span className='text-2xl font-bold text-green-600'>
             {currencyFormatter(data.regularPrice, 'Vietnamese')}{' '}
-            <span className='text-sm font-bold !text-foreground'>/ ngày</span>
+            <span className='text-sm font-bold text-foreground!'>/ ngày</span>
           </span>
           <Link
             to={`/dat-xe/${data.id}`}

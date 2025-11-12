@@ -3,6 +3,11 @@ import { CarService } from "../services/car.service";
 
 export const CarController = {
 	list: async (req: Request, res: Response) => res.json(await CarService.findAll()),
+	getBySlug: async (req: Request, res: Response) => {
+		const item = await CarService.findBySlug(req.params.slug);
+		if (!item) return res.status(404).json({ message: "Car not found" });
+		res.json(item);
+	},
 	get: async (req: Request, res: Response) => {
 		const item = await CarService.findOne(req.params.id);
 		if (!item) return res.status(404).json({ message: "Car not found" });

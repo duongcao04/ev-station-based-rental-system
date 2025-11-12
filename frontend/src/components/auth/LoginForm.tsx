@@ -9,6 +9,10 @@ import { Label } from '@radix-ui/react-label';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useNavigate } from 'react-router';
 import logo from '../../assets/logo.png';
+<<<<<<< Updated upstream
+=======
+import { useLogin } from '../../lib/queries/useAuth';
+>>>>>>> Stashed changes
 
 const signInSchema = z.object({
   username: z.string().min(1, 'Tài khoản là email hoặc số điện thoại'),
@@ -21,7 +25,11 @@ export function LoginForm({
   className,
   ...props
 }: React.ComponentProps<'div'>) {
+<<<<<<< Updated upstream
   const { signIn } = useAuthStore();
+=======
+  const { mutateAsync: loginMutate } = useLogin();
+>>>>>>> Stashed changes
   const navigate = useNavigate();
 
   const {
@@ -34,9 +42,30 @@ export function LoginForm({
 
   const onSubmit = async (data: SignInFormValues) => {
     const { username, password } = data;
+<<<<<<< Updated upstream
     const ok = await signIn(username, password);
     if (ok) {
       navigate('/');
+=======
+    const result = await loginMutate({ username, password });
+
+    if (result.role) {
+      let targetPath = '/'; // default
+      switch (result.role) {
+        case 'admin':
+          targetPath = '/dashboard';
+          break;
+        case 'staff':
+          targetPath = '/staff/dashboard';
+          break;
+        case 'renter':
+          targetPath = '/';
+          break;
+      }
+      console.log('Navigating to:', targetPath);
+      // Sử dụng navigate với replace để thay thế history entry
+      navigate(targetPath, { replace: true });
+>>>>>>> Stashed changes
     }
   };
 

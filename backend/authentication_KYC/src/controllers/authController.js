@@ -1,13 +1,29 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { Op } from "sequelize";
-import { User, sequelize } from "../libs/db.js";
+import { sequelize, User } from "../libs/db.js";
 import {
   generateAccessToken,
   generateRefreshToken,
   REFRESH_TOKEN_TTL,
   registerUser,
 } from "../services/auth.js";
+
+export const getProfile = async (req, res) => {
+  try {
+    const profile = await User.findOne({
+      where: { id: req.user.id },
+    });
+    if (!profile) {
+      return res.status(404).json({ message: "Renter profile not found" });
+    }
+
+    res.status(200).json(profile);
+  } catch (error) {
+    console.error("Error in getProfile", error);
+    res.status(500).json({ message: "Internal Error" });
+  }
+};
 
 export const register = async (req, res) => {
   try {

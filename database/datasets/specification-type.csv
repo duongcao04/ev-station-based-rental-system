@@ -1,0 +1,21 @@
+﻿id,label,icon,description
+e8f4b0f0-a7d1-4b8a-9c7f-3a4b6c8d9e0f,Động cơ,engine-outline,Loại động cơ và dung tích xi lanh.
+a7d1b8a4-9c7f-e8f0-4b0f-b6c8d3a4e9f0,Hộp số,cogs,"Loại hộp số (tự động, số sàn, CVT)."
+f4b0e8f0-d1a7-8a4b-7f9c-6c8d3a4b9e0f,Công suất tối đa,gauge-high,Công suất cực đại của xe (mã lực).
+9c7f3a4b-6c8d-9e0f-1a2b-3c4d5e6f7a8b,Mô-men xoắn,reload,Mô-men xoắn cực đại (Nm).
+6c8d9e0f-1a2b-3c4d-5e6f-7a8b9c0d1e2f,Hệ dẫn động,car-traction,"Cầu trước (FWD), Cầu sau (RWD), Bốn bánh (AWD/4WD)."
+1a2b3c4d-5e6f-7a8b-9c0d-1e2f3a4b5c6d,Loại nhiên liệu,gas-station,"Xăng, Dầu (Diesel), Điện, Hybrid."
+5e6f7a8b-9c0d-1e2f-3a4b-5c6d7e8f9a0b,Tiêu thụ nhiên liệu,speedometer,"Mức tiêu thụ (L/100km) trong đô thị, ngoài đô thị."
+9c0d1e2f-3a4b-5c6d-7e8f-9a0b1c2d3e4f,Số chỗ ngồi,seat-outline,"Tổng số chỗ ngồi trong xe (2, 4, 5, 7)."
+3a4b5c6d-7e8f-9a0b-1c2d-3e4f5a6b7c8d,Kích thước (DxRxC),ruler,Kích thước tổng thể Dài x Rộng x Cao (mm).
+7e8f9a0b-1c2d-3e4f-5a6b-7c8d9e0f1a2b,Chiều dài cơ sở,axis-arrow,Khoảng cách giữa hai trục bánh xe (mm).
+1c2d3e4f-5a6b-7c8d-9e0f-1a2b3c4d5e6f,Khoảng sáng gầm,arrow-up-down,Khoảng sáng gầm xe (mm).
+5a6b7c8d-9e0f-1a2b-3c4d-5e6f7a8b9c0d,Mâm & Lốp xe,tire,Kích thước mâm (inch) và thông số lốp.
+9e0f1a2b-3c4d-5e6f-7a8b-9c0d1e2f3a4b,Hệ thống đèn,lightbulb-on-outline,"Công nghệ đèn chiếu sáng (Halogen, LED, Laser)."
+3c4d5e6f-7a8b-9c0d-1e2f-3a4b5c6d7e8f,An toàn,shield-check-outline,"Các hệ thống an toàn chủ động (ABS, EBD, BA, VSC)."
+7a8b9c0d-1e2f-3a4b-5c6d-7e8f9a0b1c2d,Số túi khí,airbag,Số lượng túi khí được trang bị trong xe.
+4b5c6d7e-8f9a-0b1c-2d3e-4f5a6b7c8d9e,Dung lượng Pin,battery-charging-high,Dung lượng pin của xe (kWh).
+8f9a0b1c-2d3e-4f5a-6b7c-8d9e0f1a2b3c,Quãng đường (WLTP),road-variant,Quãng đường tối đa đi được sau một lần sạc đầy.
+2d3e4f5a-6b7c-8d9e-0f1a-2b3c4d5e6f7a,Sạc nhanh DC,flash,Thời gian sạc nhanh từ 10% lên 80% (phút).
+6b7c8d9e-0f1a-2b3c-4d5e-6f7a8b9c0d1e,Sạc tiêu chuẩn AC,home-battery,Thời gian sạc đầy bằng bộ sạc AC tại nhà (giờ).
+0f1a2b3c-4d5e-6f7a-8b9c-0d1e2f3a4b5c,Công suất động cơ điện,lightning-bolt,Công suất (kW) của một hoặc nhiều động cơ điện.

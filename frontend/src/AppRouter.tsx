@@ -14,11 +14,20 @@ import CreateBookingPage from './pages/dat-xe/CreateBookingPage';
 import PaymentPage from './pages/thanh-toan/PaymentPage';
 import PaymentResultPage from './pages/thanh-toan/PaymentResultPage';
 import QuanLyTramXePage from './pages/dashboard/QuanLyTramXePage';
+<<<<<<< Updated upstream
+=======
+import QuanLyBookingPage from './pages/dashboard/QuanLyBookingPage';
+import QuanLyBookingDetailPage from './pages/dashboard/QuanLyBookingDetailPage';
+>>>>>>> Stashed changes
 import AccountLayout from './components/layouts/AccountLayout';
 import ThongTinTaiKhoanPage from './pages/tai-khoan/ThongTinTaiKhoanPage';
 import XacThucKYC from './pages/tai-khoan/XacThucKYC';
 import { LichSuThueXePage } from './pages/tai-khoan/LichSuThueXePage';
 import { LichSuThueXeChiTietPage } from './pages/tai-khoan/LichSuThueXeChiTietPage';
+<<<<<<< Updated upstream
+=======
+import ProtectedRoute from './components/auth/ProtectedRoute';
+>>>>>>> Stashed changes
 const HomePage = lazy(() => import('@/pages/home/HomePage'));
 const ErrorPage = lazy(() => import('@/pages/error/ErrorPage'));
 
@@ -101,7 +110,25 @@ export const router = createBrowserRouter([
     ],
   },
   {
+<<<<<<< Updated upstream
     path: '/tai-khoan',
+=======
+    path: '/xe/:slug',
+    element: (
+      <MainLayout>
+        <ChiTietXePage />
+      </MainLayout>
+    ),
+    errorElement: (
+      <Suspense fallback={null}>
+        <ErrorPage />
+      </Suspense>
+    ),
+  },
+  {
+    path: '/tai-khoan',
+    element: <ProtectedRoute allowedRoles={['renter']} />,
+>>>>>>> Stashed changes
     errorElement: (
       <Suspense fallback={null}>
         <ErrorPage />
@@ -145,6 +172,10 @@ export const router = createBrowserRouter([
   },
   {
     path: '/dashboard',
+<<<<<<< Updated upstream
+=======
+
+>>>>>>> Stashed changes
     errorElement: (
       <Suspense fallback={null}>
         <ErrorPage />
@@ -167,6 +198,25 @@ export const router = createBrowserRouter([
           </DashboardLayout>
         ),
       },
+<<<<<<< Updated upstream
+=======
+      {
+        path: '/dashboard/bookings',
+        element: (
+          <DashboardLayout>
+            <QuanLyBookingPage />
+          </DashboardLayout>
+        ),
+      },
+      {
+        path: '/dashboard/bookings/:bookingId',
+        element: (
+          <DashboardLayout>
+            <QuanLyBookingDetailPage />
+          </DashboardLayout>
+        ),
+      },
+>>>>>>> Stashed changes
       // Catch-all
       { path: '*', element: <ErrorPage /> },
     ],
