@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { vehicleApi } from '@/lib/api/vehicle.api';
 import { bookingApi } from '@/lib/api/booking.api';
+import { stationApi } from '@/lib/api/station.api';
 import { ArrowLeft } from 'lucide-react';
 import dayjs, { Dayjs } from 'dayjs';
 import type { RangePickerProps } from 'antd/es/date-picker';
@@ -36,7 +37,23 @@ export default function CreateBookingPage() {
         retry: false,
     });
 
+    // Get stations from API
+    const { data: stationsData, isLoading: isLoadingStations } = useQuery({
+        queryKey: ['stations'],
+        queryFn: () => stationApi.getAllStations(),
+        select: (res) => res.data,
+        retry: false,
+    });
+
     const vehicle = vehicles?.find((v) => v.id === vehicleId);
+
+    // Map stations to format { id: user_id (UUID), name: display_name }
+    const stations = stationsData
+        ? (Array.isArray(stationsData) ? stationsData : []).map((station: any) => ({
+            id: station.user_id, // user_id là UUID và là primary key
+            name: station.display_name || station.address || `Station ${station.user_id?.substring(0, 8)}`,
+        }))
+        : [];
 
     // Calculate total amount when dates or vehicle changes
     useEffect(() => {
@@ -98,12 +115,19 @@ export default function CreateBookingPage() {
         },
     });
 
-    // Mock stations
-    const stations = [
-        { id: 'station-001', name: 'Ga Hà Nội' },
-        { id: 'station-002', name: 'Ga TP.HCM' },
-        { id: 'station-003', name: 'Ga Đà Nẵng' },
-    ];
+
+    // Validation functions
+    const validatePhone = (phone: string): boolean => {
+        // Kiểm tra số điện thoại phải đúng 10 số và bắt đầu từ số 0
+        const phoneRegex = /^0\d{9}$/;
+        return phoneRegex.test(phone.replace(/\s/g, ''));
+    };
+
+    const validateEmail = (email: string): boolean => {
+        // Kiểm tra email đúng format
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return emailRegex.test(email);
+    };
 
     const handleSubmit = async () => {
         if (!vehicleId || !startStation || !endStation || !dateRange[0] || !dateRange[1]) {
@@ -113,6 +137,18 @@ export default function CreateBookingPage() {
 
         if (!renterName || !renterPhone || !renterEmail) {
             alert('Vui lòng điền đầy đủ Thông tin người đặt (Họ tên, SĐT, Email).');
+            return;
+        }
+
+        // Validate phone number
+        if (!validatePhone(renterPhone)) {
+            alert('Số điện thoại phải đúng 10 số và bắt đầu từ số 0');
+            return;
+        }
+
+        // Validate email
+        if (!validateEmail(renterEmail)) {
+            alert('Email không đúng định dạng');
             return;
         }
 
@@ -142,7 +178,7 @@ export default function CreateBookingPage() {
     };
 
     // Loading state
-    if (isLoading) {
+    if (isLoading || isLoadingStations) {
         return <LoadingState />;
     }
 

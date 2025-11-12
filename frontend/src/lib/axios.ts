@@ -1,4 +1,3 @@
-import { cookie } from '@/lib/cookie'
 import axios from 'axios'
 import { envConfig } from './config/envConfig'
 
@@ -21,20 +20,17 @@ export type ApiError = {
 }
 
 // Shared request interceptor
+// Note: Token được lưu trong HTTP-only cookie bởi backend
+// Browser tự động gửi cookie trong mọi request (với withCredentials: true)
+// Không cần thêm Authorization header thủ công
 const requestInterceptor = (config: any) => {
-  // Debug: Log full URL
   console.log('🔍 Request URL:', config.baseURL + config.url);
 
-  // 1. Get token from cookie
-  const token = cookie.get('accessToken')
+  // Set Content-Type (will be overridden for FormData requests)
+  if (!config.headers['Content-Type']) {
+    config.headers['Content-Type'] = 'application/json'
+  }
 
-  // config.headers.Authorization = `Bearer ${token}`
-  config.headers['Content-Type'] = 'application/json'
-  config.headers['Access-Control-Allow-Origin'] = String(envConfig.VITE_URL)
-  config.headers['Access-Control-Allow-Credentials'] = 'true'
-  // 2. Add mock user-id header for booking/payment services
-  config.headers['x-user-id'] = 1001 // Mock renter user
-  // 3. If token -> put token into header for Authentication
   return config
 }
 
@@ -43,27 +39,16 @@ const requestErrorInterceptor = (error: any) => {
   return Promise.reject(error)
 }
 
+// Single axios client for API Gateway
+// All requests will go through API Gateway (http://localhost:8000/api)
 export const axiosClient = axios.create({
-  baseURL: BASE_URL, // API endpoint url (for Vehicles on 8099)
-  timeout: 5000, // Request timeout
-  // withCredentials: true, // Allow sending cookies
+  baseURL: BASE_URL, // API Gateway endpoint (http://localhost:8000/api)
+  timeout: 30000, // Increased timeout for API Gateway
+  withCredentials: true, // Allow sending cookies
 })
 
-// Booking Service client (port 4000)
-export const bookingAxiosClient = axios.create({
-  baseURL: 'http://localhost:4000/api', // Booking Service
-  timeout: 5000,
-})
-
-// Payment Service client (port 5000)
-export const paymentAxiosClient = axios.create({
-  baseURL: 'http://localhost:5000/api', // Payment Service
-  timeout: 5000,
-})
-
+// Apply interceptors
 axiosClient.interceptors.request.use(requestInterceptor, requestErrorInterceptor)
-bookingAxiosClient.interceptors.request.use(requestInterceptor, requestErrorInterceptor)
-paymentAxiosClient.interceptors.request.use(requestInterceptor, requestErrorInterceptor)
 
 
 // Shared response interceptor
@@ -89,5 +74,3 @@ const responseErrorInterceptor = (error: any) => {
 }
 
 axiosClient.interceptors.response.use(responseInterceptor, responseErrorInterceptor)
-bookingAxiosClient.interceptors.response.use(responseInterceptor, responseErrorInterceptor)
-paymentAxiosClient.interceptors.response.use(responseInterceptor, responseErrorInterceptor)

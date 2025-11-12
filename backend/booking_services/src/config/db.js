@@ -1,8 +1,9 @@
 import pkg from "pg";
 import dotenv from "dotenv";
+import path from "path";
 const { Pool } = pkg;
 
-dotenv.config({ path: "../.env" });
+dotenv.config({ path: path.resolve(process.cwd(), "../.env") });
 
 // Database configuration for Booking Service
 const pool = new Pool({

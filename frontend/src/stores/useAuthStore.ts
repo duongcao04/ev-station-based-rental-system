@@ -43,7 +43,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       set({ loading: true });
       //call api
 
-      const { accessToken } = await authApi.signIn(username, password);
+      const { accessToken, role } = await authApi.signIn(username, password);
 
       get().setAccessToken(accessToken);
       await new Promise((resolve) => setTimeout(resolve, 0));
@@ -90,7 +90,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       set({ user });
     } catch (error) {
       console.error(error);
-      set({ user: null, accessToken: null });
       toast.error("Lỗi khi lấy dữ liệu người dùng. Thử lại!");
     } finally {
       set({ loading: false });
@@ -109,7 +108,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       }
     } catch (error) {
       console.error(error);
-      toast.error("Phiên đăng nhập đã hết hạn vui lòng dadưng nhập lại");
+      toast.error("Phiên đăng nhập đã hết hạn vui lòng đăng nhập lại");
       get().clearState();
     } finally {
       set({ loading: false });

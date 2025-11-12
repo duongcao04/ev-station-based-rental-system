@@ -139,6 +139,17 @@
   }
 }
 
+/* Leaflet marker styles */
+.selected-station-marker {
+  filter: brightness(0) saturate(100%) invert(27%) sepia(51%) saturate(2878%) hue-rotate(346deg) brightness(104%) contrast(97%);
+  /* Makes marker red when selected */
+}
+
+/* Hide Leaflet attribution */
+.leaflet-bottom.leaflet-right {
+  display: none !important;
+}
+
 
 @utility container {
   max-width: 1440px;

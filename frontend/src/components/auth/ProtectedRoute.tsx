@@ -1,8 +1,13 @@
 import { useAuthStore } from "@/stores/useAuthStore";
+import type { User } from "@/types/user";
 import { useEffect, useState } from "react";
 import { Navigate, Outlet } from "react-router";
 
-const ProtectedRoute = () => {
+interface RoleProtectedRouteProps {
+  allowedRoles: User["role"][];
+}
+
+const ProtectedRoute = ({ allowedRoles }: RoleProtectedRouteProps) => {
   const { accessToken, user, loading, refresh, fetchMe } = useAuthStore();
   const [starting, setStarting] = useState(true);
 
@@ -24,7 +29,7 @@ const ProtectedRoute = () => {
 
   useEffect(() => {
     init();
-  }, []);
+  }, [accessToken, user]);
 
   if (starting || loading) {
     return (
@@ -38,7 +43,25 @@ const ProtectedRoute = () => {
     return <Navigate to="/login" replace />;
   }
 
-  return <Outlet></Outlet>;
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (!allowedRoles.includes(user.role)) {
+    // Redirect based on user role
+    switch (user.role) {
+      case "admin":
+        return <Navigate to="/admin/dashboard" replace />;
+      case "staff":
+        return <Navigate to="/staff/dashboard" replace />;
+      case "renter":
+        return <Navigate to="/renters/me" replace />;
+      default:
+        return <Navigate to="/login" replace />;
+    }
+  }
+
+  return <Outlet />;
 };
 
 export default ProtectedRoute;

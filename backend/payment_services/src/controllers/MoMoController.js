@@ -1,5 +1,6 @@
 import { PaymentModel } from '../models/PaymentModel.js';
 import { createMoMoService } from '../services/MoMoService.js';
+import axios from 'axios';
 
 
 export const createPaymentMomo = async (req, res) => {
@@ -28,7 +29,7 @@ export const createPaymentMomo = async (req, res) => {
         });
 
         const rawId = String(payment.payment_id);
-        const orderId = rawId.replace(/-/g, ''); 
+        const orderId = rawId.replace(/-/g, '');
         const paymentUrl = await createPaymentUrl(
             amount,
             orderId,
@@ -55,7 +56,7 @@ export const handleMomoReturn = async (req, res) => {
         const isValid = await verifyPayment(momoParams);
 
         if (isValid && momoParams.resultCode === '0') {
-           
+
             const ref = String(momoParams.orderId || '');
             const paymentId = ref.length === 32
                 ? `${ref.substring(0, 8)}-${ref.substring(8, 12)}-${ref.substring(12, 16)}-${ref.substring(16, 20)}-${ref.substring(20)}`
@@ -66,6 +67,28 @@ export const handleMomoReturn = async (req, res) => {
                     processed_at: new Date(),
                     completed_at: new Date()
                 });
+
+                // Đồng bộ payment_id với Booking Service qua API Gateway
+                try {
+                    const apiGatewayUrl = process.env.API_GATEWAY_URL || 'http://localhost:8000';
+                    const internalSecret = process.env.INTERNAL_SERVICE_SECRET || 'internal-secret-key-change-in-production';
+                    await axios.put(
+                        `${apiGatewayUrl}/api/v1/bookings/internal/${payment.booking_id}/payment`,
+                        { payment_id: payment.payment_id },
+                        {
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'x-internal-secret': internalSecret,
+                            },
+                            timeout: 10000,
+                        }
+                    );
+                    console.log(`✅ MoMo Payment ${payment.payment_id} synced with Booking ${payment.booking_id} via API Gateway`);
+                } catch (syncErr) {
+                    console.error('Booking sync failed via API Gateway:', syncErr?.response?.data || syncErr.message);
+                    // Do not fail the redirect if sync fails
+                }
+
                 const feBase = process.env.PAYMENT_RETURN_URL || 'http://localhost:5173';
                 const redirectUrl = `${feBase}/thanh-toan/ket-qua?status=success&paymentId=${encodeURIComponent(payment.payment_id)}&bookingId=${encodeURIComponent(payment.booking_id)}&amount=${encodeURIComponent(payment.amount)}`;
                 return res.redirect(302, redirectUrl);
@@ -87,7 +110,7 @@ export const handleMomoReturn = async (req, res) => {
 };
 
 export const handleMomoNotify = async (req, res) => {
-    const momoParams = req.body; // IPN dùng POST body, không phải query
+    const momoParams = req.body;
 
     try {
         const { verifyPayment } = createMoMoService();
@@ -106,6 +129,27 @@ export const handleMomoNotify = async (req, res) => {
                     completed_at: new Date()
                 });
                 console.log(`MoMo IPN: Payment ${paymentId} updated to succeeded`);
+
+                // Đồng bộ payment_id với Booking Service qua API Gateway
+                try {
+                    const apiGatewayUrl = process.env.API_GATEWAY_URL || 'http://localhost:8000';
+                    const internalSecret = process.env.INTERNAL_SERVICE_SECRET || 'internal-secret-key-change-in-production';
+                    await axios.put(
+                        `${apiGatewayUrl}/api/v1/bookings/internal/${payment.booking_id}/payment`,
+                        { payment_id: payment.payment_id },
+                        {
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'x-internal-secret': internalSecret,
+                            },
+                            timeout: 10000,
+                        }
+                    );
+                    console.log(`✅ MoMo IPN: Payment ${paymentId} synced with Booking ${payment.booking_id} via API Gateway`);
+                } catch (syncErr) {
+                    console.error('Booking sync failed via API Gateway:', syncErr?.response?.data || syncErr.message);
+                    // Do not fail the IPN response if sync fails
+                }
             }
             // Trả về thành công cho MoMo
             return res.status(200).json({ message: 'Success' });
