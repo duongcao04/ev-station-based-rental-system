@@ -37,9 +37,18 @@ export default function CreateBookingPage() {
         retry: false,
     });
 
-    // Get stations from API
-    const { data: stationsData, isLoading: isLoadingStations } = useQuery({
-        queryKey: ['stations'],
+    // Get stations that have this vehicle (điểm nhận xe) - chỉ các trạm có xe này
+    const { data: pickupStationsData, isLoading: isLoadingPickupStations } = useQuery({
+        queryKey: ['pickup-stations', vehicleId],
+        queryFn: () => stationApi.getStationsByVehicleId(vehicleId!),
+        select: (res) => res.data,
+        retry: false,
+        enabled: !!vehicleId, // Chỉ fetch khi có vehicleId
+    });
+
+    // Get all stations (điểm trả xe) - có thể trả ở bất kỳ trạm nào
+    const { data: returnStationsData, isLoading: isLoadingReturnStations } = useQuery({
+        queryKey: ['return-stations'],
         queryFn: () => stationApi.getAllStations(),
         select: (res) => res.data,
         retry: false,
@@ -47,9 +56,17 @@ export default function CreateBookingPage() {
 
     const vehicle = vehicles?.find((v) => v.id === vehicleId);
 
-    // Map stations to format { id: user_id (UUID), name: display_name }
-    const stations = stationsData
-        ? (Array.isArray(stationsData) ? stationsData : []).map((station: any) => ({
+    // Map pickup stations (chỉ các trạm có xe này)
+    const pickupStations = pickupStationsData
+        ? (Array.isArray(pickupStationsData) ? pickupStationsData : []).map((station: any) => ({
+            id: station.user_id, // user_id là UUID và là primary key
+            name: station.display_name || station.address || `Station ${station.user_id?.substring(0, 8)}`,
+        }))
+        : [];
+
+    // Map return stations (tất cả các trạm)
+    const returnStations = returnStationsData
+        ? (Array.isArray(returnStationsData) ? returnStationsData : []).map((station: any) => ({
             id: station.user_id, // user_id là UUID và là primary key
             name: station.display_name || station.address || `Station ${station.user_id?.substring(0, 8)}`,
         }))
@@ -178,7 +195,7 @@ export default function CreateBookingPage() {
     };
 
     // Loading state
-    if (isLoading || isLoadingStations) {
+    if (isLoading || isLoadingPickupStations || isLoadingReturnStations) {
         return <LoadingState />;
     }
 
@@ -223,7 +240,10 @@ export default function CreateBookingPage() {
                         <StationSelectionCard
                             startStation={startStation}
                             endStation={endStation}
-                            stations={stations}
+                            pickupStations={pickupStations}
+                            returnStations={returnStations}
+                            isLoadingPickupStations={isLoadingPickupStations}
+                            isLoadingReturnStations={isLoadingReturnStations}
                             onStartStationChange={setStartStation}
                             onEndStationChange={setEndStation}
                         />

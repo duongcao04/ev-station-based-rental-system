@@ -9,6 +9,7 @@ import { StatusBadge } from './components/StatusBadge';
 import { CheckinModal } from './components/CheckinModal';
 import { CheckoutModal } from './components/CheckoutModal';
 
+
 export default function QuanLyBookingDetailPage() {
     const { bookingId } = useParams();
     const navigate = useNavigate();
@@ -25,6 +26,30 @@ export default function QuanLyBookingDetailPage() {
     const [actualReturnDate, setActualReturnDate] = useState('');
     const [actualReturnStationId, setActualReturnStationId] = useState('');
     const [penaltyFee, setPenaltyFee] = useState('');
+
+
+    // State cho danh sách stations
+    const [stations, setStations] = useState<any[]>([]);
+    const [isLoadingStations, setIsLoadingStations] = useState(false);
+
+    
+    useEffect(() => {
+        loadStations();
+    }, []);
+
+    const loadStations = async () => {
+        try {
+            setIsLoadingStations(true);
+            const response = await stationApi.getAllStations();
+            const stationsData = Array.isArray(response.data) ? response.data : [];
+            setStations(stationsData);
+        } catch (err) {
+            console.error('Error loading stations:', err);
+            setStations([]);
+        } finally {
+            setIsLoadingStations(false);
+        }
+    };
 
     useEffect(() => {
         if (bookingId) {
@@ -331,6 +356,7 @@ export default function QuanLyBookingDetailPage() {
                             valueStyle={{ fontFamily: 'monospace', fontSize: '12px' }}
                         />
                     )}
+
                 </BookingInfoCard>
 
                 <BookingInfoCard title="Thông tin Xe">
@@ -402,7 +428,12 @@ export default function QuanLyBookingDetailPage() {
 
             <CheckoutModal
                 isOpen={showCheckoutModal}
-                onClose={() => setShowCheckoutModal(false)}
+                onClose={() => {
+                    setShowCheckoutModal(false);
+                    setActualReturnDate('');
+                    setActualReturnStationId('');
+                    setPenaltyFee('');
+                }}
                 onConfirm={handleCheckout}
                 isProcessing={isProcessing}
                 actualReturnDate={actualReturnDate}
@@ -411,6 +442,8 @@ export default function QuanLyBookingDetailPage() {
                 onActualReturnDateChange={setActualReturnDate}
                 onActualReturnStationIdChange={setActualReturnStationId}
                 onPenaltyFeeChange={setPenaltyFee}
+                stations={stations}
+                isLoadingStations={isLoadingStations}
             />
         </div>
     );

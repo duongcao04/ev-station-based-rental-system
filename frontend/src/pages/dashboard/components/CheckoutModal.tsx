@@ -9,6 +9,8 @@ export function CheckoutModal({
     onActualReturnDateChange,
     onActualReturnStationIdChange,
     onPenaltyFeeChange,
+    stations = [],
+    isLoadingStations = false,
 }: any) {
     if (!isOpen) return null;
 
@@ -63,20 +65,41 @@ export function CheckoutModal({
                         <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px' }}>
                             Trạm trả xe *
                         </label>
-                        <input
-                            type="text"
-                            placeholder="Station ID"
-                            value={actualReturnStationId}
-                            onChange={(e) => onActualReturnStationIdChange(e.target.value)}
-                            required
-                            style={{
+                        {isLoadingStations ? (
+                            <div style={{
                                 width: '100%',
                                 padding: '8px 12px',
                                 border: '1px solid #d1d5db',
                                 borderRadius: '6px',
-                                fontSize: '14px'
-                            }}
-                        />
+                                fontSize: '14px',
+                                backgroundColor: '#f9fafb',
+                                color: '#6b7280'
+                            }}>
+                                Đang tải danh sách trạm...
+                            </div>
+                        ) : (
+                            <select
+                                value={actualReturnStationId}
+                                onChange={(e) => onActualReturnStationIdChange(e.target.value)}
+                                required
+                                style={{
+                                    width: '100%',
+                                    padding: '8px 12px',
+                                    border: '1px solid #d1d5db',
+                                    borderRadius: '6px',
+                                    fontSize: '14px',
+                                    backgroundColor: 'white',
+                                    cursor: 'pointer'
+                                }}
+                            >
+                                <option value="">-- Chọn trạm trả xe --</option>
+                                {stations.map((station: any) => (
+                                    <option key={station.user_id} value={station.user_id}>
+                                        {station.display_name} {station.address ? `- ${station.address}` : ''}
+                                    </option>
+                                ))}
+                            </select>
+                        )}
                     </div>
                     <div>
                         <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px' }}>
