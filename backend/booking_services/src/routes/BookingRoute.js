@@ -23,7 +23,7 @@ router.use(authenticate);
 // Renter routes
 router.post("/", authorize('renter'), createBooking);
 router.get("/me/history", authorize('renter'), myBookings);
-router.put("/:id/cancel", authorize('renter'), checkOwnership, cancelBooking);
+router.put("/:id/cancel", authorize('renter', 'staff', 'admin'), checkOwnership, cancelBooking);
 router.put("/:id/payment", authorize('renter', 'staff', 'admin'), checkOwnership, updateBookingPayment);
 
 // Staff routes
