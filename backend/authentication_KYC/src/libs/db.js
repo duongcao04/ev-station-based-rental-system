@@ -38,6 +38,12 @@ export const connectDB = async (database, username, password) => {
       as: "user",
     });
 
+    // Association để lấy thông tin staff xác thực KYC
+    RenterProfile.belongsTo(User, {
+      foreignKey: "verified_by_staff_id",
+      as: "verified_by_staff",
+    });
+
     await sequelize.sync();
     console.log(`✅ Database models synced: ${sequelize.config.database}`);
   } catch (error) {

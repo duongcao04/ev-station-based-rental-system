@@ -12,9 +12,9 @@ export const renterApi = {
       }
 
       const profileData = data.dataValues || data;
-      
+
       const userData = profileData.user?.dataValues || profileData.user;
-      
+
       if (!userData) {
         console.error("Response không có user object:", profileData);
         throw new Error("Cấu trúc dữ liệu không hợp lệ: thiếu thông tin user");
@@ -30,6 +30,7 @@ export const renterApi = {
         nationalidUrl: profileData.national_id_url,
         verificationStatus: profileData.verification_status,
         verifiedStaffId: profileData.verified_by_staff_id,
+        verifiedStaffName: profileData.verified_by_staff_name || null,
         note: profileData.note,
         isRisky: profileData.is_risky,
         createdAt: profileData.created_at,
@@ -58,7 +59,7 @@ export const renterApi = {
     });
 
     const d = res.data?.result || res.data;
-    
+
     if (!d.user) {
       return renterApi.getProfile();
     }
@@ -73,6 +74,7 @@ export const renterApi = {
       nationalidUrl: d.national_id_url,
       verificationStatus: d.verification_status,
       verifiedStaffId: d.verified_by_staff_id,
+      verifiedStaffName: d.verified_by_staff_name || null,
       note: d.note,
       isRisky: d.is_risky,
       createdAt: d.created_at,
