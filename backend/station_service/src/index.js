@@ -14,7 +14,7 @@ app.use(cors({
     origin: process.env.CLIENT_URL || "*",
     credentials: true
 }));
-app.use(cookieParser()); // Parse HTTP-only cookies
+app.use(cookieParser()); 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 

@@ -1,7 +1,8 @@
 
-INSERT INTO stations (user_id, display_name, address, latitude, longitude, count_vehicle) VALUES
+INSERT INTO stations (station_id, user_id, display_name, address, latitude, longitude, count_vehicle) VALUES
 -- Hà Nội (4 trạm)
 (
+    '650e8400-e29b-41d4-a716-446655440001'::uuid,
     '550e8400-e29b-41d4-a716-446655440001'::uuid,
     'Ga Hà Nội',
     'Số 1 Lê Duẩn, Hoàn Kiếm, Hà Nội',
@@ -10,6 +11,7 @@ INSERT INTO stations (user_id, display_name, address, latitude, longitude, count
     0
 ),
 (
+    '650e8400-e29b-41d4-a716-446655440006'::uuid,
     '550e8400-e29b-41d4-a716-446655440006'::uuid,
     'Ga Hà Nội 2',
     'Số 120 Trần Phú, Ba Đình, Hà Nội',
@@ -18,6 +20,7 @@ INSERT INTO stations (user_id, display_name, address, latitude, longitude, count
     0
 ),
 (
+    '650e8400-e29b-41d4-a716-446655440007'::uuid,
     '550e8400-e29b-41d4-a716-446655440007'::uuid,
     'Ga Hà Nội 3',
     'Số 50 Nguyễn Chí Thanh, Đống Đa, Hà Nội',
@@ -26,6 +29,7 @@ INSERT INTO stations (user_id, display_name, address, latitude, longitude, count
     0
 ),
 (
+    '650e8400-e29b-41d4-a716-446655440008'::uuid,
     '550e8400-e29b-41d4-a716-446655440008'::uuid,
     'Ga Hà Nội 4',
     'Số 200 Láng Hạ, Đống Đa, Hà Nội',
@@ -35,6 +39,7 @@ INSERT INTO stations (user_id, display_name, address, latitude, longitude, count
 ),
 -- TP.HCM (4 trạm)
 (
+    '650e8400-e29b-41d4-a716-446655440002'::uuid,
     '550e8400-e29b-41d4-a716-446655440002'::uuid,
     'Ga TP.HCM',
     'Số 1 Nguyễn Thông, Quận 3, TP.HCM',
@@ -43,6 +48,7 @@ INSERT INTO stations (user_id, display_name, address, latitude, longitude, count
     0
 ),
 (
+    '650e8400-e29b-41d4-a716-446655440009'::uuid,
     '550e8400-e29b-41d4-a716-446655440009'::uuid,
     'Ga TP.HCM 2',
     'Số 100 Nguyễn Văn Cừ, Quận 5, TP.HCM',
@@ -51,6 +57,7 @@ INSERT INTO stations (user_id, display_name, address, latitude, longitude, count
     0
 ),
 (
+    '650e8400-e29b-41d4-a716-446655440010'::uuid,
     '550e8400-e29b-41d4-a716-446655440010'::uuid,
     'Ga TP.HCM 3',
     'Số 50 Lê Lợi, Quận 1, TP.HCM',
@@ -59,6 +66,7 @@ INSERT INTO stations (user_id, display_name, address, latitude, longitude, count
     0
 ),
 (
+    '650e8400-e29b-41d4-a716-446655440011'::uuid,
     '550e8400-e29b-41d4-a716-446655440011'::uuid,
     'Ga TP.HCM 4',
     'Số 200 Điện Biên Phủ, Bình Thạnh, TP.HCM',
@@ -68,6 +76,7 @@ INSERT INTO stations (user_id, display_name, address, latitude, longitude, count
 ),
 -- Đà Nẵng (4 trạm)
 (
+    '650e8400-e29b-41d4-a716-446655440003'::uuid,
     '550e8400-e29b-41d4-a716-446655440003'::uuid,
     'Ga Đà Nẵng',
     'Số 1 Hải Phòng, Hải Châu, Đà Nẵng',
@@ -76,6 +85,7 @@ INSERT INTO stations (user_id, display_name, address, latitude, longitude, count
     0
 ),
 (
+    '650e8400-e29b-41d4-a716-446655440012'::uuid,
     '550e8400-e29b-41d4-a716-446655440012'::uuid,
     'Ga Đà Nẵng 2',
     'Số 100 Nguyễn Văn Linh, Thanh Khê, Đà Nẵng',
@@ -84,6 +94,7 @@ INSERT INTO stations (user_id, display_name, address, latitude, longitude, count
     0
 ),
 (
+    '650e8400-e29b-41d4-a716-446655440013'::uuid,
     '550e8400-e29b-41d4-a716-446655440013'::uuid,
     'Ga Đà Nẵng 3',
     'Số 50 Trần Phú, Hải Châu, Đà Nẵng',
@@ -92,6 +103,7 @@ INSERT INTO stations (user_id, display_name, address, latitude, longitude, count
     0
 ),
 (
+    '650e8400-e29b-41d4-a716-446655440014'::uuid,
     '550e8400-e29b-41d4-a716-446655440014'::uuid,
     'Ga Đà Nẵng 4',
     'Số 200 Lê Duẩn, Hải Châu, Đà Nẵng',
@@ -101,6 +113,7 @@ INSERT INTO stations (user_id, display_name, address, latitude, longitude, count
 ),
 -- Nha Trang (4 trạm)
 (
+    '650e8400-e29b-41d4-a716-446655440004'::uuid,
     '550e8400-e29b-41d4-a716-446655440004'::uuid,
     'Ga Nha Trang',
     'Số 1 Trần Phú, Nha Trang, Khánh Hòa',
@@ -109,6 +122,7 @@ INSERT INTO stations (user_id, display_name, address, latitude, longitude, count
     0
 ),
 (
+    '650e8400-e29b-41d4-a716-446655440015'::uuid,
     '550e8400-e29b-41d4-a716-446655440015'::uuid,
     'Ga Nha Trang 2',
     'Số 100 Yersin, Nha Trang, Khánh Hòa',
@@ -117,6 +131,7 @@ INSERT INTO stations (user_id, display_name, address, latitude, longitude, count
     0
 ),
 (
+    '650e8400-e29b-41d4-a716-446655440016'::uuid,
     '550e8400-e29b-41d4-a716-446655440016'::uuid,
     'Ga Nha Trang 3',
     'Số 50 Trần Hưng Đạo, Nha Trang, Khánh Hòa',
@@ -125,6 +140,7 @@ INSERT INTO stations (user_id, display_name, address, latitude, longitude, count
     0
 ),
 (
+    '650e8400-e29b-41d4-a716-446655440017'::uuid,
     '550e8400-e29b-41d4-a716-446655440017'::uuid,
     'Ga Nha Trang 4',
     'Số 200 Nguyễn Trãi, Nha Trang, Khánh Hòa',
@@ -134,6 +150,7 @@ INSERT INTO stations (user_id, display_name, address, latitude, longitude, count
 ),
 -- Huế (4 trạm)
 (
+    '650e8400-e29b-41d4-a716-446655440005'::uuid,
     '550e8400-e29b-41d4-a716-446655440005'::uuid,
     'Ga Huế',
     'Số 1 Lê Lợi, Thành phố Huế, Thừa Thiên Huế',
@@ -142,6 +159,7 @@ INSERT INTO stations (user_id, display_name, address, latitude, longitude, count
     0
 ),
 (
+    '650e8400-e29b-41d4-a716-446655440018'::uuid,
     '550e8400-e29b-41d4-a716-446655440018'::uuid,
     'Ga Huế 2',
     'Số 100 Hùng Vương, Thành phố Huế, Thừa Thiên Huế',
@@ -150,25 +168,49 @@ INSERT INTO stations (user_id, display_name, address, latitude, longitude, count
     0
 ),
 (
+    '650e8400-e29b-41d4-a716-446655440019'::uuid,
     '550e8400-e29b-41d4-a716-446655440019'::uuid,
     'Ga Huế 3',
-    'Số 50 Bà Triệu, Thành phố Huế, Thừa Thiên Huế',
+    'Số 50 Bà Triệu, Thành phố Huế',
     '16.4437',
     '107.5709',
     0
 ),
 (
+    '650e8400-e29b-41d4-a716-446655440020'::uuid,
     '550e8400-e29b-41d4-a716-446655440020'::uuid,
     'Ga Huế 4',
-    'Số 200 Trần Hưng Đạo, Thành phố Huế, Thừa Thiên Huế',
+    'Số 200 Trần Hưng Đạo, Thành phố Huế',
     '16.4537',
     '107.5809',
     0
 )
 ON CONFLICT (user_id) DO NOTHING;
 
+-- Seed station staff assignments
+INSERT INTO station_staff_members (station_id, staff_user_id, role)
+VALUES
+    ('650e8400-e29b-41d4-a716-446655440001'::uuid, '750e8400-e29b-41d4-a716-446655440101'::uuid, 'manager'),
+    ('650e8400-e29b-41d4-a716-446655440002'::uuid, '750e8400-e29b-41d4-a716-446655440102'::uuid, 'staff'),
+    ('650e8400-e29b-41d4-a716-446655440003'::uuid, '750e8400-e29b-41d4-a716-446655440103'::uuid, 'staff'),
+    ('650e8400-e29b-41d4-a716-446655440004'::uuid, '750e8400-e29b-41d4-a716-446655440104'::uuid, 'manager'),
+    ('650e8400-e29b-41d4-a716-446655440009'::uuid, '750e8400-e29b-41d4-a716-446655440105'::uuid, 'staff'),
+    ('650e8400-e29b-41d4-a716-446655440010'::uuid, '750e8400-e29b-41d4-a716-446655440106'::uuid, 'staff'),
+    ('650e8400-e29b-41d4-a716-446655440011'::uuid, '750e8400-e29b-41d4-a716-446655440107'::uuid, 'manager'),
+    ('650e8400-e29b-41d4-a716-446655440012'::uuid, '750e8400-e29b-41d4-a716-446655440108'::uuid, 'staff'),
+    ('650e8400-e29b-41d4-a716-446655440013'::uuid, '750e8400-e29b-41d4-a716-446655440109'::uuid, 'staff'),
+    ('650e8400-e29b-41d4-a716-446655440014'::uuid, '750e8400-e29b-41d4-a716-446655440110'::uuid, 'staff'),
+    ('650e8400-e29b-41d4-a716-446655440015'::uuid, '750e8400-e29b-41d4-a716-446655440111'::uuid, 'staff'),
+    ('650e8400-e29b-41d4-a716-446655440016'::uuid, '750e8400-e29b-41d4-a716-446655440112'::uuid, 'manager'),
+    ('650e8400-e29b-41d4-a716-446655440017'::uuid, '750e8400-e29b-41d4-a716-446655440113'::uuid, 'staff'),
+    ('650e8400-e29b-41d4-a716-446655440018'::uuid, '750e8400-e29b-41d4-a716-446655440114'::uuid, 'staff'),
+    ('650e8400-e29b-41d4-a716-446655440019'::uuid, '750e8400-e29b-41d4-a716-446655440115'::uuid, 'staff'),
+    ('650e8400-e29b-41d4-a716-446655440020'::uuid, '750e8400-e29b-41d4-a716-446655440116'::uuid, 'manager')
+ON CONFLICT (station_id, staff_user_id) DO NOTHING;
+
 -- Hiển thị kết quả
 SELECT 
+    station_id,
     user_id,
     display_name,
     address,
