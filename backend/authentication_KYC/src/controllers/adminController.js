@@ -104,20 +104,16 @@ export const getUser = async (req, res) => {
   }
 };
 
-export const updateUserRole = async (req, res) => {
+export const updateUserProfile = async (req, res) => {
   try {
     const { id } = req.params;
-    const { role } = req.body;
+    const { email, phone_number, full_name } = req.body;
 
-    const validRoles = ["renter", "staff", "admin"];
-    if (!validRoles.includes(role)) {
-      return res.status(400).json({
-        success: false,
-        message: "Role không hợp lệ. Phải là 'renter', 'staff' hoặc 'admin'",
-      });
-    }
+    // Tìm user
+    const user = await User.findByPk(id, {
+      include: [{ model: RenterProfile, as: "renter_profile" }],
+    });
 
-    const user = await User.findByPk(id);
     if (!user) {
       return res.status(404).json({
         success: false,
@@ -125,20 +121,40 @@ export const updateUserRole = async (req, res) => {
       });
     }
 
-    user.role = role;
+    // Cập nhật email và số điện thoại nếu có
+    if (email) user.email = email;
+    if (phone_number) user.phone_number = phone_number;
     await user.save();
+
+    // Nếu user là renter, cập nhật full_name trong RenterProfile
+    if (user.role === "renter" && full_name) {
+      if (user.renter_profile) {
+        user.renter_profile.full_name = full_name;
+        await user.renter_profile.save();
+      } else {
+        // Trường hợp profile chưa tồn tại (không thường xảy ra)
+        await RenterProfile.create({
+          id: user.id,
+          full_name,
+          verification_status: "pending",
+          is_risky: false,
+        });
+      }
+    }
 
     res.json({
       success: true,
-      message: `Cập nhật role thành công cho user ${user.email}`,
+      message: `Cập nhật thông tin thành công cho user ${user.email}`,
       user: {
         id: user.id,
         email: user.email,
+        phone_number: user.phone_number,
         role: user.role,
+        full_name: user.renter_profile?.full_name || null,
       },
     });
   } catch (error) {
-    console.error("Error when calling updateUserRole");
+    console.error("Error when calling updateUserProfile", error);
     return res
       .status(500)
       .json({ message: "Internal Error", error: error.message });
