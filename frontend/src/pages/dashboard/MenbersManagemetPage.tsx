@@ -1,12 +1,11 @@
 "use client";
-
 import { useState } from "react";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
+  CardDescription,
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RenterList } from "./components/members/RenterList";
@@ -14,16 +13,14 @@ import { StaffList } from "./components/members/StaffList";
 import { AdminList } from "./components/members/AdminList";
 import { EditModal } from "./components/members/EditModal";
 
-export default function MenbersManagementPage() {
+export default function MembersManagementPage() {
   const [activeTab, setActiveTab] = useState("tenants");
   const [editingUser, setEditingUser] = useState<any>(null);
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight text-foreground">
-          Quản Lý Thành Viên
-        </h1>
+        <h1 className="text-3xl font-bold">Quản Lý Thành Viên</h1>
         <p className="text-muted-foreground mt-2">
           Quản lý khách thuê, nhân viên và quản trị viên
         </p>
@@ -33,16 +30,12 @@ export default function MenbersManagementPage() {
         <CardHeader>
           <CardTitle>Danh Sách Thành Viên</CardTitle>
           <CardDescription>
-            Xem và quản lý thông tin các thành viên trong hệ thống
+            Xem và quản lý thông tin các thành viên
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Tabs
-            value={activeTab}
-            onValueChange={setActiveTab}
-            className="w-full"
-          >
-            <TabsList className="grid w-full grid-cols-3">
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <TabsList className="grid grid-cols-3 w-full">
               <TabsTrigger value="tenants">Khách Thuê</TabsTrigger>
               <TabsTrigger value="staff">Nhân Viên</TabsTrigger>
               <TabsTrigger value="admin">Quản Trị</TabsTrigger>
@@ -51,11 +44,9 @@ export default function MenbersManagementPage() {
             <TabsContent value="tenants" className="mt-6">
               <RenterList onEdit={setEditingUser} />
             </TabsContent>
-
             <TabsContent value="staff" className="mt-6">
               <StaffList onEdit={setEditingUser} />
             </TabsContent>
-
             <TabsContent value="admin" className="mt-6">
               <AdminList onEdit={setEditingUser} />
             </TabsContent>
