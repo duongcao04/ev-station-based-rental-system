@@ -147,7 +147,6 @@ export const router = createBrowserRouter([
   },
   {
     path: "/tai-khoan",
-    element: <ProtectedRoute allowedRoles={["renter"]} />,
     errorElement: (
       <Suspense fallback={null}>
         <ErrorPage />
@@ -181,77 +180,86 @@ export const router = createBrowserRouter([
       {
         path: "xac-thuc-kyc",
         element: (
-          <AccountLayout>
-            <XacThucKYC />
-          </AccountLayout>
+          <ProtectedRoute allowedRoles={["renter"]}>
+            <AccountLayout>
+              <XacThucKYC />
+            </AccountLayout>
+          </ProtectedRoute>
         ),
       }, // /tai-khoan/xac-thuc-kyc
       { path: "*", element: <ErrorPage /> },
     ],
   },
   {
-    element: <ProtectedRoute allowedRoles={["admin"]} />,
+    path: "/dashboard",
+    errorElement: (
+      <Suspense fallback={null}>
+        <ErrorPage />
+      </Suspense>
+    ),
     children: [
       {
-        path: "/dashboard",
-        errorElement: (
-          <Suspense fallback={null}>
-            <ErrorPage />
-          </Suspense>
+        index: true,
+        element: (
+          <ProtectedRoute allowedRoles={["admin", "staff"]}>
+            <DashboardLayout>
+              <DashboardPage />
+            </DashboardLayout>
+          </ProtectedRoute>
         ),
-        children: [
-          {
-            index: true,
-            element: (
-              <DashboardLayout>
-                <DashboardPage />
-              </DashboardLayout>
-            ),
-          },
-          {
-            path: "/dashboard/tram-xe",
-            element: (
-              <DashboardLayout>
-                <QuanLyTramXePage />
-              </DashboardLayout>
-            ),
-          },
-          {
-            path: "/dashboard/bookings",
-            element: (
-              <DashboardLayout>
-                <QuanLyBookingPage />
-              </DashboardLayout>
-            ),
-          },
-          {
-            path: "/dashboard/bookings/:bookingId",
-            element: (
-              <DashboardLayout>
-                <QuanLyBookingDetailPage />
-              </DashboardLayout>
-            ),
-          },
-          {
-            path: "/dashboard/menbers",
-            element: (
-              <DashboardLayout>
-                <MenbersManagementPage />
-              </DashboardLayout>
-            ),
-          },
-          {
-            path: "/dashboard/setting",
-            element: (
-              <DashboardLayout>
-                <SettingsPage />
-              </DashboardLayout>
-            ),
-          },
-          // Catch-all
-          { path: "*", element: <ErrorPage /> },
-        ],
       },
+      {
+        path: "/dashboard/tram-xe",
+        element: (
+          <ProtectedRoute allowedRoles={["admin"]}>
+            <DashboardLayout>
+              <QuanLyTramXePage />
+            </DashboardLayout>
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/dashboard/bookings",
+        element: (
+          <ProtectedRoute allowedRoles={["admin", "staff"]}>
+            <DashboardLayout>
+              <QuanLyBookingPage />
+            </DashboardLayout>
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/dashboard/bookings/:bookingId",
+        element: (
+          <ProtectedRoute allowedRoles={["admin", "staff"]}>
+            <DashboardLayout>
+              <QuanLyBookingDetailPage />
+            </DashboardLayout>
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/dashboard/menbers",
+        element: (
+          <ProtectedRoute allowedRoles={["admin"]}>
+            <DashboardLayout>
+              <MenbersManagementPage />
+            </DashboardLayout>
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/dashboard/setting",
+        element: (
+          <ProtectedRoute allowedRoles={["admin", "staff"]}>
+            <DashboardLayout>
+              <SettingsPage />
+            </DashboardLayout>
+          </ProtectedRoute>
+        ),
+      },
+      // Catch-all
+      { path: "*", element: <ErrorPage /> },
     ],
   },
 ]);

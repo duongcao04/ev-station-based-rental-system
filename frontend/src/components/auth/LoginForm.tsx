@@ -1,14 +1,14 @@
-import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { z } from 'zod';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { Label } from '@radix-ui/react-label';
-import { useAuthStore } from '@/stores/useAuthStore';
-import { useNavigate } from 'react-router';
-import logo from '../../assets/logo.png';
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { z } from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Label } from "@radix-ui/react-label";
+import { useAuthStore } from "@/stores/useAuthStore";
+import { useNavigate } from "react-router";
+import logo from "../../assets/logo.png";
 
 const signInSchema = z.object({
   username: z.string().min(1, "Tài khoản là email hoặc số điện thoại"),
@@ -41,19 +41,19 @@ export function LoginForm({
 
     if (!role) return;
 
-    let targetPath = '/';
+    let targetPath = "/";
     switch (role) {
-      case 'admin':
-        targetPath = '/dashboard';
+      case "admin":
+        targetPath = "/dashboard";
         break;
-      case 'staff':
-        targetPath = '/staff/dashboard';
+      case "staff":
+        targetPath = "/dashboard";
         break;
-      case 'renter':
-        targetPath = '/';
+      case "renter":
+        targetPath = "/";
         break;
       default:
-        targetPath = '/';
+        targetPath = "/";
     }
     navigate(targetPath, { replace: true });
   };
