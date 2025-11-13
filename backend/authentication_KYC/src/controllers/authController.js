@@ -8,6 +8,7 @@ import {
   REFRESH_TOKEN_TTL,
   registerUser,
 } from "../services/auth.js";
+import { StationService } from "../services/stationService.js";
 
 export const getProfile = async (req, res) => {
   try {
@@ -100,13 +101,8 @@ export const login = async (req, res) => {
 
       let stationId = null;
       if (exist.role === "staff") {
-        const sql = `SELECT id FROM "station" WHERE user_id = :uid LIMIT 1;`;
-        const replacements = { uid: exist.id };
-        const [results] = await sequelize.query(sql, {
-          replacements,
-          type: sequelize.QueryTypes.SELECT,
-        });
-        if (results && results.id) stationId = results.id;
+        const station = await StationService.getByUserId(exist.id);
+        if (station && station.id) stationId = station.id;
       }
 
       //send access token in res
