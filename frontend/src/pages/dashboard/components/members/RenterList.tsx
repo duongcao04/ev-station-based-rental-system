@@ -19,18 +19,18 @@ export function RenterList({ onEdit }: { onEdit: (user: any) => void }) {
   > = {
     pending: {
       label: "Đang chờ xác thực",
-      bg: "bg-yellow-200",
-      text: "text-yellow-800",
+      bg: "bg-yellow-100 dark:bg-yellow-950",
+      text: "text-yellow-800 dark:text-yellow-200",
     },
     verified: {
       label: "Đã xác thực",
-      bg: "bg-green-200",
-      text: "text-green-800",
+      bg: "bg-green-100 dark:bg-green-950",
+      text: "text-green-800 dark:text-green-200",
     },
     rejected: {
       label: "KYC bị từ chối",
-      bg: "bg-red-200",
-      text: "text-red-800",
+      bg: "bg-red-100 dark:bg-red-950",
+      text: "text-red-800 dark:text-red-200",
     },
   };
 

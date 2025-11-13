@@ -28,6 +28,7 @@ import HuongDanThueXe from "./pages/huong-dan-thue-xe/HuongDanThueXe";
 import LienHePage from "./pages/lien-he/LienHePage";
 import TramXePage from "./pages/tram-xe/TramXePage";
 import SettingsPage from "./pages/dashboard/SettingPage";
+import RenterSettingsPage from "./pages/tai-khoan/SettingPage";
 import MenbersManagementPage from "./pages/dashboard/MenbersManagemetPage";
 
 // eslint-disable-next-line react-refresh/only-export-components
@@ -156,25 +157,31 @@ export const router = createBrowserRouter([
       {
         index: true,
         element: (
-          <AccountLayout>
-            <ThongTinTaiKhoanPage />
-          </AccountLayout>
+          <ProtectedRoute allowedRoles={["renter"]}>
+            <AccountLayout>
+              <ThongTinTaiKhoanPage />
+            </AccountLayout>
+          </ProtectedRoute>
         ),
       }, // /tai-khoan  -> Profile
       {
         path: "lich-su-thue",
         element: (
-          <AccountLayout>
-            <LichSuThueXePage />
-          </AccountLayout>
+          <ProtectedRoute allowedRoles={["renter"]}>
+            <AccountLayout>
+              <LichSuThueXePage />
+            </AccountLayout>
+          </ProtectedRoute>
         ),
       },
       {
         path: "lich-su-thue/*",
         element: (
-          <AccountLayout>
-            <LichSuThueXeChiTietPage />
-          </AccountLayout>
+          <ProtectedRoute allowedRoles={["renter"]}>
+            <AccountLayout>
+              <LichSuThueXeChiTietPage />
+            </AccountLayout>
+          </ProtectedRoute>
         ),
       },
       {
@@ -187,6 +194,17 @@ export const router = createBrowserRouter([
           </ProtectedRoute>
         ),
       }, // /tai-khoan/xac-thuc-kyc
+      {
+        path: "cai-dat",
+        element: (
+          <ProtectedRoute allowedRoles={["renter"]}>
+            <AccountLayout>
+              <RenterSettingsPage />
+            </AccountLayout>
+          </ProtectedRoute>
+        ),
+      },
+
       { path: "*", element: <ErrorPage /> },
     ],
   },
