@@ -14,7 +14,6 @@ export const CreateCarDto = z.object({
 	isInStock: z.boolean(),
 	description: z.string().nullable().optional(),
 	thumbnailUrl: z.string().url(),
-	stationIds: z.array(z.string().uuid().nullable().optional()).default([]),
 	brandId: z.string().uuid().nullable().optional(),
 	categoryIds: z.array(z.string().uuid()).optional(),
 });
