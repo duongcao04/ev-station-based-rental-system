@@ -57,4 +57,44 @@ export const StationService = {
       return null;
     }
   },
+
+  /**
+   * Cập nhật station theo user_id (chỉ các trường cung cấp)
+   */
+  async update(user_id, payload) {
+    try {
+      const baseUrl = getStationServiceUrl();
+      const url = `${baseUrl}/api/v1/stations/${user_id}`;
+
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+      const response = await fetch(url, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload || {}),
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        throw new Error(
+          `Station service update error: ${response.status} ${response.statusText}`
+        );
+      }
+
+      const updated = await response.json();
+      return updated;
+    } catch (error) {
+      if (error.name === "AbortError") {
+        console.error("Station service request timeout");
+      } else {
+        console.error("Error updating station service:", error.message);
+      }
+      return null;
+    }
+  },
 };

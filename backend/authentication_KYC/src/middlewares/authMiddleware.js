@@ -4,10 +4,10 @@ import { User } from "../libs/db.js";
 export const protectedRoute = (req, res, next) => {
   try {
     //get token from header
-    // const authHeader = req.headers["authorization"];
-    // const token = authHeader && authHeader.split(" ")[1];
+    //const authHeader = req.headers["authorization"];
+    //const token = authHeader && authHeader.split(" ")[1];
 
-    const token = req.cookies?.accessToken
+    const token = req.cookies?.accessToken;
 
     if (!token) {
       return res.status(401).json({ message: "access token not found" });
@@ -15,28 +15,31 @@ export const protectedRoute = (req, res, next) => {
 
     console.log("token:", token);
 
-
     //confirm token
-    jwt.verify(token, process.env.AUTH_ACCESS_TOKEN_SECRET, async (err, decoded) => {
-      if (err) {
-        console.log(err);
+    jwt.verify(
+      token,
+      process.env.AUTH_ACCESS_TOKEN_SECRET,
+      async (err, decoded) => {
+        if (err) {
+          console.log(err);
 
-        return res.status(403).json({ message: "Token expired" });
+          return res.status(403).json({ message: "Token expired" });
+        }
+
+        //find user
+        const user = await User.findOne({
+          where: { id: decoded.userId },
+          attributes: { exclude: ["password_hash"] },
+        });
+        if (!user) {
+          return res.status(404).json({ message: "user not found" });
+        }
+
+        //send user to req
+        req.user = user;
+        next();
       }
-
-      //find user
-      const user = await User.findOne({
-        where: { id: decoded.userId },
-        attributes: { exclude: ["password_hash"] },
-      });
-      if (!user) {
-        return res.status(404).json({ message: "user not found" });
-      }
-
-      //send user to req
-      req.user = user;
-      next();
-    });
+    );
   } catch (error) {
     console.error("Error verifying JWT in authMiddlware", error);
     return res.status(500).json({ message: "Internal Error" });

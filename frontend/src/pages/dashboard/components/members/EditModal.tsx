@@ -18,25 +18,27 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { adminApi } from "@/lib/api/admin.api";
+import { toast } from "sonner";
 
 const AVAILABLE_STATIONS = [
-  { id: 1, name: "Quận 1" },
-  { id: 2, name: "Quận 2" },
-  { id: 3, name: "Quận 3" },
-  { id: 4, name: "Quận 4" },
-  { id: 5, name: "Quận 5" },
-  { id: 6, name: "Quận 6" },
-  { id: 7, name: "Quận 7" },
-  { id: 8, name: "Quận 8" },
-  { id: 9, name: "Quận 9" },
-  { id: 10, name: "Quận 10" },
-  { id: 11, name: "Quận 11" },
-  { id: 12, name: "Quận 12" },
-  { id: 13, name: "Tân Bình" },
-  { id: 14, name: "Tân Phú" },
-  { id: 15, name: "Bình Thạnh" },
-  { id: 16, name: "Gò Vấp" },
-  { id: 17, name: "Phú Nhuận" },
+  "Quận 1",
+  "Quận 2",
+  "Quận 3",
+  "Quận 4",
+  "Quận 5",
+  "Quận 6",
+  "Quận 7",
+  "Quận 8",
+  "Quận 9",
+  "Quận 10",
+  "Quận 11",
+  "Quận 12",
+  "Tân Bình",
+  "Tân Phú",
+  "Bình Thạnh",
+  "Gò Vấp",
+  "Phú Nhuận",
 ];
 
 interface EditModalProps {
@@ -54,10 +56,25 @@ export function EditModal({ user, userType, onClose }: EditModalProps) {
     setHasChanges(true);
   };
 
-  const handleSave = () => {
-    // TODO: Save to database
-    console.log("Saving:", formData);
-    onClose();
+  const handleSave = async () => {
+    try {
+      await adminApi.updateUser(formData.id, formData);
+      toast.success("Cập nhật thành công", {
+        description: "Thông tin người dùng đã được lưu.",
+      });
+      onClose();
+    } catch (err) {
+      const anyErr = err as any;
+      const message =
+        anyErr?.message ||
+        anyErr?.error ||
+        anyErr?.data?.message ||
+        "Cập nhật thất bại";
+      console.error("Update user failed:", anyErr);
+      toast.error("Cập nhật thất bại", {
+        description: message,
+      });
+    }
   };
 
   return (
@@ -68,177 +85,84 @@ export function EditModal({ user, userType, onClose }: EditModalProps) {
         </DialogHeader>
 
         <div className="space-y-6 py-4">
-          {/* Display all information - Read only section */}
           <div className="space-y-4 p-4 bg-muted/30 rounded-lg">
-            <h3 className="font-semibold text-foreground">Thông Tin Cơ Bản</h3>
-
-            {userType === "tenants" && (
-              <>
-                <div className="grid grid-cols-2 gap-4">
+            <h3 className="font-semibold">Thông Tin Hiện Tại</h3>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>Tên Hiển Thị</Label>
+                <p>{formData.displayName}</p>
+              </div>
+              <div>
+                <Label>Email</Label>
+                <p>{formData.email}</p>
+              </div>
+              <div>
+                <Label>Số Điện Thoại</Label>
+                <p>{formData.phone}</p>
+              </div>
+              {userType === "tenants" && (
+                <>
                   <div>
-                    <Label className="text-xs font-medium text-muted-foreground">
-                      Tên Hiển Thị
-                    </Label>
-                    <p className="text-foreground mt-1">
-                      {formData.displayName}
-                    </p>
+                    <Label>Trạng Thái KYC</Label>
+                    <p>{formData.kycStatus}</p>
                   </div>
                   <div>
-                    <Label className="text-xs font-medium text-muted-foreground">
-                      Email
-                    </Label>
-                    <p className="text-foreground mt-1">{formData.email}</p>
+                    <Label>Nhân Viên Xác Thực</Label>
+                    <p>{formData.verifiedBy}</p>
                   </div>
                   <div>
-                    <Label className="text-xs font-medium text-muted-foreground">
-                      Số Điện Thoại
-                    </Label>
-                    <p className="text-foreground mt-1">{formData.phone}</p>
+                    <Label>Ghi Chú KYC</Label>
+                    <p>{formData.kycNote}</p>
                   </div>
-                  <div>
-                    <Label className="text-xs font-medium text-muted-foreground">
-                      Trạng Thái KYC
-                    </Label>
-                    <p className="text-foreground mt-1">{formData.kycStatus}</p>
-                  </div>
-                  <div>
-                    <Label className="text-xs font-medium text-muted-foreground">
-                      Nhân Viên Xác Thực
-                    </Label>
-                    <p className="text-foreground mt-1">
-                      {formData.verifiedBy}
-                    </p>
-                  </div>
-                  <div>
-                    <Label className="text-xs font-medium text-muted-foreground">
-                      Ghi Chú KYC
-                    </Label>
-                    <p className="text-foreground mt-1">{formData.kycNote}</p>
-                  </div>
+                </>
+              )}
+              {userType === "staff" && (
+                <div>
+                  <Label>Trạm Làm Việc</Label>
+                  <p>{formData.station}</p>
                 </div>
-              </>
-            )}
-
-            {userType === "staff" && (
-              <>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label className="text-xs font-medium text-muted-foreground">
-                      Tên Hiển Thị
-                    </Label>
-                    <p className="text-foreground mt-1">
-                      {formData.displayName}
-                    </p>
-                  </div>
-                  <div>
-                    <Label className="text-xs font-medium text-muted-foreground">
-                      Email
-                    </Label>
-                    <p className="text-foreground mt-1">{formData.email}</p>
-                  </div>
-                  <div>
-                    <Label className="text-xs font-medium text-muted-foreground">
-                      Số Điện Thoại
-                    </Label>
-                    <p className="text-foreground mt-1">{formData.phone}</p>
-                  </div>
-                  <div>
-                    <Label className="text-xs font-medium text-muted-foreground">
-                      Trạm Làm Việc
-                    </Label>
-                    <p className="text-foreground mt-1">{formData.station}</p>
-                  </div>
-                </div>
-              </>
-            )}
-
-            {userType === "admin" && (
-              <>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label className="text-xs font-medium text-muted-foreground">
-                      Tên Hiển Thị
-                    </Label>
-                    <p className="text-foreground mt-1">
-                      {formData.displayName}
-                    </p>
-                  </div>
-                  <div>
-                    <Label className="text-xs font-medium text-muted-foreground">
-                      Email
-                    </Label>
-                    <p className="text-foreground mt-1">{formData.email}</p>
-                  </div>
-                  <div>
-                    <Label className="text-xs font-medium text-muted-foreground">
-                      Số Điện Thoại
-                    </Label>
-                    <p className="text-foreground mt-1">{formData.phone}</p>
-                  </div>
-                </div>
-              </>
-            )}
+              )}
+            </div>
           </div>
 
-          {/* Editable fields section */}
           <div className="space-y-4 p-4 bg-card rounded-lg border border-border">
-            <h3 className="font-semibold text-foreground">
-              Chỉnh Sửa Thông Tin
-            </h3>
-
+            <h3 className="font-semibold">Chỉnh Sửa</h3>
             <div className="space-y-2">
-              <Label htmlFor="displayName" className="text-sm font-medium">
-                Tên Hiển Thị
-              </Label>
+              <Label>Tên Hiển Thị</Label>
               <Input
-                id="displayName"
                 value={formData.displayName}
                 onChange={(e) => handleChange("displayName", e.target.value)}
-                className="border border-border"
               />
             </div>
-
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-sm font-medium">
-                Email
-              </Label>
+              <Label>Email</Label>
               <Input
-                id="email"
-                type="email"
                 value={formData.email}
+                type="email"
                 onChange={(e) => handleChange("email", e.target.value)}
-                className="border border-border"
               />
             </div>
-
             <div className="space-y-2">
-              <Label htmlFor="phone" className="text-sm font-medium">
-                Số Điện Thoại
-              </Label>
+              <Label>Số Điện Thoại</Label>
               <Input
-                id="phone"
                 value={formData.phone}
                 onChange={(e) => handleChange("phone", e.target.value)}
-                className="border border-border"
               />
             </div>
-
             {userType === "staff" && (
               <div className="space-y-2">
-                <Label htmlFor="station" className="text-sm font-medium">
-                  Trạm Làm Việc
-                </Label>
+                <Label>Trạm Làm Việc</Label>
                 <Select
                   value={formData.station}
-                  onValueChange={(value) => handleChange("station", value)}
+                  onValueChange={(v) => handleChange("station", v)}
                 >
-                  <SelectTrigger id="station" className="border border-border">
-                    <SelectValue placeholder="Chọn trạm làm việc" />
+                  <SelectTrigger>
+                    <SelectValue placeholder="Chọn trạm" />
                   </SelectTrigger>
                   <SelectContent>
-                    {AVAILABLE_STATIONS.map((station) => (
-                      <SelectItem key={station.id} value={station.name}>
-                        {station.name}
+                    {AVAILABLE_STATIONS.map((s) => (
+                      <SelectItem key={s} value={s}>
+                        {s}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -252,11 +176,7 @@ export function EditModal({ user, userType, onClose }: EditModalProps) {
           <Button variant="outline" onClick={onClose}>
             Hủy
           </Button>
-          <Button
-            onClick={handleSave}
-            disabled={!hasChanges}
-            className="bg-primary hover:bg-primary/90"
-          >
+          <Button onClick={handleSave} disabled={!hasChanges}>
             Lưu Thay Đổi
           </Button>
         </DialogFooter>
