@@ -5,10 +5,10 @@ export interface User {
   role: "admin" | "staff" | "renter";
   displayName?: string;
   driverlicenseUrl?: string;
-  nationalidUrl?: String;
-  verificationStatus?: String;
-  verifiedStaffId?: String;
-  note?: String;
+  nationalidUrl?: string;
+  verificationStatus?: string;
+  verifiedStaffId?: string;
+  note?: string;
   isRisky?: boolean;
   createdAt?: string;
   updatedAt?: string;

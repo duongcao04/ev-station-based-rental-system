@@ -1,65 +1,119 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Mail, User, Edit2, Save, Phone, CheckCircle } from "lucide-react";
+import {
+  Mail,
+  User as UserIcon,
+  Edit2,
+  Save,
+  Phone,
+  CheckCircle,
+} from "lucide-react";
+import { renterApi } from "@/lib/api/renter.api";
+import type { User } from "@/types/user";
 
 export default function ThongTinTaiKhoanPage() {
   const [isEditing, setIsEditing] = useState(false);
-  const [fullName, setFullName] = useState("Nguyễn Văn A");
-  const [email, setEmail] = useState("nguyenvan.a@example.com");
-  const [phone, setPhone] = useState("0987654321");
-  const [tempFullName, setTempFullName] = useState(fullName);
-  const [tempEmail, setTempEmail] = useState(email);
-  const [tempPhone, setTempPhone] = useState(phone);
+  const [user, setUser] = useState<User | null>(null);
 
-  type KycStatus = "Đang chờ xác thực" | "Đã xác thực" | "KYC bị từ chối";
-  const kycStatus: KycStatus = "Đang chờ xác thực";
-  const verifiedBy = "Nguyễn Thị B";
-  const verificationNote = "Tài liệu đầy đủ và hợp lệ";
+  const [tempFullName, setTempFullName] = useState("");
+  const [tempEmail, setTempEmail] = useState("");
+  const [tempPhone, setTempPhone] = useState("");
 
-  const handleEdit = () => {
-    setTempFullName(fullName);
-    setTempEmail(email);
-    setTempPhone(phone);
-    setIsEditing(true);
-  };
+  useEffect(() => {
+    fetchProfile();
+  }, []);
 
-  const handleSave = () => {
-    setFullName(tempFullName);
-    setEmail(tempEmail);
-    setPhone(tempPhone);
-    setIsEditing(false);
-  };
-
-  const handleCancel = () => {
-    setIsEditing(false);
-  };
-
-  const initials = fullName
-    .split(" ")
-    .map((n) => n[0])
-    .join("")
-    .toUpperCase();
-
-  const getKycStatusStyle = (status: KycStatus) => {
-    switch (status) {
-      case "Đã xác thực":
-        return "bg-green-100 text-green-800 dark:bg-green-950 dark:text-green-200";
-      case "Đang chờ xác thực":
-        return "bg-yellow-100 text-yellow-800 dark:bg-yellow-950 dark:text-yellow-200";
-      case "KYC bị từ chối":
-        return "bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-200";
+  const fetchProfile = async () => {
+    try {
+      const res = await renterApi.getProfile();
+      
+      if (res.result) {
+        const data = res.result;
+        setUser(data);
+        setTempFullName(data.displayName ?? "");
+        setTempEmail(data.email ?? "");
+        setTempPhone(data.phoneNumber ?? "");
+      } else {
+        console.error("Response không có result:", res);
+      }
+    } catch (error: any) {
+      console.error("Lỗi khi fetch profile:", error);
+      console.error("Error details:", {
+        message: error?.message,
+        response: error?.response,
+        data: error?.data,
+      });
     }
   };
+
+  const handleEdit = () => setIsEditing(true);
+  const handleCancel = () => setIsEditing(false);
+
+  const handleSave = async () => {
+    if (!user) return;
+    try {
+      const res = await renterApi.updateProfile(user._id, {
+        displayName: tempFullName,
+        email: tempEmail,
+        phoneNumber: tempPhone,
+      });
+
+      if (res.result) {
+        setUser({
+          ...user,
+          displayName: res.result.displayName,
+          email: res.result.email,
+          phoneNumber: res.result.phoneNumber,
+        });
+        setIsEditing(false);
+      }
+    } catch (error) {
+      console.error("Lỗi khi cập nhật profile:", error);
+    }
+  };
+
+  const getKycStatusText = (status?: string) => {
+    switch (status) {
+      case "verified":
+        return "Đã xác thực";
+      case "rejected":
+        return "KYC bị từ chối";
+      case "pending":
+      default:
+        return "Đang chờ xác thực";
+    }
+  };
+
+  const getKycStatusStyle = (status?: string) => {
+    switch (status) {
+      case "verified":
+        return "bg-green-100 text-green-800 dark:bg-green-950 dark:text-green-200";
+      case "pending":
+        return "bg-yellow-100 text-yellow-800 dark:bg-yellow-950 dark:text-yellow-200";
+      case "rejected":
+        return "bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-200";
+      default:
+        return "";
+    }
+  };
+
+  if (!user) return <div>Loading...</div>;
+
+  const initials =
+    user.displayName
+      ?.split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase() || "NA";
 
   return (
     <main className="bg-linear-to-br from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900 py-12">
       <div className="max-w-2xl mx-auto">
-        {/* Header */}
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-foreground mb-2">
             Thông tin tài khoản
@@ -74,32 +128,29 @@ export default function ThongTinTaiKhoanPage() {
           <CardHeader className="pb-0 pt-8 px-8">
             <div className="flex items-start justify-between mb-8">
               <div className="flex items-end gap-6">
-                {/* Avatar Section */}
                 <div className="flex flex-col items-center gap-4">
                   <Avatar className="h-24 w-24 border-4 border-primary">
                     <AvatarImage
-                      src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${fullName}`}
-                      alt={fullName}
+                      src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user.displayName}`}
+                      alt={user.displayName}
                     />
                     <AvatarFallback className="text-xl font-bold bg-primary text-primary-foreground">
-                      {initials || "NA"}
+                      {initials}
                     </AvatarFallback>
                   </Avatar>
                 </div>
 
-                {/* Name Section */}
                 <div>
                   <h2 className="text-3xl font-bold text-foreground">
-                    {fullName}
+                    {user.displayName}
                   </h2>
                   <p className="text-sm text-muted-foreground mt-1 flex items-center gap-2">
                     <Mail className="h-4 w-4" />
-                    {email}
+                    {user.email}
                   </p>
                 </div>
               </div>
 
-              {/* Action Button */}
               <button
                 onClick={isEditing ? handleSave : handleEdit}
                 className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
@@ -121,32 +172,29 @@ export default function ThongTinTaiKhoanPage() {
 
           <CardContent className="px-8 pb-8">
             <div className="space-y-6">
-              {/* Full Name Field */}
+              {/* Họ và tên */}
               <div className="space-y-2">
                 <Label
                   htmlFor="fullName"
                   className="text-base font-semibold flex items-center gap-2"
                 >
-                  <User className="h-4 w-4" />
+                  <UserIcon className="h-4 w-4" />
                   Họ và tên
                 </Label>
                 {isEditing ? (
                   <Input
                     id="fullName"
-                    type="text"
                     value={tempFullName}
                     onChange={(e) => setTempFullName(e.target.value)}
-                    className="text-base py-2"
-                    placeholder="Nhập họ và tên"
                   />
                 ) : (
                   <div className="px-4 py-2 rounded-md bg-muted text-foreground">
-                    {fullName}
+                    {user.displayName}
                   </div>
                 )}
               </div>
 
-              {/* Email Field */}
+              {/* Email */}
               <div className="space-y-2">
                 <Label
                   htmlFor="email"
@@ -161,16 +209,15 @@ export default function ThongTinTaiKhoanPage() {
                     type="email"
                     value={tempEmail}
                     onChange={(e) => setTempEmail(e.target.value)}
-                    className="text-base py-2"
-                    placeholder="Nhập email"
                   />
                 ) : (
                   <div className="px-4 py-2 rounded-md bg-muted text-foreground">
-                    {email}
+                    {user.email}
                   </div>
                 )}
               </div>
 
+              {/* Số điện thoại */}
               <div className="space-y-2">
                 <Label
                   htmlFor="phone"
@@ -185,17 +232,14 @@ export default function ThongTinTaiKhoanPage() {
                     type="tel"
                     value={tempPhone}
                     onChange={(e) => setTempPhone(e.target.value)}
-                    className="text-base py-2"
-                    placeholder="Nhập số điện thoại"
                   />
                 ) : (
                   <div className="px-4 py-2 rounded-md bg-muted text-foreground">
-                    {phone}
+                    {user.phoneNumber}
                   </div>
                 )}
               </div>
 
-              {/* Action Buttons */}
               {isEditing && (
                 <div className="flex gap-3 justify-end pt-4">
                   <button
@@ -216,6 +260,7 @@ export default function ThongTinTaiKhoanPage() {
           </CardContent>
         </Card>
 
+        {/* KYC Card */}
         <Card className="mt-8 border-0 shadow-lg">
           <CardHeader className="pb-4 pt-8 px-8">
             <h3 className="text-xl font-bold text-foreground flex items-center gap-2">
@@ -223,56 +268,39 @@ export default function ThongTinTaiKhoanPage() {
               Thông tin xác thực
             </h3>
           </CardHeader>
-
           <CardContent className="px-8 pb-8">
             <div className="space-y-6">
-              {/* KYC Status */}
               <div className="space-y-2">
                 <Label className="text-base font-semibold">
                   Trạng thái xác thực KYC
                 </Label>
                 <div
                   className={`px-4 py-2 rounded-md inline-block font-medium ${getKycStatusStyle(
-                    kycStatus
+                    user.verificationStatus
                   )}`}
                 >
-                  {kycStatus}
+                  {getKycStatusText(user.verificationStatus)}
                 </div>
               </div>
 
-              {/* Verified By */}
               <div className="space-y-2">
                 <Label className="text-base font-semibold">
                   Xác thực bởi nhân viên
                 </Label>
                 <div className="px-4 py-2 rounded-md bg-muted text-foreground">
-                  {verifiedBy}
+                  {user.verifiedStaffId || "-"}
                 </div>
               </div>
 
-              {/* Verification Note */}
               <div className="space-y-2">
                 <Label className="text-base font-semibold">
                   Ghi chú xác thực
                 </Label>
                 <div className="px-4 py-2 rounded-md bg-muted text-foreground">
-                  {verificationNote}
+                  {user.note || "-"}
                 </div>
               </div>
             </div>
-          </CardContent>
-        </Card>
-
-        {/* Info Section */}
-        <Card className="mt-8 border-0 shadow-lg bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-900">
-          <CardContent className="pt-6">
-            <p className="text-sm text-muted-foreground flex items-start gap-3">
-              <span className="text-lg">ℹ️</span>
-              <span>
-                Thông tin cá nhân của bạn được bảo mật và chỉ được sử dụng để
-                cải thiện trải nghiệm người dùng.
-              </span>
-            </p>
           </CardContent>
         </Card>
       </div>
