@@ -56,9 +56,23 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       if (accessToken) {
         get().setAccessToken(accessToken);
       }
-      await new Promise((resolve) => setTimeout(resolve, 0));
+      
+      // Đợi một chút để đảm bảo token đã được set
+      await new Promise((resolve) => setTimeout(resolve, 50));
 
-      await get().fetchMe();
+      // Fetch user data
+      try {
+        await get().fetchMe();
+      } catch (fetchError) {
+        console.warn("Error fetching user data, but login was successful:", fetchError);
+        // Nếu fetchMe fail nhưng login thành công, vẫn cho phép login
+        // User data sẽ được fetch sau khi navigate
+      }
+
+      // Invalidate React Query cache để refresh profile
+      if (queryClient) {
+        queryClient.invalidateQueries({ queryKey: ["profile"] });
+      }
 
       toast.success(message || "Đăng nhập thành công");
       return true;
@@ -104,11 +118,23 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       set({ loading: true });
       const user = await authApi.fetchMe();
 
-      const userData = { ...user, _id: user._id || user.id || user.user_id };
+      if (!user) {
+        throw new Error("Không nhận được dữ liệu người dùng");
+      }
+
+      const userData = { 
+        ...user, 
+        _id: user._id || user.id || user.user_id,
+        role: user.role || "renter" // Đảm bảo có role
+      };
       set({ user: userData });
+      
+      return userData;
     } catch (error) {
-      console.error(error);
-      toast.error("Lỗi khi lấy dữ liệu người dùng. Thử lại!");
+      console.error("Error in fetchMe:", error);
+      // Không throw error để không block login flow
+      // Chỉ log và return null
+      return null;
     } finally {
       set({ loading: false });
     }
