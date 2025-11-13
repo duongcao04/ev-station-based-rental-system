@@ -44,10 +44,43 @@ export const KYCService = {
         "note",
         "updated_at",
       ],
+      include: [
+        {
+          model: User,
+          as: "verified_by_staff",
+          attributes: ["id", "email"],
+          required: false,
+          include: [
+            {
+              model: RenterProfile,
+              as: "renter_profile",
+              attributes: ["full_name"],
+              required: false,
+            },
+          ],
+        },
+      ],
     });
     if (!profile) throw new Error("Profile not found");
 
-    return profile;
+    const result = profile.toJSON();
+    if (result.verified_by_staff_id && result.verified_by_staff) {
+      // Lấy tên từ RenterProfile.full_name của staff, nếu không có thì fallback về email
+      const staffProfile = result.verified_by_staff.renter_profile;
+      if (staffProfile && staffProfile.full_name) {
+        result.verified_by_staff_name = staffProfile.full_name;
+      } else {
+        // Fallback: lấy từ email
+        const emailPrefix = result.verified_by_staff.email.split("@")[0];
+        result.verified_by_staff_name = emailPrefix
+          .replace(/[._-]/g, " ")
+          .split(" ")
+          .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+          .join(" ") || emailPrefix;
+      }
+    }
+
+    return result;
   },
 
   async getKYCSubmissions({ status, page, q }) {
@@ -80,6 +113,20 @@ export const KYCService = {
           attributes: ["email", "phone_number", "role"],
           where: Object.keys(whereUser).length ? whereUser : undefined,
         },
+        {
+          model: User,
+          as: "verified_by_staff",
+          attributes: ["id", "email"],
+          required: false,
+          include: [
+            {
+              model: RenterProfile,
+              as: "renter_profile",
+              attributes: ["full_name"],
+              required: false,
+            },
+          ],
+        },
       ],
       attributes: [
         "id",
@@ -93,8 +140,29 @@ export const KYCService = {
       ],
     });
 
+
+    const formattedRows = rows.map((row) => {
+      const result = row.toJSON();
+      if (result.verified_by_staff_id && result.verified_by_staff) {
+        // Lấy tên từ RenterProfile.full_name của staff, nếu không có thì fallback về email
+        const staffProfile = result.verified_by_staff.renter_profile;
+        if (staffProfile && staffProfile.full_name) {
+          result.verified_by_staff_name = staffProfile.full_name;
+        } else {
+          // Fallback: lấy từ email
+          const emailPrefix = result.verified_by_staff.email.split("@")[0];
+          result.verified_by_staff_name = emailPrefix
+            .replace(/[._-]/g, " ")
+            .split(" ")
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+            .join(" ") || emailPrefix;
+        }
+      }
+      return result;
+    });
+
     return {
-      data: rows,
+      data: formattedRows,
       total: count,
       page: Number(page),
       totalPages: Math.ceil(count / limit),
@@ -123,14 +191,51 @@ export const KYCService = {
       updated_at: new Date(),
     });
 
-    await profile.reload();
+    await profile.reload({
+      include: [
+        {
+          model: User,
+          as: "verified_by_staff",
+          attributes: ["id", "email"],
+          required: false,
+          include: [
+            {
+              model: RenterProfile,
+              as: "renter_profile",
+              attributes: ["full_name"],
+              required: false,
+            },
+          ],
+        },
+      ],
+    });
+
+    // Format response với tên staff
+    const result = profile.toJSON();
+    if (result.verified_by_staff_id && result.verified_by_staff) {
+      // Lấy tên từ RenterProfile.full_name của staff, nếu không có thì fallback về email
+      const staffProfile = result.verified_by_staff.renter_profile;
+      if (staffProfile && staffProfile.full_name) {
+        result.verified_by_staff_name = staffProfile.full_name;
+      } else {
+        // Fallback: lấy từ email
+        const emailPrefix = result.verified_by_staff.email.split("@")[0];
+        result.verified_by_staff_name = emailPrefix
+          .replace(/[._-]/g, " ")
+          .split(" ")
+          .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+          .join(" ") || emailPrefix;
+      }
+    }
+
     return {
-      id: profile.id,
-      full_name: profile.full_name,
-      verification_status: profile.verification_status,
-      note_staff: profile.note,
-      verified_by_staff_id: profile.verified_by_staff_id,
-      updated_at: profile.updated_at,
+      id: result.id,
+      full_name: result.full_name,
+      verification_status: result.verification_status,
+      note_staff: result.note,
+      verified_by_staff_id: result.verified_by_staff_id,
+      verified_by_staff_name: result.verified_by_staff_name || null,
+      updated_at: result.updated_at,
     };
   },
 };

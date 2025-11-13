@@ -51,14 +51,27 @@ export const authApi = {
         const renterRes = await axiosClient.get("/v1/renters/me", {
           withCredentials: true,
         });
+        const renterData = renterRes.data;
+        const displayName =
+          renterData?.full_name ||
+          (baseProfile.email ? baseProfile.email.split("@")[0] : "");
+
         return {
-          ...renterRes.data,
+          ...renterData,
           ...normalizedProfile,
           role: "renter",
+          displayName: displayName,
         };
       } catch (error) {
         console.warn("Không thể lấy thông tin renter chi tiết:", error);
-        return normalizedProfile;
+        const displayName = baseProfile.email
+          ? baseProfile.email.split("@")[0]
+          : "";
+        return {
+          ...normalizedProfile,
+          role: "renter",
+          displayName: displayName,
+        };
       }
     }
 

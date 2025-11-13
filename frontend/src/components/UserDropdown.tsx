@@ -54,7 +54,7 @@ export function UserDropdown() {
             Thông tin tài khoản
             <DropdownMenuShortcut>⇧⌘P</DropdownMenuShortcut>
           </DropdownMenuItem>
-          <DropdownMenuItem>
+          <DropdownMenuItem onClick={() => navigate("/tai-khoan/cai-dat")}>
             Cài đặt
             <DropdownMenuShortcut>⌘S</DropdownMenuShortcut>
           </DropdownMenuItem>

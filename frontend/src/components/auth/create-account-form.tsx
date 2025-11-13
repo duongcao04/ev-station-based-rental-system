@@ -2,7 +2,7 @@
 
 import type React from "react";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -20,7 +20,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { AlertCircle, CheckCircle } from "lucide-react";
+import { toast } from "sonner";
 import { useAdminStore } from "@/stores/useAdminStore";
+import { useAuthStore } from "@/stores/useAuthStore";
+import { authApi } from "@/lib/api/auth.api";
+import { getErrorMessage } from "@/lib/utils/error";
 
 interface CreateAccountFormProps {
   onClose?: () => void;
@@ -32,16 +36,28 @@ export function CreateAccountForm({
   onSuccess,
 }: CreateAccountFormProps) {
   const { createAccount } = useAdminStore();
+  const { user } = useAuthStore();
+  
+  const currentUserRole = user?.role;
+  const isStaff = currentUserRole === "staff";
+  const isAdmin = currentUserRole === "admin";
 
   const [formData, setFormData] = useState({
     email: "",
     phone_number: "",
     password: "",
-    role: "",
+    role: "", 
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  
+  useEffect(() => {
+    if (isStaff) {
+      setFormData((prev) => ({ ...prev, role: "renter" }));
+    }
+  }, [isStaff]);
 
   const validateEmail = (email: string) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -77,8 +93,8 @@ export function CreateAccountForm({
       newErrors.password = "Mật khẩu phải có ít nhất 6 ký tự";
     }
 
-    // Validate role
-    if (!formData.role) {
+    
+    if (!isStaff && !formData.role) {
       newErrors.role = "Vui lòng chọn một vai trò";
     }
 
@@ -94,16 +110,46 @@ export function CreateAccountForm({
 
     setLoading(true);
     try {
-      const ok = await createAccount(
-        formData.email,
-        formData.phone_number,
-        formData.password,
-        formData.role
-      );
+      let ok = false;
+      
+      if (isStaff) {
+        
+        try {
+          const res = await authApi.signUp(
+            formData.email,
+            formData.phone_number,
+            formData.password
+          );
+          toast.success(res?.message || "Tạo tài khoản khách thuê thành công");
+          ok = true;
+        } catch (error) {
+          console.error(error);
+          const message = getErrorMessage(error, "Tạo tài khoản thất bại");
+          toast.error(message);
+          ok = false;
+        }
+      } else if (isAdmin) {
+        
+        ok = await createAccount(
+          formData.email,
+          formData.phone_number,
+          formData.password,
+          formData.role
+        );
+      } else {
+        toast.error("Bạn không có quyền tạo tài khoản");
+        return;
+      }
+      
       if (ok) {
         setSuccess(true);
         onSuccess?.(formData);
-        setFormData({ email: "", phone_number: "", password: "", role: "" });
+        setFormData({ 
+          email: "", 
+          phone_number: "", 
+          password: "", 
+          role: isStaff ? "renter" : "" 
+        });
         if (onClose) setTimeout(onClose, 1500);
       }
     } finally {
@@ -240,32 +286,45 @@ export function CreateAccountForm({
             )}
           </div>
 
-          <div className="space-y-2">
-            <label
-              htmlFor="role"
-              className="text-sm font-medium text-foreground"
-            >
-              Vai Trò
-            </label>
-            <Select value={formData.role} onValueChange={handleRoleChange}>
-              <SelectTrigger
-                className={errors.role ? "border-destructive" : ""}
+          {/* Chỉ hiển thị role selector nếu là admin */}
+          {isAdmin && (
+            <div className="space-y-2">
+              <label
+                htmlFor="role"
+                className="text-sm font-medium text-foreground"
               >
-                <SelectValue placeholder="Chọn vai trò" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="renter">Khách Thuê</SelectItem>
-                <SelectItem value="staff">Nhân Viên</SelectItem>
-                <SelectItem value="admin">Quản Trị Viên</SelectItem>
-              </SelectContent>
-            </Select>
-            {errors.role && (
-              <p className="text-xs text-destructive flex items-center gap-1">
-                <AlertCircle className="w-3 h-3" />
-                {errors.role}
+                Vai Trò
+              </label>
+              <Select value={formData.role} onValueChange={handleRoleChange}>
+                <SelectTrigger
+                  className={errors.role ? "border-destructive" : ""}
+                >
+                  <SelectValue placeholder="Chọn vai trò" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="renter">Khách Thuê</SelectItem>
+                  <SelectItem value="staff">Nhân Viên</SelectItem>
+                  <SelectItem value="admin">Quản Trị Viên</SelectItem>
+                </SelectContent>
+              </Select>
+              {errors.role && (
+                <p className="text-xs text-destructive flex items-center gap-1">
+                  <AlertCircle className="w-3 h-3" />
+                  {errors.role}
+                </p>
+              )}
+            </div>
+          )}
+          
+          {/* Hiển thị thông báo nếu là staff */}
+          {isStaff && (
+            <div className="p-3 bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-md">
+              <p className="text-sm text-blue-800 dark:text-blue-200">
+                <strong>Lưu ý:</strong> Bạn đang tạo tài khoản cho <strong>Khách Thuê</strong>. 
+                Chỉ có quyền tạo tài khoản khách thuê.
               </p>
-            )}
-          </div>
+            </div>
+          )}
 
           {errors.submit && (
             <div className="p-3 bg-destructive/10 border border-destructive/30 rounded-md flex items-center gap-2 text-sm text-destructive">

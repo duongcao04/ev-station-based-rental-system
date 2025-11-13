@@ -52,7 +52,7 @@ export function AccountTabs({ children }: { children: React.ReactNode }) {
       return "validate-kyc";
     if (location.pathname.startsWith("/tai-khoan/lich-su-thue"))
       return "history-rent";
-    // mặc định: /tai-khoan
+    if (location.pathname.startsWith("/tai-khoan/cai-dat")) return "cai-dat";
     return "profile";
   }, [location.pathname]);
 

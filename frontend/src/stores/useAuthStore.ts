@@ -46,19 +46,28 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       set({ loading: true });
       //call api
 
-      const data = await authApi.signIn(
-        username,
-        password
-      );
+      const data = await authApi.signIn(username, password);
 
       const accessToken = data?.accessToken ?? null;
       const message = data?.message;
       if (accessToken) {
         get().setAccessToken(accessToken);
       }
-      await new Promise((resolve) => setTimeout(resolve, 0));
 
-      await get().fetchMe();
+      await new Promise((resolve) => setTimeout(resolve, 50));
+
+      try {
+        await get().fetchMe();
+      } catch (fetchError) {
+        console.warn(
+          "Error fetching user data, but login was successful:",
+          fetchError
+        );
+      }
+
+      if (queryClient) {
+        queryClient.invalidateQueries({ queryKey: ["profile"] });
+      }
 
       toast.success(message || "Đăng nhập thành công");
       return true;
@@ -78,20 +87,18 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     try {
       get().clearState();
       const res = await authApi.signOut();
-      
-      // Invalidate React Query cache để cập nhật UI
+
       if (queryClient) {
         queryClient.invalidateQueries({ queryKey: ["profile"] });
         queryClient.removeQueries({ queryKey: ["profile"] });
       }
-      
+
       toast.success(res?.message || "Đăng xuất thành công");
     } catch (error) {
       console.error(error);
       const message = getErrorMessage(error, "Đăng xuất thất bại");
       toast.error(message);
-      
-      // Vẫn invalidate cache ngay cả khi có lỗi
+
       if (queryClient) {
         queryClient.invalidateQueries({ queryKey: ["profile"] });
         queryClient.removeQueries({ queryKey: ["profile"] });
@@ -104,11 +111,25 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       set({ loading: true });
       const user = await authApi.fetchMe();
 
-      const userData = { ...user, _id: user._id || user.id || user.user_id };
+      if (!user) {
+        throw new Error("Không nhận được dữ liệu người dùng");
+      }
+
+      const displayName =
+        user.displayName || (user.email ? user.email.split("@")[0] : "");
+
+      const userData = {
+        ...user,
+        _id: user._id || user.id || user.user_id,
+        role: user.role || "renter",
+        displayName: displayName,
+      };
       set({ user: userData });
+
+      return userData;
     } catch (error) {
-      console.error(error);
-      toast.error("Lỗi khi lấy dữ liệu người dùng. Thử lại!");
+      console.error("Error in fetchMe:", error);
+      return null;
     } finally {
       set({ loading: false });
     }

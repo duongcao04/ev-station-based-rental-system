@@ -1,4 +1,5 @@
 import { RenterProfile, User } from "../libs/db.js";
+import { Op } from "sequelize";
 
 export const getProfile = async (req, res) => {
   try {
@@ -10,13 +11,44 @@ export const getProfile = async (req, res) => {
           as: "user",
           attributes: ["email", "phone_number", "role"],
         },
+        {
+          model: User,
+          as: "verified_by_staff",
+          attributes: ["id", "email"],
+          required: false,
+          include: [
+            {
+              model: RenterProfile,
+              as: "renter_profile",
+              attributes: ["full_name"],
+              required: false,
+            },
+          ],
+        },
       ],
     });
     if (!profile) {
       return res.status(404).json({ message: "Renter profile not found" });
     }
 
-    res.status(200).json(profile);
+    const result = profile.toJSON();
+    if (result.verified_by_staff_id && result.verified_by_staff) {
+      // Lấy tên từ RenterProfile.full_name của staff, nếu không có thì fallback về email
+      const staffProfile = result.verified_by_staff.renter_profile;
+      if (staffProfile && staffProfile.full_name) {
+        result.verified_by_staff_name = staffProfile.full_name;
+      } else {
+        // Fallback: lấy từ email
+        const emailPrefix = result.verified_by_staff.email.split("@")[0];
+        result.verified_by_staff_name = emailPrefix
+          .replace(/[._-]/g, " ")
+          .split(" ")
+          .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+          .join(" ") || emailPrefix;
+      }
+    }
+
+    res.status(200).json(result);
   } catch (error) {
     console.error("Error in getProfile", error);
     res.status(500).json({ message: "Internal Error" });

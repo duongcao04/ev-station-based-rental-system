@@ -4,18 +4,28 @@ import { toast } from 'sonner';
 import { getErrorMessage } from '../utils/error';
 
 export const useProfile = () => {
-	const { data, isLoading, isFetching } = useQuery({
+	const { data, isLoading, isFetching, error } = useQuery({
 		queryKey: ['profile'],
-		queryFn: () => authApi.getProfile(),
+		queryFn: async () => {
+			try {
+				return await authApi.getProfile();
+			} catch (err) {
+				// Nếu không có auth (chưa login), return null thay vì throw error
+				console.warn("Profile fetch error (user may not be logged in):", err);
+				return null;
+			}
+		},
 		select(res) {
 			return res;
 		},
+		retry: false, // Không retry nếu fail (có thể user chưa login)
+		refetchOnWindowFocus: false, // Không refetch khi focus window
 	});
 	const isAdmin = data?.role === 'admin'
 	const isRenter = data?.role === "renter"
 	const isStaff = data?.role === 'staff'
 
-	return { data, isAdmin, isRenter, isStaff, isLoading: isLoading || isFetching };
+	return { data, isAdmin, isRenter, isStaff, isLoading: isLoading || isFetching, error };
 };
 
 export const useLogin = () => {

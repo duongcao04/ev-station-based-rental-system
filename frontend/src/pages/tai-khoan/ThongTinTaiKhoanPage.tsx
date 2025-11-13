@@ -31,11 +31,19 @@ export default function ThongTinTaiKhoanPage() {
   const fetchProfile = async () => {
     try {
       const res = await renterApi.getProfile();
-      
+
       if (res.result) {
         const data = res.result;
-        setUser(data);
-        setTempFullName(data.displayName ?? "");
+        const displayName =
+          data.displayName || (data.email ? data.email.split("@")[0] : "");
+
+        const userData = {
+          ...data,
+          displayName: displayName,
+        };
+
+        setUser(userData);
+        setTempFullName(displayName);
         setTempEmail(data.email ?? "");
         setTempPhone(data.phoneNumber ?? "");
       } else {
@@ -102,11 +110,19 @@ export default function ThongTinTaiKhoanPage() {
     }
   };
 
-  if (!user) return <div>Loading...</div>;
+  if (!user) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <div>Đang tải thông tin...</div>
+      </div>
+    );
+  }
+
+  const displayName = user.displayName || user.email?.split("@")[0] || "User";
 
   const initials =
-    user.displayName
-      ?.split(" ")
+    displayName
+      .split(" ")
       .map((n) => n[0])
       .join("")
       .toUpperCase() || "NA";
@@ -131,8 +147,8 @@ export default function ThongTinTaiKhoanPage() {
                 <div className="flex flex-col items-center gap-4">
                   <Avatar className="h-24 w-24 border-4 border-primary">
                     <AvatarImage
-                      src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user.displayName}`}
-                      alt={user.displayName}
+                      src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${displayName}`}
+                      alt={displayName}
                     />
                     <AvatarFallback className="text-xl font-bold bg-primary text-primary-foreground">
                       {initials}
@@ -142,7 +158,7 @@ export default function ThongTinTaiKhoanPage() {
 
                 <div>
                   <h2 className="text-3xl font-bold text-foreground">
-                    {user.displayName}
+                    {displayName}
                   </h2>
                   <p className="text-sm text-muted-foreground mt-1 flex items-center gap-2">
                     <Mail className="h-4 w-4" />
@@ -189,7 +205,7 @@ export default function ThongTinTaiKhoanPage() {
                   />
                 ) : (
                   <div className="px-4 py-2 rounded-md bg-muted text-foreground">
-                    {user.displayName}
+                    {displayName}
                   </div>
                 )}
               </div>
@@ -288,7 +304,7 @@ export default function ThongTinTaiKhoanPage() {
                   Xác thực bởi nhân viên
                 </Label>
                 <div className="px-4 py-2 rounded-md bg-muted text-foreground">
-                  {user.verifiedStaffId || "-"}
+                  {user.verifiedStaffName || user.verifiedStaffId || "-"}
                 </div>
               </div>
 
