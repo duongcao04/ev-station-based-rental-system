@@ -11,6 +11,6 @@ const router = express.Router();
 router.use(protectedRoute, authorize("renter"));
 
 router.get("/me", getProfile);
-router.patch("/:id/update", checkOwnership, updateProfile);
+router.patch("/me/:id", checkOwnership, updateProfile);
 
 export default router;

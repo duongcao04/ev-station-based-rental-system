@@ -4,6 +4,11 @@ import { create } from "zustand";
 import { authApi } from "@/lib/api/auth.api";
 import { getErrorMessage } from "@/lib/utils/error";
 
+let queryClient: any = null;
+export const setQueryClient = (client: any) => {
+  queryClient = client;
+};
+
 export const useAuthStore = create<AuthState>((set, get) => ({
   accessToken: null,
   user: null,
@@ -73,11 +78,24 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     try {
       get().clearState();
       const res = await authApi.signOut();
+      
+      // Invalidate React Query cache để cập nhật UI
+      if (queryClient) {
+        queryClient.invalidateQueries({ queryKey: ["profile"] });
+        queryClient.removeQueries({ queryKey: ["profile"] });
+      }
+      
       toast.success(res?.message || "Đăng xuất thành công");
     } catch (error) {
       console.error(error);
       const message = getErrorMessage(error, "Đăng xuất thất bại");
       toast.error(message);
+      
+      // Vẫn invalidate cache ngay cả khi có lỗi
+      if (queryClient) {
+        queryClient.invalidateQueries({ queryKey: ["profile"] });
+        queryClient.removeQueries({ queryKey: ["profile"] });
+      }
     }
   },
 

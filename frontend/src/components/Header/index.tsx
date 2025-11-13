@@ -1,4 +1,5 @@
 import { useProfile } from '@/lib/queries/useAuth';
+import { useAuthStore } from '@/stores/useAuthStore';
 import { Car, Menu, Search, User, X } from 'lucide-react';
 import { useState } from 'react';
 import { Link, NavLink } from 'react-router-dom';
@@ -8,8 +9,18 @@ import { NotificationDropdown } from '../NotificationDropdown';
 
 export default function Header() {
   const { data: profile } = useProfile();
+  const { user, signOut } = useAuthStore();
+  
+  // Sử dụng cả profile từ React Query và user từ Zustand store
+  // Khi đăng xuất, user sẽ null ngay lập tức, profile sẽ được invalidate
+  const isAuthenticated = user || profile;
 
   const [mobileOpen, setMobileOpen] = useState(false);
+  
+  const handleSignOut = async () => {
+    await signOut();
+    setMobileOpen(false);
+  };
 
   const navItems = [
     { to: '/', label: 'Trang chủ' },
@@ -80,7 +91,7 @@ export default function Header() {
           </button>
 
       
-          {profile ? (
+          {isAuthenticated ? (
             <div className='flex items-center justify-end gap-4'>
               <UserDropdown />
               <NotificationDropdown />
@@ -140,20 +151,40 @@ export default function Header() {
           ))}
 
           <div className='mt-2 flex flex-col gap-3 border-t border-gray-200 pt-4'>
-            <Link
-              to='/login'
-              className='rounded-lg border-2 border-primary-600 px-4 py-2 text-center font-semibold text-primary-600'
-              onClick={() => setMobileOpen(false)}
-            >
-              Đăng nhập
-            </Link>
-            <Link
-              to='/rent'
-              className='rounded-lg bg-primary-600 px-4 py-2 text-center font-bold text-white'
-              onClick={() => setMobileOpen(false)}
-            >
-              Thuê xe ngay
-            </Link>
+            {isAuthenticated ? (
+              <>
+                <Link
+                  to='/tai-khoan'
+                  className='rounded-lg border-2 border-primary-600 px-4 py-2 text-center font-semibold text-primary-600'
+                  onClick={() => setMobileOpen(false)}
+                >
+                  Tài khoản
+                </Link>
+                <button
+                  onClick={handleSignOut}
+                  className='rounded-lg bg-red-600 px-4 py-2 text-center font-semibold text-white'
+                >
+                  Đăng xuất
+                </button>
+              </>
+            ) : (
+              <>
+                <Link
+                  to='/login'
+                  className='rounded-lg border-2 border-primary-600 px-4 py-2 text-center font-semibold text-primary-600'
+                  onClick={() => setMobileOpen(false)}
+                >
+                  Đăng nhập
+                </Link>
+                <Link
+                  to='/rent'
+                  className='rounded-lg bg-primary-600 px-4 py-2 text-center font-bold text-white'
+                  onClick={() => setMobileOpen(false)}
+                >
+                  Thuê xe ngay
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </div>
