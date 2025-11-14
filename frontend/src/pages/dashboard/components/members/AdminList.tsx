@@ -1,7 +1,8 @@
 "use client";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Edit2 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Edit2, Search, X } from "lucide-react";
 import { adminApi } from "@/lib/api/admin.api";
 
 export function AdminList({ onEdit }: { onEdit: (user: any) => void }) {
@@ -11,6 +12,7 @@ export function AdminList({ onEdit }: { onEdit: (user: any) => void }) {
   const [pageSize, setPageSize] = useState(10);
   const [totalItems, setTotalItems] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     const fetchAdmin = async () => {
@@ -60,10 +62,19 @@ export function AdminList({ onEdit }: { onEdit: (user: any) => void }) {
 
   if (loading) return <p>Đang tải dữ liệu...</p>;
 
+  const filteredData = adminData.filter((admin) => {
+    return (
+      searchTerm === "" ||
+      admin.displayName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      admin.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      admin.phone?.includes(searchTerm)
+    );
+  });
+
   const safeTotalPages = Math.max(1, totalPages);
-  const hasData = adminData.length > 0;
+  const hasData = filteredData.length > 0;
   const startIndex = hasData ? (currentPage - 1) * pageSize + 1 : 0;
-  const endIndex = hasData ? startIndex + adminData.length - 1 : 0;
+  const endIndex = hasData ? startIndex + filteredData.length - 1 : 0;
   const rangeText = hasData ? `${startIndex}-${endIndex}` : "0";
 
   const goPrev = () =>
@@ -84,7 +95,35 @@ export function AdminList({ onEdit }: { onEdit: (user: any) => void }) {
   };
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+        <div className="flex-1">
+          <label className="text-sm font-medium text-foreground mb-1 block">
+            Tìm kiếm
+          </label>
+          <div className="relative">
+            <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Tên, email, số điện thoại..."
+              value={searchTerm}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="pl-8"
+            />
+            {searchTerm && (
+              <button
+                onClick={() => setSearchTerm("")}
+                className="absolute right-2 top-2.5"
+              >
+                <X className="h-4 w-4 text-muted-foreground hover:text-foreground" />
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+
       <div className="flex items-center justify-between">
         <div className="text-sm text-muted-foreground">
           Hiển thị {rangeText} trong {totalItems} quản trị
@@ -115,7 +154,7 @@ export function AdminList({ onEdit }: { onEdit: (user: any) => void }) {
             </tr>
           </thead>
           <tbody>
-            {adminData.map((admin) => (
+            {filteredData.map((admin) => (
               <tr
                 key={admin.id}
                 className="border-b border-border hover:bg-muted/50 transition-colors"
@@ -136,9 +175,12 @@ export function AdminList({ onEdit }: { onEdit: (user: any) => void }) {
                 </td>
               </tr>
             ))}
-            {adminData.length === 0 && (
+            {filteredData.length === 0 && (
               <tr>
-                <td className="p-4 text-center text-muted-foreground" colSpan={4}>
+                <td
+                  className="p-4 text-center text-muted-foreground"
+                  colSpan={4}
+                >
                   Không có dữ liệu
                 </td>
               </tr>

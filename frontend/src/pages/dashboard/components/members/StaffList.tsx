@@ -1,8 +1,36 @@
 "use client";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Edit2 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Edit2, Search, X } from "lucide-react";
 import { adminApi } from "@/lib/api/admin.api";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+const AVAILABLE_STATIONS = [
+  "Quận 1",
+  "Quận 2",
+  "Quận 3",
+  "Quận 4",
+  "Quận 5",
+  "Quận 6",
+  "Quận 7",
+  "Quận 8",
+  "Quận 9",
+  "Quận 10",
+  "Quận 11",
+  "Quận 12",
+  "Tân Bình",
+  "Tân Phú",
+  "Bình Thạnh",
+  "Gò Vấp",
+  "Phú Nhuận",
+];
 
 export function StaffList({ onEdit }: { onEdit: (user: any) => void }) {
   const [staffData, setStaffData] = useState<any[]>([]);
@@ -11,6 +39,8 @@ export function StaffList({ onEdit }: { onEdit: (user: any) => void }) {
   const [pageSize, setPageSize] = useState(10);
   const [totalItems, setTotalItems] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [stationFilter, setStationFilter] = useState<string>("");
 
   useEffect(() => {
     const fetchStaff = async () => {
@@ -60,10 +90,21 @@ export function StaffList({ onEdit }: { onEdit: (user: any) => void }) {
 
   if (loading) return <p>Đang tải dữ liệu...</p>;
 
+  const filteredData = staffData.filter((staff) => {
+    const matchesSearch =
+      searchTerm === "" ||
+      staff.displayName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      staff.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      staff.phone?.includes(searchTerm);
+    const matchesStation =
+      stationFilter === "" || staff.station === stationFilter;
+    return matchesSearch && matchesStation;
+  });
+
   const safeTotalPages = Math.max(1, totalPages);
-  const hasData = staffData.length > 0;
+  const hasData = filteredData.length > 0;
   const startIndex = hasData ? (currentPage - 1) * pageSize + 1 : 0;
-  const endIndex = hasData ? startIndex + staffData.length - 1 : 0;
+  const endIndex = hasData ? startIndex + filteredData.length - 1 : 0;
   const rangeText = hasData ? `${startIndex}-${endIndex}` : "0";
 
   const goPrev = () =>
@@ -84,7 +125,58 @@ export function StaffList({ onEdit }: { onEdit: (user: any) => void }) {
   };
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+        <div className="flex-1">
+          <label className="text-sm font-medium text-foreground mb-1 block">
+            Tìm kiếm
+          </label>
+          <div className="relative">
+            <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Tên, email, số điện thoại..."
+              value={searchTerm}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="pl-8"
+            />
+            {searchTerm && (
+              <button
+                onClick={() => setSearchTerm("")}
+                className="absolute right-2 top-2.5"
+              >
+                <X className="h-4 w-4 text-muted-foreground hover:text-foreground" />
+              </button>
+            )}
+          </div>
+        </div>
+        <div className="w-full sm:w-48">
+          <label className="text-sm font-medium text-foreground mb-1 block">
+            Trạm Làm Việc
+          </label>
+          <Select
+            value={stationFilter || "all"}
+            onValueChange={(value) =>
+              setStationFilter(value === "all" ? "" : value)
+            }
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Tất cả" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Tất cả</SelectItem>
+              {AVAILABLE_STATIONS.map((station) => (
+                <SelectItem key={station} value={station}>
+                  {station}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
       <div className="flex items-center justify-between">
         <div className="text-sm text-muted-foreground">
           Hiển thị {rangeText} trong {totalItems} nhân viên
@@ -116,7 +208,7 @@ export function StaffList({ onEdit }: { onEdit: (user: any) => void }) {
             </tr>
           </thead>
           <tbody>
-            {staffData.map((staff) => (
+            {filteredData.map((staff) => (
               <tr
                 key={staff.id}
                 className="border-b border-border hover:bg-muted/50 transition-colors"
@@ -138,9 +230,12 @@ export function StaffList({ onEdit }: { onEdit: (user: any) => void }) {
                 </td>
               </tr>
             ))}
-            {staffData.length === 0 && (
+            {filteredData.length === 0 && (
               <tr>
-                <td className="p-4 text-center text-muted-foreground" colSpan={5}>
+                <td
+                  className="p-4 text-center text-muted-foreground"
+                  colSpan={5}
+                >
                   Không có dữ liệu
                 </td>
               </tr>

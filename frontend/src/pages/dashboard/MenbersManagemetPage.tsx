@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Card,
   CardContent,
@@ -16,6 +16,18 @@ import { EditModal } from "./components/members/EditModal";
 export default function MembersManagementPage() {
   const [activeTab, setActiveTab] = useState("tenants");
   const [editingUser, setEditingUser] = useState<any>(null);
+
+  useEffect(() => {
+    const savedTab = localStorage.getItem("membersActiveTab");
+    if (savedTab) {
+      setActiveTab(savedTab);
+    }
+  }, []);
+
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab);
+    localStorage.setItem("membersActiveTab", tab);
+  };
 
   return (
     <div className="space-y-6">
@@ -34,7 +46,7 @@ export default function MembersManagementPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <Tabs value={activeTab} onValueChange={handleTabChange}>
             <TabsList className="grid grid-cols-3 w-full">
               <TabsTrigger value="tenants">Khách Thuê</TabsTrigger>
               <TabsTrigger value="staff">Nhân Viên</TabsTrigger>
@@ -57,7 +69,7 @@ export default function MembersManagementPage() {
       {editingUser && (
         <EditModal
           user={editingUser}
-          userType={activeTab}
+          userType={editingUser.type}
           onClose={() => setEditingUser(null)}
         />
       )}
