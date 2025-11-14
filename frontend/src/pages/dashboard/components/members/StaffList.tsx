@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Edit2, Search, X } from "lucide-react";
 import { adminApi } from "@/lib/api/admin.api";
+import { stationApi } from "@/lib/api/station.api";
 import {
   Select,
   SelectContent,
@@ -11,26 +12,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-
-const AVAILABLE_STATIONS = [
-  "Quận 1",
-  "Quận 2",
-  "Quận 3",
-  "Quận 4",
-  "Quận 5",
-  "Quận 6",
-  "Quận 7",
-  "Quận 8",
-  "Quận 9",
-  "Quận 10",
-  "Quận 11",
-  "Quận 12",
-  "Tân Bình",
-  "Tân Phú",
-  "Bình Thạnh",
-  "Gò Vấp",
-  "Phú Nhuận",
-];
 
 export function StaffList({ onEdit }: { onEdit: (user: any) => void }) {
   const [staffData, setStaffData] = useState<any[]>([]);
@@ -41,6 +22,20 @@ export function StaffList({ onEdit }: { onEdit: (user: any) => void }) {
   const [totalPages, setTotalPages] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
   const [stationFilter, setStationFilter] = useState<string>("");
+  const [stations, setStations] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchStations = async () => {
+      try {
+        const response = await stationApi.getAllStations();
+        setStations(response.data || []);
+      } catch (err) {
+        console.error("Failed to fetch stations:", err);
+      }
+    };
+
+    fetchStations();
+  }, []);
 
   useEffect(() => {
     const fetchStaff = async () => {
@@ -94,7 +89,7 @@ export function StaffList({ onEdit }: { onEdit: (user: any) => void }) {
 
   const filteredData = staffData.filter((staff) => {
     const matchesStation =
-      stationFilter === "" || staff.station === stationFilter;
+      stationFilter === "" || staff.station_id === stationFilter;
     return matchesStation;
   });
 
@@ -164,9 +159,12 @@ export function StaffList({ onEdit }: { onEdit: (user: any) => void }) {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Tất cả</SelectItem>
-              {AVAILABLE_STATIONS.map((station) => (
-                <SelectItem key={station} value={station}>
-                  {station}
+              {stations.map((station) => (
+                <SelectItem
+                  key={station.station_id || station.id}
+                  value={station.station_id || station.id}
+                >
+                  {station.display_name || station.station_id || station.id}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -213,7 +211,13 @@ export function StaffList({ onEdit }: { onEdit: (user: any) => void }) {
                 <td className="p-2">{staff.displayName}</td>
                 <td className="p-2 text-muted-foreground">{staff.email}</td>
                 <td className="p-2">{staff.phone}</td>
-                <td className="p-2">{staff.station}</td>
+                <td className="p-2">
+                  {staff.station_id
+                    ? (stations.find(
+                        (s) => (s.station_id || s.id) === staff.station_id
+                      )?.display_name || staff.station_id)
+                    : "Chưa có trạm"}
+                </td>
                 <td className="p-2">
                   <Button
                     variant="ghost"

@@ -53,7 +53,7 @@ const ProtectedRoute = ({
         path = "/dashboard";
         break;
       case "renter":
-        path = "/renters/me";
+        path = "/";
         break;
     }
 

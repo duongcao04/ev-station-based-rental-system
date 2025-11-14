@@ -1,21 +1,24 @@
 import { Op } from "sequelize";
 import { RenterProfile, User } from "../libs/db.js";
 import { registerUser } from "../services/auth.js";
+import { StationService } from "../services/stationService.js";
 
 export const createAccount = async (req, res) => {
   try {
-    const { email, phone_number, password, role } = req.body;
+    const { email, phone_number, password, role, station_id } = req.body;
     const user = await registerUser({
       email,
       phone_number,
       password,
       role,
+      station_id: station_id || null,
     });
     return res.status(201).json({
-      message: "Dăng ký thành công",
+      message: "Đăng ký thành công",
       email: user.email,
       phone_number: user.phone_number,
       role: user.role,
+      station_id: user.station_id || null,
     });
   } catch (error) {
     const status = error.statusCode || 500;
@@ -90,49 +93,79 @@ export const getAllUsers = async (req, res) => {
       order: [["created_at", "DESC"]],
     });
 
-    const normalizedUsers = rows.map((u) => {
-      let verifiedByName = null;
-      if (
-        u.role === "renter" &&
-        u.renter_profile?.verified_by_staff_id &&
-        u.renter_profile?.verified_by_staff
-      ) {
-        const staffProfile = u.renter_profile.verified_by_staff.renter_profile;
-        if (staffProfile && staffProfile.full_name) {
-          verifiedByName = staffProfile.full_name;
-        } else {
-          const emailPrefix =
-            u.renter_profile.verified_by_staff.email.split("@")[0];
-          verifiedByName =
-            emailPrefix
-              .replace(/[._-]/g, " ")
-              .split(" ")
-              .map(
-                (word) =>
-                  word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
-              )
-              .join(" ") || emailPrefix;
+    // Fetch station info for staff users in parallel
+    const normalizedUsers = await Promise.all(
+      rows.map(async (u) => {
+        let verifiedByName = null;
+        if (
+          u.role === "renter" &&
+          u.renter_profile?.verified_by_staff_id &&
+          u.renter_profile?.verified_by_staff
+        ) {
+          const staffProfile = u.renter_profile.verified_by_staff.renter_profile;
+          if (staffProfile && staffProfile.full_name) {
+            verifiedByName = staffProfile.full_name;
+          } else {
+            const emailPrefix =
+              u.renter_profile.verified_by_staff.email.split("@")[0];
+            verifiedByName =
+              emailPrefix
+                .replace(/[._-]/g, " ")
+                .split(" ")
+                .map(
+                  (word) =>
+                    word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+                )
+                .join(" ") || emailPrefix;
+          }
         }
-      }
 
-      return {
-        id: u.id,
-        email: u.email,
-        role: u.role,
+        let stationInfo = null;
+        if (u.role === "staff" && u.station_id) {
+          try {
+            // Try to get station info from Station Service
+            const station = await StationService.getByUserId(u.id);
+            if (station) {
+              stationInfo = {
+                station_id: station.station_id || station.id || u.station_id,
+                display_name: station.display_name || null,
+              };
+            } else {
+              // If station not found in Station Service, use station_id from User
+              stationInfo = {
+                station_id: u.station_id,
+                display_name: null,
+              };
+            }
+          } catch (error) {
+            console.error(`Error fetching station for user ${u.id}:`, error);
+            stationInfo = {
+              station_id: u.station_id,
+              display_name: null,
+            };
+          }
+        }
 
-        displayName: u.renter_profile?.full_name || null,
-        phone: u.phone_number || "",
+        return {
+          id: u.id,
+          email: u.email,
+          role: u.role,
 
-        kycStatus:
-          u.role === "renter"
-            ? u.renter_profile?.verification_status || "pending"
-            : undefined,
-        verifiedBy: verifiedByName || null,
-        kycNote: u.renter_profile?.note || null,
+          displayName: u.renter_profile?.full_name || null,
+          phone: u.phone_number || "",
 
-        station: u.role === "staff" ? null : undefined,
-      };
-    });
+          kycStatus:
+            u.role === "renter"
+              ? u.renter_profile?.verification_status || "pending"
+              : undefined,
+          verifiedBy: verifiedByName || null,
+          kycNote: u.renter_profile?.note || null,
+
+          station: stationInfo?.display_name || null,
+          station_id: stationInfo?.station_id || null,
+        };
+      })
+    );
 
     res.status(200).json({
       success: true,
@@ -232,15 +265,10 @@ export const updateUserProfile = async (req, res) => {
     // save changes to User (email, phone, full_name)
     await user.save();
 
-    // if user is staff, update station
-    if (user.role === "staff" && req.body.station) {
-      try {
-        await StationService.update(user.id, {
-          display_name: req.body.station,
-        });
-      } catch (e) {
-        console.error("Failed to update staff station:", e?.message || e);
-      }
+    if (user.role === "staff" && req.body.station_id !== undefined) {
+      const stationId = req.body.station_id || null;
+      user.station_id = stationId;
+      await user.save();
     }
 
     // update full_name for renter
@@ -255,6 +283,30 @@ export const updateUserProfile = async (req, res) => {
           verification_status: "pending",
           is_risky: false,
         });
+      }
+    }
+
+    let stationInfo = null;
+    if (user.role === "staff" && user.station_id) {
+      try {
+        const station = await StationService.getByUserId(user.id);
+        if (station) {
+          stationInfo = {
+            station_id: station.station_id || station.id || user.station_id,
+            display_name: station.display_name || null,
+          };
+        } else {
+          stationInfo = {
+            station_id: user.station_id,
+            display_name: null,
+          };
+        }
+      } catch (error) {
+        console.error(`Error fetching station for user ${user.id}:`, error);
+        stationInfo = {
+          station_id: user.station_id,
+          display_name: null,
+        };
       }
     }
 
@@ -276,6 +328,8 @@ export const updateUserProfile = async (req, res) => {
             : undefined,
         verifiedBy: user.renter_profile?.verified_by_staff_id || null,
         kycNote: user.renter_profile?.note || null,
+        station: stationInfo?.display_name || null,
+        station_id: stationInfo?.station_id || null,
       },
     });
   } catch (error) {
