@@ -111,6 +111,12 @@ app.use(
     makeProxy(SERVICES.AUTH, (path) => `/api/kyc${path}`)
 );
 
+// Route /upload/* → Auth Service (for static files)
+app.use(
+    "/upload",
+    makeProxy(SERVICES.AUTH, (path) => `/upload${path}`)
+);
+
 // ================== BOOKING SERVICE ==================
 app.use(
     "/api/v1/bookings",

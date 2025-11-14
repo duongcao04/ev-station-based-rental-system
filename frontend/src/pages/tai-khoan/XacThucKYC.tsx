@@ -1,182 +1,220 @@
-'use client';
+"use client";
 
-import { Button } from '@/components/ui/button';
-import { ArrowRight } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
 import {
-  useFaceVerification,
-  useKYCSubmit,
-  useOCRProcess,
-} from '../../lib/queries/useKyc';
-import { ImageUpload } from './components/kyc/ImageUpload';
-import { OCRResults } from './components/kyc/OcrResults';
+  Card,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { FileUpload } from "./components/kyc/ImageUpload";
+import {
+  FileText,
+  Dices as License,
+  CheckCircle,
+  Clock,
+  AlertCircle,
+} from "lucide-react";
+import { useKycStore } from "@/stores/useKycStore";
 
-interface OCRData {
-  idNumber?: string;
-  fullName?: string;
-  birthDate?: string;
-  permanentAddress?: string;
-  districtCode?: string;
-  wardCode?: string;
-  provinceCode?: string;
-  expiryDate?: string;
-}
+export default function KYCPage() {
+  const [activeDialog, setActiveDialog] = useState<"cccd" | "license" | null>(
+    null
+  );
 
-interface BackOCRData {
-  issuedBy?: string;
-  issueDate?: string;
-  ethnicity?: string;
-  religion?: string;
-}
+  const { profile, fetchKYC, uploadKYC } = useKycStore();
 
-export default function XacThucKYC() {
-  const [frontImage, setFrontImage] = useState<File | null>(null);
-  const [backImage, setBackImage] = useState<File | null>(null);
-  const [faceImage, setFaceImage] = useState<File | null>(null);
+  useEffect(() => {
+    fetchKYC();
+  }, []);
 
-  const [frontOCR, setFrontOCR] = useState<OCRData | null>(null);
-  const [backOCR, setBackOCR] = useState<BackOCRData | null>(null);
-  const [faceStatus, setFaceStatus] = useState<
-    'pending' | 'verified' | 'failed'
-  >('pending');
+  const canEdit = profile?.verification_status !== "verified";
 
-  const ocrMutation = useOCRProcess();
-  const faceMutation = useFaceVerification();
-  const submitMutation = useKYCSubmit();
+  const handleFileUpload = async (docType: "cccd" | "license", file: File) => {
+    const files =
+      docType === "cccd" ? { national_id: file } : { driver_license: file };
 
-  const handleFrontImageSelect = async (file: File) => {
-    setFrontImage(file);
-    // Simulate OCR processing
-    ocrMutation.mutate(
-      { file, type: 'front' },
-      {
-        onSuccess: (response) => {
-          setFrontOCR(response.data.ocrResult || {});
-        },
-      }
-    );
+    await uploadKYC(files);
+    await fetchKYC();
+    setActiveDialog(null);
   };
 
-  const handleBackImageSelect = async (file: File) => {
-    setBackImage(file);
-    // Simulate OCR processing
-    ocrMutation.mutate(
-      { file, type: 'back' },
-      {
-        onSuccess: (response) => {
-          setBackOCR(response.data.ocrResult || {});
-        },
-      }
-    );
-  };
-
-  const handleFaceImageSelect = async (file: File) => {
-    setFaceImage(file);
-    // Simulate face verification
-    faceMutation.mutate(file, {
-      onSuccess: (response) => {
-        setFaceStatus(response.data.status || 'verified');
-      },
-    });
-  };
-
-  const handleSubmit = () => {
-    if (!frontImage || !backImage || !faceImage) {
-      alert('Vui lòng cung cấp tất cả các ảnh cần thiết');
-      return;
+  const getStatusIcon = (status?: string) => {
+    switch (status) {
+      case "verified":
+        return <CheckCircle className="w-5 h-5 text-green-500" />;
+      case "rejected":
+        return <AlertCircle className="w-5 h-5 text-destructive" />;
+      case "pending":
+      default:
+        return <Clock className="w-5 h-5 text-amber-500" />;
     }
+  };
 
-    submitMutation.mutate(
-      {
-        frontImage,
-        backImage,
-        faceImage,
-        frontOCR: frontOCR || undefined,
-        backOCR: backOCR || undefined,
-        faceVerification: { status: faceStatus },
-      },
-      {
-        onSuccess: () => {
-          alert('Xác thực KYC thành công!');
-        },
-        onError: () => {
-          alert('Xác thực KYC thất bại');
-        },
-      }
-    );
+  const getStatusText = (status?: string) => {
+    switch (status) {
+      case "verified":
+        return "Đã xác thực";
+      case "rejected":
+        return "Bị từ chối";
+      case "pending":
+      default:
+        return "Chờ xác thực";
+    }
   };
 
   return (
-    <div className='min-h-screen bg-gray-50 py-8 px-4'>
-      <div className='max-w-7xl mx-auto'>
-        {/* Header */}
-        <div className='mb-8'>
-          <h1 className='text-3xl font-bold text-gray-900 mb-2'>
-            Xác thực thông tin tài khoản của khách hàng
-          </h1>
-          <p className='text-red-600 text-sm'>
-            * Hình ảnh CMT/CCCD của Quý khách được bảo mật
-          </p>
-        </div>
-
-        <div className='grid grid-cols-1 lg:grid-cols-2 gap-6'>
-          {/* Left Column - Image Upload */}
-          <div className='space-y-6'>
-            <ImageUpload
-              title='1. Ảnh CCCD/Hộ chiếu mặt trước'
-              onImageSelect={handleFrontImageSelect}
-              preview={frontImage ? URL.createObjectURL(frontImage) : undefined}
-              isLoading={ocrMutation.isPending}
-            />
-
-            <ImageUpload
-              title='2. Ảnh CMT/CCCD mặt sau'
-              onImageSelect={handleBackImageSelect}
-              preview={backImage ? URL.createObjectURL(backImage) : undefined}
-              isLoading={ocrMutation.isPending}
-            />
-
-            <ImageUpload
-              title='3. Ảnh khuôn mặt'
-              onImageSelect={handleFaceImageSelect}
-              preview={faceImage ? URL.createObjectURL(faceImage) : undefined}
-              isLoading={faceMutation.isPending}
-            />
+    <div className="min-h-screen bg-background">
+      <div className="container mx-auto px-4 py-8">
+        <div className="max-w-2xl mx-auto">
+          {/* Header */}
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold text-foreground">
+              Xác Thực Danh Tính
+            </h1>
+            <p className="text-muted-foreground mt-2">
+              Vui lòng tải lên các giấy tờ cần thiết để xác thực danh tính
+            </p>
           </div>
 
-          {/* Right Column - OCR Results */}
-          <div className='space-y-6'>
-            <OCRResults
-              title='Kết quả OCR mặt trước'
-              data={frontOCR || undefined}
-              isLoading={ocrMutation.isPending}
-            />
+          {/* KYC Cards */}
+          <div className="space-y-6">
+            {/* CCCD */}
+            <Card className="border border-border hover:border-primary/50 transition-colors mb-4">
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3 flex-1">
+                    <div className="p-2 bg-primary/10 rounded-lg">
+                      <FileText className="w-5 h-5 text-primary" />
+                    </div>
+                    <div className="flex-1">
+                      <CardTitle className="text-lg">
+                        Căn Cước Công Dân
+                      </CardTitle>
+                      <CardDescription>
+                        {profile?.national_id_url ? (
+                          <span className="flex items-center gap-2 mt-1">
+                            {getStatusIcon(profile.verification_status)}
+                            <span>
+                              {profile.national_id_url.split("/").pop()} •{" "}
+                              {getStatusText(profile.verification_status)}
+                            </span>
+                          </span>
+                        ) : (
+                          "Tải lên ảnh CCCD"
+                        )}
+                      </CardDescription>
+                    </div>
+                  </div>
 
-            <OCRResults
-              title='Kết quả OCR mặt sau'
-              data={backOCR || undefined}
-              isLoading={ocrMutation.isPending}
-            />
+                  <Button
+                    onClick={() => canEdit && setActiveDialog("cccd")}
+                    variant={canEdit ? "outline" : "secondary"}
+                    size="sm"
+                    disabled={!canEdit}
+                  >
+                    {profile?.national_id_url ? "Thay Đổi" : "Tải Lên"}
+                  </Button>
+                </div>
+              </CardHeader>
+            </Card>
 
-            {/* <FaceVerification status={faceStatus} /> */}
+            {/* Driver License */}
+            <Card className="border border-border hover:border-primary/50 transition-colors mb-4">
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3 flex-1">
+                    <div className="p-2 bg-primary/10 rounded-lg">
+                      <License className="w-5 h-5 text-primary" />
+                    </div>
+                    <div className="flex-1">
+                      <CardTitle className="text-lg">
+                        Giấy Phép Lái Xe (Mặt Trước)
+                      </CardTitle>
+                      <CardDescription>
+                        {profile?.driver_license_url ? (
+                          <span className="flex items-center gap-2 mt-1">
+                            {getStatusIcon(profile.verification_status)}
+                            <span>
+                              {profile.driver_license_url.split("/").pop()} •{" "}
+                              {getStatusText(profile.verification_status)}
+                            </span>
+                          </span>
+                        ) : (
+                          "Tải lên ảnh giấy phép lái xe"
+                        )}
+                      </CardDescription>
+                    </div>
+                  </div>
 
-            {/* Submit Button */}
-            <Button
-              onClick={handleSubmit}
-              disabled={
-                !frontImage ||
-                !backImage ||
-                !faceImage ||
-                submitMutation.isPending
-              }
-              className='w-full bg-green-500 hover:bg-green-600 text-white h-12 text-base'
-            >
-              <ArrowRight className='w-5 h-5 mr-2' />
-              Tiếp tục
-            </Button>
+                  <Button
+                    onClick={() => canEdit && setActiveDialog("license")}
+                    variant={canEdit ? "outline" : "secondary"}
+                    size="sm"
+                    disabled={!canEdit}
+                  >
+                    {profile?.driver_license_url ? "Thay Đổi" : "Tải Lên"}
+                  </Button>
+                </div>
+              </CardHeader>
+            </Card>
+          </div>
+
+          {/* Info */}
+          <div className="mt-8 p-4 bg-secondary/50 rounded-lg border border-border">
+            <p className="text-sm text-muted-foreground">
+              <strong>Lưu ý:</strong> Hình ảnh phải rõ ràng, đầy đủ thông tin và
+              còn hạn sử dụng. Thời gian xác thực thường mất 1-3 ngày làm việc.
+            </p>
           </div>
         </div>
       </div>
+
+      {/* CCCD Dialog */}
+      <Dialog
+        open={activeDialog === "cccd" && canEdit}
+        onOpenChange={(open) => setActiveDialog(open ? "cccd" : null)}
+      >
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Tải Lên Căn Cước Công Dân</DialogTitle>
+            <DialogDescription>
+              Chọn ảnh CCCD (JPG/PNG, tối đa 5MB)
+            </DialogDescription>
+          </DialogHeader>
+          <FileUpload
+            onUpload={(file) => handleFileUpload("cccd", file)}
+            onCancel={() => setActiveDialog(null)}
+          />
+        </DialogContent>
+      </Dialog>
+
+      {/* Driver License Dialog */}
+      <Dialog
+        open={activeDialog === "license" && canEdit}
+        onOpenChange={(open) => setActiveDialog(open ? "license" : null)}
+      >
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Tải Lên Giấy Phép Lái Xe</DialogTitle>
+            <DialogDescription>
+              Chọn ảnh mặt trước giấy phép (JPG/PNG, tối đa 5MB)
+            </DialogDescription>
+          </DialogHeader>
+          <FileUpload
+            onUpload={(file) => handleFileUpload("license", file)}
+            onCancel={() => setActiveDialog(null)}
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

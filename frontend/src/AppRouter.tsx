@@ -30,6 +30,7 @@ import TramXePage from "./pages/tram-xe/TramXePage";
 import SettingsPage from "./pages/dashboard/SettingPage";
 import RenterSettingsPage from "./pages/tai-khoan/SettingPage";
 import MenbersManagementPage from "./pages/dashboard/MenbersManagemetPage";
+import KYCVerificationPage from "./pages/dashboard/KYCVerificationPage";
 
 // eslint-disable-next-line react-refresh/only-export-components
 export const router = createBrowserRouter([
@@ -262,6 +263,16 @@ export const router = createBrowserRouter([
           <ProtectedRoute allowedRoles={["admin"]}>
             <DashboardLayout>
               <MenbersManagementPage />
+            </DashboardLayout>
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/dashboard/kyc-verification",
+        element: (
+          <ProtectedRoute allowedRoles={["admin", "staff"]}>
+            <DashboardLayout>
+              <KYCVerificationPage />
             </DashboardLayout>
           </ProtectedRoute>
         ),

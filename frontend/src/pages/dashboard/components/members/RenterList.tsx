@@ -1,8 +1,16 @@
 "use client";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Edit2 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Edit2, Search, X } from "lucide-react";
 import { adminApi } from "@/lib/api/admin.api";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export function RenterList({ onEdit }: { onEdit: (user: any) => void }) {
   const [tenantsData, setTenantsData] = useState<any[]>([]);
@@ -11,6 +19,8 @@ export function RenterList({ onEdit }: { onEdit: (user: any) => void }) {
   const [pageSize, setPageSize] = useState(10);
   const [totalItems, setTotalItems] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [kycFilter, setKycFilter] = useState<string>("");
 
   // Mapping trạng thái KYC với nhãn và màu nền/chữ
   const kycStatusMap: Record<
@@ -42,6 +52,8 @@ export function RenterList({ onEdit }: { onEdit: (user: any) => void }) {
           page: currentPage,
           limit: pageSize,
           role: "renter",
+          q: searchTerm || undefined,
+          kycStatus: kycFilter || undefined,
         });
 
         const result = response?.result ?? [];
@@ -59,7 +71,7 @@ export function RenterList({ onEdit }: { onEdit: (user: any) => void }) {
             : Math.ceil((totalFromMeta || 0) / pageSize) || 1
         );
 
-        if (currentPage > normalizedTotalPages) {
+        if (currentPage > normalizedTotalPages && normalizedTotalPages > 0) {
           setCurrentPage(normalizedTotalPages);
           return;
         }
@@ -78,14 +90,17 @@ export function RenterList({ onEdit }: { onEdit: (user: any) => void }) {
     };
 
     fetchTenants();
-  }, [currentPage, pageSize]);
+  }, [currentPage, pageSize, searchTerm, kycFilter]);
 
   if (loading) return <p>Đang tải dữ liệu...</p>;
 
+
+  const filteredData = tenantsData;
+
   const safeTotalPages = Math.max(1, totalPages);
-  const hasData = tenantsData.length > 0;
+  const hasData = filteredData.length > 0;
   const startIndex = hasData ? (currentPage - 1) * pageSize + 1 : 0;
-  const endIndex = hasData ? startIndex + tenantsData.length - 1 : 0;
+  const endIndex = hasData ? startIndex + filteredData.length - 1 : 0;
   const rangeText = hasData ? `${startIndex}-${endIndex}` : "0";
 
   const goPrev = () => setCurrentPage((p) => (p <= 1 ? 1 : p - 1));
@@ -99,7 +114,57 @@ export function RenterList({ onEdit }: { onEdit: (user: any) => void }) {
   };
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+        <div className="flex-1">
+          <label className="text-sm font-medium text-foreground mb-1 block">
+            Tìm kiếm
+          </label>
+          <div className="relative">
+            <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Tên, email, số điện thoại..."
+              value={searchTerm}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setCurrentPage(1); 
+              }}
+              className="pl-8"
+            />
+            {searchTerm && (
+              <button
+                onClick={() => setSearchTerm("")}
+                className="absolute right-2 top-2.5"
+              >
+                <X className="h-4 w-4 text-muted-foreground hover:text-foreground" />
+              </button>
+            )}
+          </div>
+        </div>
+        <div className="w-full sm:w-48">
+          <label className="text-sm font-medium text-foreground mb-1 block">
+            Trạng Thái KYC
+          </label>
+          <Select
+            value={kycFilter || "all"}
+            onValueChange={(value) => {
+              setKycFilter(value === "all" ? "" : value);
+              setCurrentPage(1); 
+            }}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Tất cả" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Tất cả</SelectItem>
+              <SelectItem value="pending">Đang chờ xác thực</SelectItem>
+              <SelectItem value="verified">Đã xác thực</SelectItem>
+              <SelectItem value="rejected">KYC bị từ chối</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
       {/* Header: số dòng và số lượng hiển thị */}
       <div className="flex items-center justify-between">
         <div className="text-sm text-muted-foreground">
@@ -135,7 +200,7 @@ export function RenterList({ onEdit }: { onEdit: (user: any) => void }) {
             </tr>
           </thead>
           <tbody>
-            {tenantsData.map((tenant) => (
+            {filteredData.map((tenant) => (
               <tr
                 key={tenant.id}
                 className="border-b border-border hover:bg-muted/50 transition-colors"
