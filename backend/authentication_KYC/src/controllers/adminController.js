@@ -26,7 +26,7 @@ export const createAccount = async (req, res) => {
 
 export const getAllUsers = async (req, res) => {
   try {
-    const { page = 1, limit = 10, role, q } = req.query;
+    const { page = 1, limit = 10, role, q, kycStatus } = req.query;
 
     const where = {};
 
@@ -34,22 +34,54 @@ export const getAllUsers = async (req, res) => {
 
     if (q) {
       where[Op.or] = [
-        { email: { [Op.iLike]: `%${q}%` } }, // iLike dùng trong PostgreSQL (case-insensitive)
+        { email: { [Op.iLike]: `%${q}%` } },
         { phone_number: { [Op.iLike]: `%${q}%` } },
       ];
     }
 
     const offset = (page - 1) * limit;
 
+    const renterProfileWhere = {};
+
+    if (kycStatus && role === "renter") {
+      renterProfileWhere.verification_status = kycStatus;
+    }
+
+    const includeOptions = [
+      {
+        model: RenterProfile,
+        as: "renter_profile",
+        required: role === "renter",
+        ...(Object.keys(renterProfileWhere).length > 0
+          ? {
+              where: renterProfileWhere,
+            }
+          : {}),
+        include:
+          role === "renter"
+            ? [
+                {
+                  model: User,
+                  as: "verified_by_staff",
+                  attributes: ["id", "email"],
+                  required: false,
+                  include: [
+                    {
+                      model: RenterProfile,
+                      as: "renter_profile",
+                      attributes: ["full_name"],
+                      required: false,
+                    },
+                  ],
+                },
+              ]
+            : [],
+      },
+    ];
+
     const { rows, count } = await User.findAndCountAll({
       where,
-      include: [
-        {
-          model: RenterProfile,
-          as: "renter_profile",
-          required: false,
-        },
-      ],
+      include: includeOptions,
       attributes: {
         exclude: ["password_hash", "refreshtoken"],
       },
@@ -58,24 +90,49 @@ export const getAllUsers = async (req, res) => {
       order: [["created_at", "DESC"]],
     });
 
-    // Normalize response to match frontend expectations
-    const normalizedUsers = rows.map((u) => ({
-      id: u.id,
-      email: u.email,
-      role: u.role,
-      // FE expects these names
-      displayName: u.renter_profile?.full_name || null,
-      phone: u.phone_number || "",
-      // KYC fields for renters
-      kycStatus:
-        u.role === "renter"
-          ? u.renter_profile?.verification_status || "pending"
-          : undefined,
-      verifiedBy: u.renter_profile?.verified_by_staff_id || null,
-      kycNote: u.renter_profile?.note || null,
-      // Placeholder for staff station (not modeled here)
-      station: u.role === "staff" ? null : undefined,
-    }));
+    const normalizedUsers = rows.map((u) => {
+      let verifiedByName = null;
+      if (
+        u.role === "renter" &&
+        u.renter_profile?.verified_by_staff_id &&
+        u.renter_profile?.verified_by_staff
+      ) {
+        const staffProfile = u.renter_profile.verified_by_staff.renter_profile;
+        if (staffProfile && staffProfile.full_name) {
+          verifiedByName = staffProfile.full_name;
+        } else {
+          const emailPrefix =
+            u.renter_profile.verified_by_staff.email.split("@")[0];
+          verifiedByName =
+            emailPrefix
+              .replace(/[._-]/g, " ")
+              .split(" ")
+              .map(
+                (word) =>
+                  word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+              )
+              .join(" ") || emailPrefix;
+        }
+      }
+
+      return {
+        id: u.id,
+        email: u.email,
+        role: u.role,
+
+        displayName: u.renter_profile?.full_name || null,
+        phone: u.phone_number || "",
+
+        kycStatus:
+          u.role === "renter"
+            ? u.renter_profile?.verification_status || "pending"
+            : undefined,
+        verifiedBy: verifiedByName || null,
+        kycNote: u.renter_profile?.note || null,
+
+        station: u.role === "staff" ? null : undefined,
+      };
+    });
 
     res.status(200).json({
       success: true,

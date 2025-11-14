@@ -22,6 +22,7 @@ export function AdminList({ onEdit }: { onEdit: (user: any) => void }) {
           page: currentPage,
           limit: pageSize,
           role: "admin",
+          q: searchTerm || undefined,
         });
 
         const result = response?.result ?? [];
@@ -39,7 +40,7 @@ export function AdminList({ onEdit }: { onEdit: (user: any) => void }) {
             : Math.ceil((totalFromMeta || 0) / pageSize) || 1
         );
 
-        if (currentPage > normalizedTotalPages) {
+        if (currentPage > normalizedTotalPages && normalizedTotalPages > 0) {
           setCurrentPage(normalizedTotalPages);
           return;
         }
@@ -58,18 +59,11 @@ export function AdminList({ onEdit }: { onEdit: (user: any) => void }) {
     };
 
     fetchAdmin();
-  }, [currentPage, pageSize]);
+  }, [currentPage, pageSize, searchTerm]);
 
   if (loading) return <p>Đang tải dữ liệu...</p>;
 
-  const filteredData = adminData.filter((admin) => {
-    return (
-      searchTerm === "" ||
-      admin.displayName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      admin.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      admin.phone?.includes(searchTerm)
-    );
-  });
+  const filteredData = adminData;
 
   const safeTotalPages = Math.max(1, totalPages);
   const hasData = filteredData.length > 0;
@@ -108,7 +102,7 @@ export function AdminList({ onEdit }: { onEdit: (user: any) => void }) {
               value={searchTerm}
               onChange={(e) => {
                 setSearchTerm(e.target.value);
-                setCurrentPage(1);
+                setCurrentPage(1); 
               }}
               className="pl-8"
             />

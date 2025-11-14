@@ -50,6 +50,7 @@ export function StaffList({ onEdit }: { onEdit: (user: any) => void }) {
           page: currentPage,
           limit: pageSize,
           role: "staff",
+          q: searchTerm || undefined,
         });
 
         const result = response?.result ?? [];
@@ -67,7 +68,7 @@ export function StaffList({ onEdit }: { onEdit: (user: any) => void }) {
             : Math.ceil((totalFromMeta || 0) / pageSize) || 1
         );
 
-        if (currentPage > normalizedTotalPages) {
+        if (currentPage > normalizedTotalPages && normalizedTotalPages > 0) {
           setCurrentPage(normalizedTotalPages);
           return;
         }
@@ -86,19 +87,15 @@ export function StaffList({ onEdit }: { onEdit: (user: any) => void }) {
     };
 
     fetchStaff();
-  }, [currentPage, pageSize]);
+  }, [currentPage, pageSize, searchTerm]);
 
   if (loading) return <p>Đang tải dữ liệu...</p>;
 
+
   const filteredData = staffData.filter((staff) => {
-    const matchesSearch =
-      searchTerm === "" ||
-      staff.displayName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      staff.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      staff.phone?.includes(searchTerm);
     const matchesStation =
       stationFilter === "" || staff.station === stationFilter;
-    return matchesSearch && matchesStation;
+    return matchesStation;
   });
 
   const safeTotalPages = Math.max(1, totalPages);
@@ -138,7 +135,7 @@ export function StaffList({ onEdit }: { onEdit: (user: any) => void }) {
               value={searchTerm}
               onChange={(e) => {
                 setSearchTerm(e.target.value);
-                setCurrentPage(1);
+                setCurrentPage(1); 
               }}
               className="pl-8"
             />

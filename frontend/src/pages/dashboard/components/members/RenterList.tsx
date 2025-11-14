@@ -52,6 +52,8 @@ export function RenterList({ onEdit }: { onEdit: (user: any) => void }) {
           page: currentPage,
           limit: pageSize,
           role: "renter",
+          q: searchTerm || undefined,
+          kycStatus: kycFilter || undefined,
         });
 
         const result = response?.result ?? [];
@@ -69,7 +71,7 @@ export function RenterList({ onEdit }: { onEdit: (user: any) => void }) {
             : Math.ceil((totalFromMeta || 0) / pageSize) || 1
         );
 
-        if (currentPage > normalizedTotalPages) {
+        if (currentPage > normalizedTotalPages && normalizedTotalPages > 0) {
           setCurrentPage(normalizedTotalPages);
           return;
         }
@@ -88,19 +90,12 @@ export function RenterList({ onEdit }: { onEdit: (user: any) => void }) {
     };
 
     fetchTenants();
-  }, [currentPage, pageSize]);
+  }, [currentPage, pageSize, searchTerm, kycFilter]);
 
   if (loading) return <p>Đang tải dữ liệu...</p>;
 
-  const filteredData = tenantsData.filter((tenant) => {
-    const matchesSearch =
-      searchTerm === "" ||
-      tenant.displayName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      tenant.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      tenant.phone?.includes(searchTerm);
-    const matchesKycFilter = kycFilter === "" || tenant.kycStatus === kycFilter;
-    return matchesSearch && matchesKycFilter;
-  });
+
+  const filteredData = tenantsData;
 
   const safeTotalPages = Math.max(1, totalPages);
   const hasData = filteredData.length > 0;
@@ -132,7 +127,7 @@ export function RenterList({ onEdit }: { onEdit: (user: any) => void }) {
               value={searchTerm}
               onChange={(e) => {
                 setSearchTerm(e.target.value);
-                setCurrentPage(1);
+                setCurrentPage(1); 
               }}
               className="pl-8"
             />
@@ -152,9 +147,10 @@ export function RenterList({ onEdit }: { onEdit: (user: any) => void }) {
           </label>
           <Select
             value={kycFilter || "all"}
-            onValueChange={(value) =>
-              setKycFilter(value === "all" ? "" : value)
-            }
+            onValueChange={(value) => {
+              setKycFilter(value === "all" ? "" : value);
+              setCurrentPage(1); 
+            }}
           >
             <SelectTrigger>
               <SelectValue placeholder="Tất cả" />

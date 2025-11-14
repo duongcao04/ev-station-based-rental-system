@@ -36,18 +36,20 @@ export default function KYCPage() {
     fetchKYC();
   }, []);
 
+  const canEdit = profile?.verification_status !== "verified";
+
   const handleFileUpload = async (docType: "cccd" | "license", file: File) => {
     const files =
       docType === "cccd" ? { national_id: file } : { driver_license: file };
+
     await uploadKYC(files);
-    // Refresh KYC status after successful upload
     await fetchKYC();
     setActiveDialog(null);
   };
 
   const getStatusIcon = (status?: string) => {
     switch (status) {
-      case "approved":
+      case "verified":
         return <CheckCircle className="w-5 h-5 text-green-500" />;
       case "rejected":
         return <AlertCircle className="w-5 h-5 text-destructive" />;
@@ -59,10 +61,10 @@ export default function KYCPage() {
 
   const getStatusText = (status?: string) => {
     switch (status) {
-      case "approved":
+      case "verified":
         return "Đã xác thực";
       case "rejected":
-        return "Từ chối";
+        return "Bị từ chối";
       case "pending":
       default:
         return "Chờ xác thực";
@@ -79,8 +81,7 @@ export default function KYCPage() {
               Xác Thực Danh Tính
             </h1>
             <p className="text-muted-foreground mt-2">
-              Vui lòng tải lên các tài liệu cần thiết để xác thực thông tin của
-              bạn
+              Vui lòng tải lên các giấy tờ cần thiết để xác thực danh tính
             </p>
           </div>
 
@@ -108,19 +109,17 @@ export default function KYCPage() {
                             </span>
                           </span>
                         ) : (
-                          "Tải lên ảnh CCCD của bạn"
+                          "Tải lên ảnh CCCD"
                         )}
                       </CardDescription>
                     </div>
                   </div>
+
                   <Button
-                    onClick={() => setActiveDialog("cccd")}
-                    variant={
-                      profile?.verification_status === "approved"
-                        ? "secondary"
-                        : "outline"
-                    }
+                    onClick={() => canEdit && setActiveDialog("cccd")}
+                    variant={canEdit ? "outline" : "secondary"}
                     size="sm"
+                    disabled={!canEdit}
                   >
                     {profile?.national_id_url ? "Thay Đổi" : "Tải Lên"}
                   </Button>
@@ -155,14 +154,12 @@ export default function KYCPage() {
                       </CardDescription>
                     </div>
                   </div>
+
                   <Button
-                    onClick={() => setActiveDialog("license")}
-                    variant={
-                      profile?.verification_status === "approved"
-                        ? "secondary"
-                        : "outline"
-                    }
+                    onClick={() => canEdit && setActiveDialog("license")}
+                    variant={canEdit ? "outline" : "secondary"}
                     size="sm"
+                    disabled={!canEdit}
                   >
                     {profile?.driver_license_url ? "Thay Đổi" : "Tải Lên"}
                   </Button>
@@ -171,7 +168,7 @@ export default function KYCPage() {
             </Card>
           </div>
 
-          {/* Submit / Info */}
+          {/* Info */}
           <div className="mt-8 p-4 bg-secondary/50 rounded-lg border border-border">
             <p className="text-sm text-muted-foreground">
               <strong>Lưu ý:</strong> Hình ảnh phải rõ ràng, đầy đủ thông tin và
@@ -183,20 +180,18 @@ export default function KYCPage() {
 
       {/* CCCD Dialog */}
       <Dialog
-        open={activeDialog === "cccd"}
+        open={activeDialog === "cccd" && canEdit}
         onOpenChange={(open) => setActiveDialog(open ? "cccd" : null)}
       >
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Tải Lên Căn Cước Công Dân</DialogTitle>
             <DialogDescription>
-              Chọn ảnh CCCD của bạn (JPG, PNG, tối đa 5MB)
+              Chọn ảnh CCCD (JPG/PNG, tối đa 5MB)
             </DialogDescription>
           </DialogHeader>
           <FileUpload
-            onUpload={(file) =>
-              handleFileUpload("cccd", file)
-            }
+            onUpload={(file) => handleFileUpload("cccd", file)}
             onCancel={() => setActiveDialog(null)}
           />
         </DialogContent>
@@ -204,20 +199,18 @@ export default function KYCPage() {
 
       {/* Driver License Dialog */}
       <Dialog
-        open={activeDialog === "license"}
+        open={activeDialog === "license" && canEdit}
         onOpenChange={(open) => setActiveDialog(open ? "license" : null)}
       >
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Tải Lên Giấy Phép Lái Xe</DialogTitle>
             <DialogDescription>
-              Chọn ảnh mặt trước của giấy phép (JPG, PNG, tối đa 5MB)
+              Chọn ảnh mặt trước giấy phép (JPG/PNG, tối đa 5MB)
             </DialogDescription>
           </DialogHeader>
           <FileUpload
-            onUpload={(file) =>
-              handleFileUpload("license", file)
-            }
+            onUpload={(file) => handleFileUpload("license", file)}
             onCancel={() => setActiveDialog(null)}
           />
         </DialogContent>

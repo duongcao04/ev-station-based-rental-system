@@ -1,6 +1,9 @@
 import { axiosClient, type ApiResponse } from "@/lib/axios";
-
-export type KYCStatus = "pending" | "approved" | "rejected";
+import type {
+  KYCStatus,
+  KYCSubmissionsResponse,
+  KYCVerifySubmissionResponse,
+} from "@/types/kyc";
 
 export interface KYCProfile {
   driver_license_url?: string;
@@ -41,15 +44,14 @@ export const KYC_API = {
     status?: string;
     page?: number;
     q?: string;
-  }) => {
-    const res = await axiosClient.get<
-      ApiResponse<{
-        data: any[];
-        total: number;
-        page: number;
-        totalPages: number;
-      }>
-    >("/v1/kyc/submissions", { params });
+  }): Promise<KYCSubmissionsResponse> => {
+    const res = await axiosClient.get<ApiResponse<KYCSubmissionsResponse>>(
+      "/v1/kyc/submissions",
+      { params }
+    );
+    if (!res.data?.result) {
+      throw new Error("Invalid response from server");
+    }
     return res.data.result;
   },
 
@@ -58,11 +60,14 @@ export const KYC_API = {
     submissionId: string,
     status: "verified" | "rejected",
     note?: string
-  ) => {
-    const res = await axiosClient.put<ApiResponse>(
+  ): Promise<KYCVerifySubmissionResponse> => {
+    const res = await axiosClient.put<ApiResponse<KYCVerifySubmissionResponse>>(
       `/v1/kyc/verify/${submissionId}`,
       { status, note_staff: note }
     );
-    return res.data;
+    if (!res.data?.result) {
+      throw new Error("Invalid response from server");
+    }
+    return res.data.result;
   },
 };

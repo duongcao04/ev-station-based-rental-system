@@ -5,6 +5,7 @@ type AdminUsersParams = {
   limit?: number;
   role?: string;
   q?: string;
+  kycStatus?: string;
 };
 
 export const adminApi = {

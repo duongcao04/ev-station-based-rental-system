@@ -39,11 +39,24 @@ export const getKYCStatus = async (req, res) => {
 export const getKYCSubmissions = async (req, res) => {
   try {
     const { status, page = 1, q = "" } = req.query;
-    const submissions = await KYCService.getKYCSubmissions({ status, page, q });
-    res.status(200).json(submissions);
+    const pageNum = parseInt(page, 10) || 1;
+    const submissions = await KYCService.getKYCSubmissions({ 
+      status: status || undefined, 
+      page: pageNum, 
+      q: q || undefined 
+    });
+    res.status(200).json({
+      success: true,
+      message: "Lấy danh sách KYC thành công",
+      result: submissions,
+    });
   } catch (error) {
-    console.error("Error in getKYCStatus", error);
-    res.status(500).json({ message: "Internal Error" });
+    console.error("Error in getKYCSubmissions", error);
+    res.status(500).json({ 
+      success: false,
+      message: error.message || "Internal Error",
+      error: error.message || "Internal Error"
+    });
   }
 };
 
@@ -59,9 +72,11 @@ export const verifyKYCSubmission = async (req, res) => {
       note_staff,
       staffId,
     });
-    res
-      .status(200)
-      .json({ message: "Xác thực trạng thái KYC thành công", updated });
+    res.status(200).json({
+      success: true,
+      message: "Xác thực trạng thái KYC thành công",
+      result: updated,
+    });
   } catch (error) {
     console.error("Error in getKYCStatus", error);
     res.status(500).json({ message: "Internal Error" });
