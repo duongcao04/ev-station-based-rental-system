@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -19,27 +19,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { adminApi } from "@/lib/api/admin.api";
+import { stationApi } from "@/lib/api/station.api";
 import { toast } from "sonner";
-
-const AVAILABLE_STATIONS = [
-  "Quận 1",
-  "Quận 2",
-  "Quận 3",
-  "Quận 4",
-  "Quận 5",
-  "Quận 6",
-  "Quận 7",
-  "Quận 8",
-  "Quận 9",
-  "Quận 10",
-  "Quận 11",
-  "Quận 12",
-  "Tân Bình",
-  "Tân Phú",
-  "Bình Thạnh",
-  "Gò Vấp",
-  "Phú Nhuận",
-];
 
 interface EditModalProps {
   user: any;
@@ -50,15 +31,48 @@ interface EditModalProps {
 export function EditModal({ user, userType, onClose }: EditModalProps) {
   const [formData, setFormData] = useState(user);
   const [hasChanges, setHasChanges] = useState(false);
+  const [stations, setStations] = useState<any[]>([]);
+  const [loadingStations, setLoadingStations] = useState(false);
 
-  const handleChange = (field: string, value: string) => {
+  useEffect(() => {
+    if (userType === "staff") {
+      fetchStations();
+    }
+  }, [userType]);
+
+  const fetchStations = async () => {
+    setLoadingStations(true);
+    try {
+      const response = await stationApi.getAllStations();
+      setStations(response.data || []);
+    } catch (err) {
+      console.error("Failed to fetch stations:", err);
+      toast.error("Không thể tải danh sách trạm", {
+        description: "Vui lòng thử lại sau.",
+      });
+    } finally {
+      setLoadingStations(false);
+    }
+  };
+
+  const handleChange = (field: string, value: string | null) => {
     setFormData({ ...formData, [field]: value });
     setHasChanges(true);
   };
 
   const handleSave = async () => {
     try {
-      await adminApi.updateUser(formData.id, formData);
+      const updateData: any = {
+        email: formData.email,
+        phone: formData.phone,
+        displayName: formData.displayName,
+      };
+
+      if (userType === "staff") {
+        updateData.station_id = formData.station_id === "none" || !formData.station_id ? null : formData.station_id;
+      }
+
+      await adminApi.updateUser(formData.id, updateData);
       toast.success("Cập nhật thành công", {
         description: "Thông tin người dùng đã được lưu.",
       });
@@ -119,7 +133,14 @@ export function EditModal({ user, userType, onClose }: EditModalProps) {
               {userType === "staff" && (
                 <div>
                   <Label>Trạm Làm Việc</Label>
-                  <p>{formData.station}</p>
+                  <p>
+                    {formData.station_id
+                      ? (stations.find(
+                          (s) =>
+                            (s.station_id || s.id) === formData.station_id
+                        )?.display_name || formData.station_id)
+                      : "Chưa có trạm"}
+                  </p>
                 </div>
               )}
             </div>
@@ -153,16 +174,27 @@ export function EditModal({ user, userType, onClose }: EditModalProps) {
               <div className="space-y-2">
                 <Label>Trạm Làm Việc</Label>
                 <Select
-                  value={formData.station}
-                  onValueChange={(v) => handleChange("station", v)}
+                  value={formData.station_id || "none"}
+                  onValueChange={(v) => handleChange("station_id", v === "none" ? null : v)}
+                  disabled={loadingStations}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Chọn trạm" />
+                    <SelectValue
+                      placeholder={
+                        loadingStations ? "Đang tải..." : "Chọn trạm"
+                      }
+                    />
                   </SelectTrigger>
                   <SelectContent>
-                    {AVAILABLE_STATIONS.map((s) => (
-                      <SelectItem key={s} value={s}>
-                        {s}
+                    <SelectItem value="none">Không có trạm</SelectItem>
+                    {stations.map((station) => (
+                      <SelectItem
+                        key={station.station_id || station.id}
+                        value={station.station_id || station.id}
+                      >
+                        {station.display_name ||
+                          station.station_id ||
+                          station.id}
                       </SelectItem>
                     ))}
                   </SelectContent>

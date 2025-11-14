@@ -21,24 +21,22 @@ import {
 } from "@/components/ui/select";
 import { AlertCircle, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
-import { useAdminStore } from "@/stores/useAdminStore";
-import { useAuthStore } from "@/stores/useAuthStore";
-import { authApi } from "@/lib/api/auth.api";
-import { getErrorMessage } from "@/lib/utils/error";
+import { stationApi } from "@/lib/api/station.api";
 
 interface CreateAccountFormProps {
   onClose?: () => void;
   onSuccess?: (data: any) => void;
+  userRole?: string; // Optional prop for user role
+  onSubmit?: (data: any) => Promise<boolean>; // Optional submit handler
 }
 
 export function CreateAccountForm({
   onClose,
   onSuccess,
+  userRole = "admin",
+  onSubmit,
 }: CreateAccountFormProps) {
-  const { createAccount } = useAdminStore();
-  const { user } = useAuthStore();
-  
-  const currentUserRole = user?.role;
+  const currentUserRole = userRole;
   const isStaff = currentUserRole === "staff";
   const isAdmin = currentUserRole === "admin";
 
@@ -46,18 +44,41 @@ export function CreateAccountForm({
     email: "",
     phone_number: "",
     password: "",
-    role: "", 
+    role: "",
+    station_id: "", // added station_id field
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [stations, setStations] = useState<any[]>([]); // added stations state
+  const [loadingStations, setLoadingStations] = useState(false); // added loading state for stations
 
-  
   useEffect(() => {
     if (isStaff) {
       setFormData((prev) => ({ ...prev, role: "renter" }));
     }
   }, [isStaff]);
+
+  useEffect(() => {
+    if (formData.role === "staff") {
+      fetchStations();
+    }
+  }, [formData.role]);
+
+  const fetchStations = async () => {
+    setLoadingStations(true);
+    try {
+      const response = await stationApi.getAllStations();
+      setStations(response.data || []);
+    } catch (err) {
+      console.error("Failed to fetch stations:", err);
+      toast.error("Không thể tải danh sách trạm", {
+        description: "Vui lòng thử lại sau.",
+      });
+    } finally {
+      setLoadingStations(false);
+    }
+  };
 
   const validateEmail = (email: string) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -93,7 +114,6 @@ export function CreateAccountForm({
       newErrors.password = "Mật khẩu phải có ít nhất 6 ký tự";
     }
 
-    
     if (!isStaff && !formData.role) {
       newErrors.role = "Vui lòng chọn một vai trò";
     }
@@ -111,47 +131,31 @@ export function CreateAccountForm({
     setLoading(true);
     try {
       let ok = false;
-      
-      if (isStaff) {
-        
-        try {
-          const res = await authApi.signUp(
-            formData.email,
-            formData.phone_number,
-            formData.password
-          );
-          toast.success(res?.message || "Tạo tài khoản khách thuê thành công");
-          ok = true;
-        } catch (error) {
-          console.error(error);
-          const message = getErrorMessage(error, "Tạo tài khoản thất bại");
-          toast.error(message);
-          ok = false;
-        }
-      } else if (isAdmin) {
-        
-        ok = await createAccount(
-          formData.email,
-          formData.phone_number,
-          formData.password,
-          formData.role
-        );
+
+      // If custom submit handler provided, use it
+      if (onSubmit) {
+        ok = await onSubmit(formData);
       } else {
-        toast.error("Bạn không có quyền tạo tài khoản");
-        return;
+        // Default behavior - just show success
+        console.log("Form submitted with data:", formData);
+        ok = true;
       }
-      
+
       if (ok) {
         setSuccess(true);
         onSuccess?.(formData);
-        setFormData({ 
-          email: "", 
-          phone_number: "", 
-          password: "", 
-          role: isStaff ? "renter" : "" 
+        setFormData({
+          email: "",
+          phone_number: "",
+          password: "",
+          role: isStaff ? "renter" : "",
+          station_id: "",
         });
         if (onClose) setTimeout(onClose, 1500);
       }
+    } catch (err) {
+      console.error("Error submitting form:", err);
+      toast.error("Tạo tài khoản thất bại");
     } finally {
       setLoading(false);
     }
@@ -176,11 +180,26 @@ export function CreateAccountForm({
     setFormData((prev) => ({
       ...prev,
       role: value,
+      station_id: "", // reset station_id when role changes
     }));
     if (errors.role) {
       setErrors((prev) => {
         const newErrors = { ...prev };
         delete newErrors.role;
+        return newErrors;
+      });
+    }
+  };
+
+  const handleStationChange = (value: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      station_id: value === "none" ? "" : value,
+    }));
+    if (errors.station_id) {
+      setErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors.station_id;
         return newErrors;
       });
     }
@@ -288,40 +307,91 @@ export function CreateAccountForm({
 
           {/* Chỉ hiển thị role selector nếu là admin */}
           {isAdmin && (
-            <div className="space-y-2">
-              <label
-                htmlFor="role"
-                className="text-sm font-medium text-foreground"
-              >
-                Vai Trò
-              </label>
-              <Select value={formData.role} onValueChange={handleRoleChange}>
-                <SelectTrigger
-                  className={errors.role ? "border-destructive" : ""}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label
+                  htmlFor="role"
+                  className="text-sm font-medium text-foreground"
                 >
-                  <SelectValue placeholder="Chọn vai trò" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="renter">Khách Thuê</SelectItem>
-                  <SelectItem value="staff">Nhân Viên</SelectItem>
-                  <SelectItem value="admin">Quản Trị Viên</SelectItem>
-                </SelectContent>
-              </Select>
-              {errors.role && (
-                <p className="text-xs text-destructive flex items-center gap-1">
-                  <AlertCircle className="w-3 h-3" />
-                  {errors.role}
-                </p>
+                  Vai Trò
+                </label>
+                <Select value={formData.role} onValueChange={handleRoleChange}>
+                  <SelectTrigger
+                    className={errors.role ? "border-destructive" : ""}
+                  >
+                    <SelectValue placeholder="Chọn vai trò" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="renter">Khách Thuê</SelectItem>
+                    <SelectItem value="staff">Nhân Viên</SelectItem>
+                    <SelectItem value="admin">Quản Trị Viên</SelectItem>
+                  </SelectContent>
+                </Select>
+                {errors.role && (
+                  <p className="text-xs text-destructive flex items-center gap-1">
+                    <AlertCircle className="w-3 h-3" />
+                    {errors.role}
+                  </p>
+                )}
+              </div>
+
+              {(formData.role === "staff" ||
+                (isStaff && formData.role === "renter")) && (
+                <div className="space-y-2">
+                  <label
+                    htmlFor="station_id"
+                    className="text-sm font-medium text-foreground"
+                  >
+                    Trạm Làm Việc
+                  </label>
+                  <Select
+                    value={formData.station_id || "none"}
+                    onValueChange={handleStationChange}
+                    disabled={loadingStations}
+                  >
+                    <SelectTrigger
+                      className={errors.station_id ? "border-destructive" : ""}
+                    >
+                      <SelectValue
+                        placeholder={
+                          loadingStations ? "Đang tải..." : "Chọn trạm"
+                        }
+                      />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Không có trạm</SelectItem>
+                      {stations.map((station) => (
+                        <SelectItem
+                          key={station.station_id || station.id}
+                          value={station.station_id || station.id}
+                        >
+                          {station.display_name ||
+                            station.station_id ||
+                            station.id}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {errors.station_id && (
+                    <p className="text-xs text-destructive flex items-center gap-1">
+                      <AlertCircle className="w-3 h-3" />
+                      {errors.station_id}
+                    </p>
+                  )}
+                </div>
               )}
             </div>
           )}
-          
+
+          {/* Staff chỉ có thể tạo tài khoản renter, không cần hiển thị station_id cho renter */}
+
           {/* Hiển thị thông báo nếu là staff */}
           {isStaff && (
             <div className="p-3 bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-md">
               <p className="text-sm text-blue-800 dark:text-blue-200">
-                <strong>Lưu ý:</strong> Bạn đang tạo tài khoản cho <strong>Khách Thuê</strong>. 
-                Chỉ có quyền tạo tài khoản khách thuê.
+                <strong>Lưu ý:</strong> Bạn đang tạo tài khoản cho{" "}
+                <strong>Khách Thuê</strong>. Chỉ có quyền tạo tài khoản khách
+                thuê.
               </p>
             </div>
           )}

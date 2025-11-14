@@ -51,6 +51,10 @@ const createUserModel = (sequelize) => {
         type: DataTypes.TEXT,
         allowNull: true,
       },
+      station_id: {
+        type: DataTypes.UUID,
+        allowNull: true,
+      },
     },
     {
       tableName: "users",
@@ -61,21 +65,19 @@ const createUserModel = (sequelize) => {
 
   User.afterCreate(async (user, options) => {
     const RenterProfile = sequelize.models.RenterProfile;
-    if (user.role === "renter") {
-      const emailPrefix = user.email.split("@")[0];
-      const formattedName = emailPrefix
-        .replace(/[._-]/g, " ")
-        .split(" ")
-        .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-        .join(" ");
-      
-      await RenterProfile.create({
-        id: user.id,
-        full_name: formattedName || emailPrefix,
-        verification_status: "pending",
-        is_risky: false,
-      });
-    }
+    const emailPrefix = user.email.split("@")[0];
+    const formattedName = emailPrefix
+      .replace(/[._-]/g, " ")
+      .split(" ")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(" ");
+
+    await RenterProfile.create({
+      id: user.id,
+      full_name: formattedName || emailPrefix,
+      verification_status: "pending",
+      is_risky: false,
+    });
   });
 
   return User;

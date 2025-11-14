@@ -20,14 +20,19 @@ import { CreateAccountForm } from "@/components/auth/create-account-form";
 import { Lock, LogOut, UserPlus } from "lucide-react";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { useNavigate } from "react-router-dom";
+import { adminApi } from "@/lib/api/admin.api";
+import { authApi } from "@/lib/api/auth.api";
+import { toast } from "sonner";
 
 export function Settings() {
   const [activeDialog, setActiveDialog] = useState<
     "changePassword" | "createAccount" | null
   >(null);
 
-  const { signOut } = useAuthStore();
+  const { signOut, user } = useAuthStore();
   const navigate = useNavigate();
+  const currentUserRole = user?.role || "admin";
+  const isStaff = currentUserRole === "staff";
 
   const handleLogout = async () => {
     await signOut();
@@ -37,6 +42,48 @@ export function Settings() {
   const handleCreateAccountSuccess = (data: any) => {
     console.log("New account created:", data);
     // Handle post-creation logic here
+  };
+
+  const handleCreateAccount = async (formData: any) => {
+    try {
+      let response;
+      
+      // Nếu là staff, chỉ được tạo tài khoản renter và dùng API register
+      if (isStaff) {
+        // Đảm bảo role là renter
+        if (formData.role !== "renter") {
+          toast.error("Nhân viên chỉ được tạo tài khoản cho khách thuê");
+          return false;
+        }
+        response = await authApi.signUp(
+          formData.email,
+          formData.phone_number,
+          formData.password
+        );
+      } else {
+        // Admin có thể tạo tài khoản với bất kỳ role nào
+        response = await adminApi.createAccount(
+          formData.email,
+          formData.phone_number,
+          formData.password,
+          formData.role,
+          formData.station_id || undefined
+        );
+      }
+      
+      // Sử dụng message từ backend response
+      const message = response?.message || "Tạo tài khoản thành công";
+      toast.success(message);
+      return true;
+    } catch (err: any) {
+      // Sử dụng message từ backend response
+      const message =
+        err?.response?.data?.message ||
+        err?.message ||
+        "Tạo tài khoản thất bại";
+      toast.error(message);
+      return false;
+    }
   };
 
   return (
@@ -170,6 +217,8 @@ export function Settings() {
           <CreateAccountForm
             onClose={() => setActiveDialog(null)}
             onSuccess={handleCreateAccountSuccess}
+            onSubmit={handleCreateAccount}
+            userRole={currentUserRole}
           />
         </DialogContent>
       </Dialog>

@@ -13,14 +13,19 @@ export const adminApi = {
     email: string,
     phone_number: string,
     password: string,
-    role: string
+    role: string,
+    station_id?: string
   ) => {
-    const res = await axiosClient.post("/v1/admin/create-account", {
+    const payload: any = {
       email,
       phone_number,
       password,
       role,
-    });
+    };
+    if (station_id) {
+      payload.station_id = station_id;
+    }
+    const res = await axiosClient.post("/v1/admin/create-account", payload);
     return res.data;
   },
 

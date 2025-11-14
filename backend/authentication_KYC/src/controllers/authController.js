@@ -99,19 +99,13 @@ export const login = async (req, res) => {
         maxAge: REFRESH_TOKEN_TTL,
       });
 
-      let stationId = null;
-      if (exist.role === "staff") {
-        const station = await StationService.getByUserId(exist.id);
-        if (station && station.id) stationId = station.id;
-      }
-
       //send access token in res
       return res.status(200).json({
         message: "Đăng nhập thành công",
         user_id: exist.id,
         email: exist.dataValues.email,
         role: exist.role,
-        station_id: stationId,
+        station_id: exist.station_id,
         accessToken: accessToken,
       });
     } else {
