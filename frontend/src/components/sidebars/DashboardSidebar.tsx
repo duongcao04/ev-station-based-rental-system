@@ -2,6 +2,7 @@ import {
   Calendar,
   Home,
   Inbox,
+  Verified,
   Search,
   Settings,
   BookOpen,
@@ -40,6 +41,11 @@ const items = [
     title: "Thành viên",
     url: "/dashboard/menbers",
     icon: Inbox,
+  },
+  {
+    title: "Xác thực KYC",
+    url: "/dashboard/kyc-verification",
+    icon: Verified,
   },
   {
     title: "Xe",
