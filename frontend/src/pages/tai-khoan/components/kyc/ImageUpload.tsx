@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Upload, File, X } from "lucide-react";
 
 interface FileUploadProps {
-  onUpload: (fileName: string, preview: string | null) => void;
+  onUpload: (file: File, preview: string | null) => void;
   onCancel: () => void;
 }
 
@@ -62,12 +62,14 @@ export function FileUpload({ onUpload, onCancel }: FileUploadProps) {
     if (!selectedFile) return;
 
     setIsUploading(true);
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    setIsUploading(false);
-
-    onUpload(selectedFile.name, imagePreview);
-    setSelectedFile(null);
-    setImagePreview(null);
+    try {
+      // Pass the File object instead of filename
+      onUpload(selectedFile, imagePreview);
+      setSelectedFile(null);
+      setImagePreview(null);
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   return (

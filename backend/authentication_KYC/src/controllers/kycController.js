@@ -4,22 +4,35 @@ export const uploadKYC = async (req, res) => {
   try {
     const profile = await KYCService.updateKYC(req.user.id, req.files);
     res.status(200).json({
+      success: true,
       message: "Cập nhật thông tin giấy tờ thành công. Đợi xác thực.",
-      profile,
+      result: profile,
     });
   } catch (error) {
     console.error("Error in uploadKYC", error);
-    res.status(500).json({ message: "Internal Error" });
+    res.status(500).json({ 
+      success: false,
+      message: error.message || "Internal Error",
+      error: error.message || "Internal Error"
+    });
   }
 };
 
 export const getKYCStatus = async (req, res) => {
   try {
     const kyc = await KYCService.getKYCStatus(req.user.id);
-    res.status(200).json({ kyc });
+    res.status(200).json({ 
+      success: true,
+      message: "Lấy thông tin KYC thành công",
+      result: kyc 
+    });
   } catch (error) {
     console.error("Error in getKYCStatus", error);
-    res.status(500).json({ message: "Internal Error" });
+    res.status(500).json({ 
+      success: false,
+      message: error.message || "Internal Error",
+      error: error.message || "Internal Error"
+    });
   }
 };
 

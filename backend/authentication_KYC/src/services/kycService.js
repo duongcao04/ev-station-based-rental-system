@@ -29,6 +29,9 @@ export const KYCService = {
       updated_at: new Date(),
     };
     await profile.update(updateData);
+    
+    // Reload to get fresh data
+    await profile.reload();
 
     return profile;
   },
@@ -65,12 +68,10 @@ export const KYCService = {
 
     const result = profile.toJSON();
     if (result.verified_by_staff_id && result.verified_by_staff) {
-      // Lấy tên từ RenterProfile.full_name của staff, nếu không có thì fallback về email
       const staffProfile = result.verified_by_staff.renter_profile;
       if (staffProfile && staffProfile.full_name) {
         result.verified_by_staff_name = staffProfile.full_name;
       } else {
-        // Fallback: lấy từ email
         const emailPrefix = result.verified_by_staff.email.split("@")[0];
         result.verified_by_staff_name = emailPrefix
           .replace(/[._-]/g, " ")
@@ -144,12 +145,10 @@ export const KYCService = {
     const formattedRows = rows.map((row) => {
       const result = row.toJSON();
       if (result.verified_by_staff_id && result.verified_by_staff) {
-        // Lấy tên từ RenterProfile.full_name của staff, nếu không có thì fallback về email
         const staffProfile = result.verified_by_staff.renter_profile;
         if (staffProfile && staffProfile.full_name) {
           result.verified_by_staff_name = staffProfile.full_name;
         } else {
-          // Fallback: lấy từ email
           const emailPrefix = result.verified_by_staff.email.split("@")[0];
           result.verified_by_staff_name = emailPrefix
             .replace(/[._-]/g, " ")
@@ -213,12 +212,11 @@ export const KYCService = {
     // Format response với tên staff
     const result = profile.toJSON();
     if (result.verified_by_staff_id && result.verified_by_staff) {
-      // Lấy tên từ RenterProfile.full_name của staff, nếu không có thì fallback về email
+      
       const staffProfile = result.verified_by_staff.renter_profile;
       if (staffProfile && staffProfile.full_name) {
         result.verified_by_staff_name = staffProfile.full_name;
       } else {
-        // Fallback: lấy từ email
         const emailPrefix = result.verified_by_staff.email.split("@")[0];
         result.verified_by_staff_name = emailPrefix
           .replace(/[._-]/g, " ")

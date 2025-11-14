@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -22,63 +22,30 @@ import {
   CheckCircle,
   Clock,
   AlertCircle,
-  X,
 } from "lucide-react";
-
-interface KYCDocument {
-  name: string;
-  fileName?: string;
-  status: "pending" | "approved" | "rejected";
-  uploadedAt?: string;
-  rejectionReason?: string;
-  preview?: string;
-}
+import { useKycStore } from "@/stores/useKycStore";
 
 export default function KYCPage() {
   const [activeDialog, setActiveDialog] = useState<"cccd" | "license" | null>(
     null
   );
-  const [documents, setDocuments] = useState<Record<string, KYCDocument>>({
-    cccd: {
-      name: "Căn Cước Công Dân",
-      status: "pending",
-    },
-    license: {
-      name: "Giấy Phép Lái Xe",
-      status: "pending",
-    },
-  });
 
-  const handleFileUpload = (
-    docType: "cccd" | "license",
-    fileName: string,
-    preview?: string | null
-  ) => {
-    setDocuments((prev) => ({
-      ...prev,
-      [docType]: {
-        ...prev[docType],
-        fileName,
-        preview,
-        status: "pending",
-        uploadedAt: new Date().toLocaleDateString("vi-VN"),
-      } as KYCDocument,
-    }));
+  const { profile, fetchKYC, uploadKYC } = useKycStore();
+
+  useEffect(() => {
+    fetchKYC();
+  }, []);
+
+  const handleFileUpload = async (docType: "cccd" | "license", file: File) => {
+    const files =
+      docType === "cccd" ? { national_id: file } : { driver_license: file };
+    await uploadKYC(files);
+    // Refresh KYC status after successful upload
+    await fetchKYC();
     setActiveDialog(null);
   };
 
-  const handleClearPreview = (docType: "cccd" | "license") => {
-    setDocuments((prev) => ({
-      ...prev,
-      [docType]: {
-        ...prev[docType],
-        preview: undefined,
-        fileName: undefined,
-      },
-    }));
-  };
-
-  const getStatusIcon = (status: string) => {
+  const getStatusIcon = (status?: string) => {
     switch (status) {
       case "approved":
         return <CheckCircle className="w-5 h-5 text-green-500" />;
@@ -90,7 +57,7 @@ export default function KYCPage() {
     }
   };
 
-  const getStatusText = (status: string) => {
+  const getStatusText = (status?: string) => {
     switch (status) {
       case "approved":
         return "Đã xác thực";
@@ -99,18 +66,6 @@ export default function KYCPage() {
       case "pending":
       default:
         return "Chờ xác thực";
-    }
-  };
-
-  const getStatusBgColor = (status: string) => {
-    switch (status) {
-      case "approved":
-        return "bg-green-500/10";
-      case "rejected":
-        return "bg-destructive/10";
-      case "pending":
-      default:
-        return "bg-amber-500/10";
     }
   };
 
@@ -129,138 +84,94 @@ export default function KYCPage() {
             </p>
           </div>
 
-          {/* KYC Cards and Preview */}
+          {/* KYC Cards */}
           <div className="space-y-6">
-            {/* CCCD Section */}
-            <div>
-              <Card className="border border-border hover:border-primary/50 transition-colors mb-4">
-                <CardHeader className="pb-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3 flex-1">
-                      <div className="p-2 bg-primary/10 rounded-lg">
-                        <FileText className="w-5 h-5 text-primary" />
-                      </div>
-                      <div className="flex-1">
-                        <CardTitle className="text-lg">
-                          Căn Cước Công Dân
-                        </CardTitle>
-                        <CardDescription>
-                          {documents.cccd.fileName ? (
-                            <span className="flex items-center gap-2 mt-1">
-                              {getStatusIcon(documents.cccd.status)}
-                              <span>
-                                {documents.cccd.fileName} •{" "}
-                                {getStatusText(documents.cccd.status)}
-                              </span>
-                            </span>
-                          ) : (
-                            "Tải lên ảnh CCCD của bạn"
-                          )}
-                        </CardDescription>
-                      </div>
+            {/* CCCD */}
+            <Card className="border border-border hover:border-primary/50 transition-colors mb-4">
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3 flex-1">
+                    <div className="p-2 bg-primary/10 rounded-lg">
+                      <FileText className="w-5 h-5 text-primary" />
                     </div>
-                    <Button
-                      onClick={() => setActiveDialog("cccd")}
-                      variant={
-                        documents.cccd.status === "approved"
-                          ? "secondary"
-                          : "outline"
-                      }
-                      size="sm"
-                    >
-                      {documents.cccd.fileName ? "Thay Đổi" : "Tải Lên"}
-                    </Button>
+                    <div className="flex-1">
+                      <CardTitle className="text-lg">
+                        Căn Cước Công Dân
+                      </CardTitle>
+                      <CardDescription>
+                        {profile?.national_id_url ? (
+                          <span className="flex items-center gap-2 mt-1">
+                            {getStatusIcon(profile.verification_status)}
+                            <span>
+                              {profile.national_id_url.split("/").pop()} •{" "}
+                              {getStatusText(profile.verification_status)}
+                            </span>
+                          </span>
+                        ) : (
+                          "Tải lên ảnh CCCD của bạn"
+                        )}
+                      </CardDescription>
+                    </div>
                   </div>
-                </CardHeader>
-              </Card>
-              {documents.cccd.preview && (
-                <div className="relative rounded-lg overflow-hidden bg-background border border-border">
-                  <img
-                    src={documents.cccd.preview || "/placeholder.svg"}
-                    alt="CCCD Preview"
-                    className="w-full h-80 object-cover"
-                  />
-                  <button
-                    onClick={() => handleClearPreview("cccd")}
-                    className="absolute top-3 right-3 bg-black/50 hover:bg-black/70 rounded-full p-2 text-white transition-colors"
+                  <Button
+                    onClick={() => setActiveDialog("cccd")}
+                    variant={
+                      profile?.verification_status === "approved"
+                        ? "secondary"
+                        : "outline"
+                    }
+                    size="sm"
                   >
-                    <X className="w-5 h-5" />
-                  </button>
+                    {profile?.national_id_url ? "Thay Đổi" : "Tải Lên"}
+                  </Button>
                 </div>
-              )}
-            </div>
+              </CardHeader>
+            </Card>
 
-            {/* Driver License Section */}
-            <div>
-              <Card className="border border-border hover:border-primary/50 transition-colors mb-4">
-                <CardHeader className="pb-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3 flex-1">
-                      <div className="p-2 bg-primary/10 rounded-lg">
-                        <License className="w-5 h-5 text-primary" />
-                      </div>
-                      <div className="flex-1">
-                        <CardTitle className="text-lg">
-                          Giấy Phép Lái Xe (Mặt Trước)
-                        </CardTitle>
-                        <CardDescription>
-                          {documents.license.fileName ? (
-                            <span className="flex items-center gap-2 mt-1">
-                              {getStatusIcon(documents.license.status)}
-                              <span>
-                                {documents.license.fileName} •{" "}
-                                {getStatusText(documents.license.status)}
-                              </span>
-                            </span>
-                          ) : (
-                            "Tải lên ảnh giấy phép lái xe"
-                          )}
-                        </CardDescription>
-                      </div>
+            {/* Driver License */}
+            <Card className="border border-border hover:border-primary/50 transition-colors mb-4">
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3 flex-1">
+                    <div className="p-2 bg-primary/10 rounded-lg">
+                      <License className="w-5 h-5 text-primary" />
                     </div>
-                    <Button
-                      onClick={() => setActiveDialog("license")}
-                      variant={
-                        documents.license.status === "approved"
-                          ? "secondary"
-                          : "outline"
-                      }
-                      size="sm"
-                    >
-                      {documents.license.fileName ? "Thay Đổi" : "Tải Lên"}
-                    </Button>
+                    <div className="flex-1">
+                      <CardTitle className="text-lg">
+                        Giấy Phép Lái Xe (Mặt Trước)
+                      </CardTitle>
+                      <CardDescription>
+                        {profile?.driver_license_url ? (
+                          <span className="flex items-center gap-2 mt-1">
+                            {getStatusIcon(profile.verification_status)}
+                            <span>
+                              {profile.driver_license_url.split("/").pop()} •{" "}
+                              {getStatusText(profile.verification_status)}
+                            </span>
+                          </span>
+                        ) : (
+                          "Tải lên ảnh giấy phép lái xe"
+                        )}
+                      </CardDescription>
+                    </div>
                   </div>
-                </CardHeader>
-              </Card>
-              {documents.license.preview && (
-                <div className="relative rounded-lg overflow-hidden bg-background border border-border">
-                  <img
-                    src={documents.license.preview || "/placeholder.svg"}
-                    alt="License Preview"
-                    className="w-full h-80 object-cover"
-                  />
-                  <button
-                    onClick={() => handleClearPreview("license")}
-                    className="absolute top-3 right-3 bg-black/50 hover:bg-black/70 rounded-full p-2 text-white transition-colors"
+                  <Button
+                    onClick={() => setActiveDialog("license")}
+                    variant={
+                      profile?.verification_status === "approved"
+                        ? "secondary"
+                        : "outline"
+                    }
+                    size="sm"
                   >
-                    <X className="w-5 h-5" />
-                  </button>
+                    {profile?.driver_license_url ? "Thay Đổi" : "Tải Lên"}
+                  </Button>
                 </div>
-              )}
-            </div>
+              </CardHeader>
+            </Card>
           </div>
 
-          {/* Submit Button */}
-          <div className="mt-8 flex gap-3">
-            <Button className="flex-1" size="lg">
-              Gửi Xác Thực
-            </Button>
-            <Button variant="outline" size="lg">
-              Hủy
-            </Button>
-          </div>
-
-          {/* Info Section */}
+          {/* Submit / Info */}
           <div className="mt-8 p-4 bg-secondary/50 rounded-lg border border-border">
             <p className="text-sm text-muted-foreground">
               <strong>Lưu ý:</strong> Hình ảnh phải rõ ràng, đầy đủ thông tin và
@@ -270,7 +181,7 @@ export default function KYCPage() {
         </div>
       </div>
 
-      {/* CCCD Upload Dialog */}
+      {/* CCCD Dialog */}
       <Dialog
         open={activeDialog === "cccd"}
         onOpenChange={(open) => setActiveDialog(open ? "cccd" : null)}
@@ -283,15 +194,15 @@ export default function KYCPage() {
             </DialogDescription>
           </DialogHeader>
           <FileUpload
-            onUpload={(fileName, preview) =>
-              handleFileUpload("cccd", fileName, preview)
+            onUpload={(file) =>
+              handleFileUpload("cccd", file)
             }
             onCancel={() => setActiveDialog(null)}
           />
         </DialogContent>
       </Dialog>
 
-      {/* Driver License Upload Dialog */}
+      {/* Driver License Dialog */}
       <Dialog
         open={activeDialog === "license"}
         onOpenChange={(open) => setActiveDialog(open ? "license" : null)}
@@ -304,8 +215,8 @@ export default function KYCPage() {
             </DialogDescription>
           </DialogHeader>
           <FileUpload
-            onUpload={(fileName, preview) =>
-              handleFileUpload("license", fileName, preview)
+            onUpload={(file) =>
+              handleFileUpload("license", file)
             }
             onCancel={() => setActiveDialog(null)}
           />
