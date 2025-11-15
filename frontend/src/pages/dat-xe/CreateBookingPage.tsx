@@ -59,16 +59,20 @@ export default function CreateBookingPage() {
     // Map pickup stations (chỉ các trạm có xe này)
     const pickupStations = pickupStationsData
         ? (Array.isArray(pickupStationsData) ? pickupStationsData : []).map((station: any) => ({
-            id: station.user_id, // user_id là UUID và là primary key
-            name: station.display_name || station.address || `Station ${station.user_id?.substring(0, 8)}`,
+            id: station.station_id || station.user_id, // Ưu tiên station_id, fallback về user_id
+            name: station.display_name || station.address || `Station ${(station.station_id || station.user_id)?.substring(0, 8)}`,
+            station_id: station.station_id,
+            user_id: station.user_id,
         }))
         : [];
 
     // Map return stations (tất cả các trạm)
     const returnStations = returnStationsData
         ? (Array.isArray(returnStationsData) ? returnStationsData : []).map((station: any) => ({
-            id: station.user_id, // user_id là UUID và là primary key
-            name: station.display_name || station.address || `Station ${station.user_id?.substring(0, 8)}`,
+            id: station.station_id || station.user_id, // Ưu tiên station_id, fallback về user_id
+            name: station.display_name || station.address || `Station ${(station.station_id || station.user_id)?.substring(0, 8)}`,
+            station_id: station.station_id,
+            user_id: station.user_id,
         }))
         : [];
 
@@ -169,10 +173,18 @@ export default function CreateBookingPage() {
             return;
         }
 
+        // Tìm station object để lấy station_id nếu có
+        const selectedStartStation = pickupStations.find(s => s.id === startStation);
+        const selectedEndStation = returnStations.find(s => s.id === endStation);
+
+        // Ưu tiên gửi station_id, fallback về user_id hoặc id
+        const startStationId = selectedStartStation?.station_id || selectedStartStation?.id || startStation;
+        const endStationId = selectedEndStation?.station_id || selectedEndStation?.id || endStation;
+
         const bookingData = {
             vehicle_id: vehicleId,
-            start_station_id: startStation,
-            end_station_id: endStation,
+            start_station_id: startStationId, // Ưu tiên station_id
+            end_station_id: endStationId,     // Ưu tiên station_id
             start_date: dateRange[0].toISOString(),
             end_date: dateRange[1].toISOString(),
             total_amount: totalAmount,
@@ -186,6 +198,12 @@ export default function CreateBookingPage() {
         };
 
         console.log('Submitting booking:', bookingData);
+        console.log('Selected stations:', {
+            startStation: selectedStartStation,
+            endStation: selectedEndStation,
+            startStationId,
+            endStationId
+        });
         createBookingMutation.mutate(bookingData);
     };
 

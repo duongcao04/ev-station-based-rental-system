@@ -187,26 +187,9 @@ INSERT INTO stations (station_id, user_id, display_name, address, latitude, long
 )
 ON CONFLICT (user_id) DO NOTHING;
 
--- Seed station staff assignments
-INSERT INTO station_staff_members (station_id, staff_user_id, role)
-VALUES
-    ('650e8400-e29b-41d4-a716-446655440001'::uuid, '750e8400-e29b-41d4-a716-446655440101'::uuid, 'manager'),
-    ('650e8400-e29b-41d4-a716-446655440002'::uuid, '750e8400-e29b-41d4-a716-446655440102'::uuid, 'staff'),
-    ('650e8400-e29b-41d4-a716-446655440003'::uuid, '750e8400-e29b-41d4-a716-446655440103'::uuid, 'staff'),
-    ('650e8400-e29b-41d4-a716-446655440004'::uuid, '750e8400-e29b-41d4-a716-446655440104'::uuid, 'manager'),
-    ('650e8400-e29b-41d4-a716-446655440009'::uuid, '750e8400-e29b-41d4-a716-446655440105'::uuid, 'staff'),
-    ('650e8400-e29b-41d4-a716-446655440010'::uuid, '750e8400-e29b-41d4-a716-446655440106'::uuid, 'staff'),
-    ('650e8400-e29b-41d4-a716-446655440011'::uuid, '750e8400-e29b-41d4-a716-446655440107'::uuid, 'manager'),
-    ('650e8400-e29b-41d4-a716-446655440012'::uuid, '750e8400-e29b-41d4-a716-446655440108'::uuid, 'staff'),
-    ('650e8400-e29b-41d4-a716-446655440013'::uuid, '750e8400-e29b-41d4-a716-446655440109'::uuid, 'staff'),
-    ('650e8400-e29b-41d4-a716-446655440014'::uuid, '750e8400-e29b-41d4-a716-446655440110'::uuid, 'staff'),
-    ('650e8400-e29b-41d4-a716-446655440015'::uuid, '750e8400-e29b-41d4-a716-446655440111'::uuid, 'staff'),
-    ('650e8400-e29b-41d4-a716-446655440016'::uuid, '750e8400-e29b-41d4-a716-446655440112'::uuid, 'manager'),
-    ('650e8400-e29b-41d4-a716-446655440017'::uuid, '750e8400-e29b-41d4-a716-446655440113'::uuid, 'staff'),
-    ('650e8400-e29b-41d4-a716-446655440018'::uuid, '750e8400-e29b-41d4-a716-446655440114'::uuid, 'staff'),
-    ('650e8400-e29b-41d4-a716-446655440019'::uuid, '750e8400-e29b-41d4-a716-446655440115'::uuid, 'staff'),
-    ('650e8400-e29b-41d4-a716-446655440020'::uuid, '750e8400-e29b-41d4-a716-446655440116'::uuid, 'manager')
-ON CONFLICT (station_id, staff_user_id) DO NOTHING;
+-- Bảng station_staff_members đã được xóa vì không sử dụng
+-- Staff assignment được quản lý qua users.station_id trong Auth Service database
+-- Để assign staff vào station, dùng admin dashboard: PATCH /api/v1/admin/users/{id} với body { station_id: "..." }
 
 -- Hiển thị kết quả
 SELECT 

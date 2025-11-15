@@ -6,6 +6,8 @@ export const stationApi = {
 
     getStationByUserId: (userId: string) => axiosClient.get(`/v1/stations/${userId}`),
 
+    getStationById: (stationId: string) => axiosClient.get(`/v1/stations/by-id/${stationId}`),
+
     getStationVehicles: (userId: string) => axiosClient.get(`/v1/stations/${userId}/vehicles`),
 
     // Lấy stations có vehicle cụ thể (điểm nhận xe)

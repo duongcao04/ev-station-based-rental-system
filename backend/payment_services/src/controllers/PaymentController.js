@@ -1,15 +1,11 @@
-
 import { PaymentModel } from "../models/PaymentModel.js";
 import axios from "axios";
 
-
-// Post v1/api/payments
-
+// POST /v1/api/payments
 export const createPayment = async (req, res) => {
   const { booking_id, amount, type, payment_method, provider, description } = req.body;
   const user_id = req.user?.id;
 
-  // validation
   if (!booking_id || !amount || !type) {
     return res.status(400).json({
       error: "Missing required fields"
@@ -21,7 +17,6 @@ export const createPayment = async (req, res) => {
     return res.status(400).json({ error: "amount must be a positive number" });
   }
 
-  // Validate type
   const allowedTypes = ['rental_fee', 'deposit', 'extra_fee', 'refund'];
   if (!allowedTypes.includes(type)) {
     return res.status(400).json({
@@ -30,7 +25,6 @@ export const createPayment = async (req, res) => {
     });
   }
 
-  // Validate payment_method (if provided)
   if (payment_method) {
     const allowedMethods = ['credit_card', 'e_wallet', 'bank_transfer', 'cash'];
     if (!allowedMethods.includes(payment_method)) {
@@ -60,7 +54,6 @@ export const createPayment = async (req, res) => {
     .catch((err) => {
       console.error("createPayment error:", err);
 
-      // Handle unique constraint violations
       if (err.code === '23505') {
         return res.status(409).json({
           error: "Payment already exists for this booking and type",
@@ -80,7 +73,6 @@ export const getPaymentById = async (req, res) => {
     const payment = await PaymentModel.getById(id);
     if (!payment) return res.status(404).json({ error: "Payment not found" });
 
-    // renters can only view their own payments
     if (req.user?.role === 'renter' && payment.user_id != req.user.id) {
       return res.status(403).json({ error: 'Forbidden' });
     }
@@ -98,7 +90,6 @@ export const getPaymentsByUser = async (req, res) => {
     const { user_id } = req.params;
     const { status, limit, offset } = req.query;
 
-    // user_id is UUID, no need to convert to Number
     const payments = await PaymentModel.getByUserId(user_id, {
       status,
       limit: Number(limit) || 50,
@@ -186,14 +177,12 @@ export const confirmCashPayment = async (req, res) => {
       completed_at: now,
     });
 
-    // Đồng bộ payment_id với Booking Service qua API Gateway
     try {
-      // Gọi Booking Service qua API Gateway (không gọi trực tiếp)
       const apiGatewayUrl = process.env.API_GATEWAY_URL || 'http://localhost:8000';
       const internalSecret = process.env.INTERNAL_SERVICE_SECRET || 'internal-secret-key-change-in-production';
       const headers = {
         'Content-Type': 'application/json',
-        'x-internal-secret': internalSecret, // Internal secret để verify service-to-service request
+        'x-internal-secret': internalSecret,
       };
 
       await axios.put(
@@ -201,13 +190,11 @@ export const confirmCashPayment = async (req, res) => {
         { payment_id: id },
         {
           headers,
-          timeout: 10000, // Tăng timeout vì phải qua gateway
+          timeout: 10000,
         }
       );
-      console.log(`✅ Payment ${id} synced with Booking ${payment.booking_id} via API Gateway`);
     } catch (syncErr) {
       console.error('Booking sync failed via API Gateway:', syncErr?.response?.data || syncErr.message);
-      // Do not fail the confirmation if sync fails; client can retry sync later
     }
 
     return res.json({ payment: updated });

@@ -157,50 +157,6 @@ export const StationModel = {
         return rows[0] || null;
     },
 
-    listStaff: async (station_id) => {
-        const { rows } = await pool.query(
-            `SELECT * FROM station_staff_members
-             WHERE station_id=$1
-             ORDER BY role DESC, created_at DESC`,
-            [station_id]
-        );
-        return rows;
-    },
-
-    addStaff: async (station_id, staff_user_id, role = 'staff') => {
-        const { rows } = await pool.query(
-            `INSERT INTO station_staff_members (station_id, staff_user_id, role)
-             VALUES ($1, $2, $3)
-             ON CONFLICT (station_id, staff_user_id)
-             DO UPDATE SET role = EXCLUDED.role,
-                           updated_at = NOW()
-             RETURNING *`,
-            [station_id, staff_user_id, role]
-        );
-        return rows[0] || null;
-    },
-
-    removeStaff: async (station_id, staff_user_id) => {
-        const { rowCount } = await pool.query(
-            `DELETE FROM station_staff_members
-             WHERE station_id=$1 AND staff_user_id=$2`,
-            [station_id, staff_user_id]
-        );
-        return rowCount > 0;
-    },
-
-    isUserAssignedToStation: async (station_id, user_id) => {
-        const { rows } = await pool.query(
-            `SELECT 1
-             FROM stations s
-             LEFT JOIN station_staff_members sm ON sm.station_id = s.station_id AND sm.staff_user_id = $2
-             WHERE s.station_id = $1 AND (s.user_id = $2 OR sm.staff_user_id IS NOT NULL)
-             LIMIT 1`,
-            [station_id, user_id]
-        );
-        return rows.length > 0;
-    },
-
     deleteByUserId: async (user_id) => {
         const { rows } = await pool.query(
             `DELETE FROM stations

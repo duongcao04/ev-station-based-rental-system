@@ -6,9 +6,7 @@ const router = express.Router();
 
 router.get("/", StationController.list);
 router.get("/vehicles/:vehicle_id/stations", StationController.getStationsByVehicleId);
-router.get("/:station_id/staff", authenticate, authorize('admin'), StationController.listStaff);
-router.post("/:station_id/staff", authenticate, authorize('admin'), StationController.addStaff);
-router.delete("/:station_id/staff/:staff_user_id", authenticate, authorize('admin'), StationController.removeStaff);
+router.get("/by-id/:station_id", StationController.getById); // Get station by station_id
 
 router.get("/:user_id", StationController.getByUserId);
 
