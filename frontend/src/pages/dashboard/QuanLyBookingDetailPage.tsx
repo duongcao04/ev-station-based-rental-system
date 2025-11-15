@@ -75,26 +75,67 @@ export default function QuanLyBookingDetailPage() {
             setBooking(bookingData);
 
             // Load station info
+            // Lưu ý: booking.start_station_id có thể là station_id hoặc user_id
+            // Thử load theo station_id trước, nếu fail thì thử user_id
             if (bookingData.start_station_id) {
                 try {
-                    const stationResponse = await stationApi.getStationByUserId(bookingData.start_station_id);
-                    setStartStation(stationResponse.data);
+                    // Thử get by station_id trước
+                    try {
+                        const stationResponse = await stationApi.getStationById(bookingData.start_station_id);
+                        console.log('Start station data (by station_id):', stationResponse.data);
+                        setStartStation(stationResponse.data);
+                    } catch (err1: any) {
+                        // Nếu fail (404 hoặc lỗi khác), thử get by user_id
+                        if (err1?.response?.status === 404) {
+                            const stationResponse = await stationApi.getStationByUserId(bookingData.start_station_id);
+                            console.log('Start station data (by user_id):', stationResponse.data);
+                            setStartStation(stationResponse.data);
+                        } else {
+                            throw err1;
+                        }
+                    }
                 } catch (err) {
                     console.error('Error loading start station:', err);
                 }
             }
             if (bookingData.end_station_id) {
                 try {
-                    const stationResponse = await stationApi.getStationByUserId(bookingData.end_station_id);
-                    setEndStation(stationResponse.data);
+                    // Thử get by station_id trước
+                    try {
+                        const stationResponse = await stationApi.getStationById(bookingData.end_station_id);
+                        console.log('End station data (by station_id):', stationResponse.data);
+                        setEndStation(stationResponse.data);
+                    } catch (err1: any) {
+                        // Nếu fail (404 hoặc lỗi khác), thử get by user_id
+                        if (err1?.response?.status === 404) {
+                            const stationResponse = await stationApi.getStationByUserId(bookingData.end_station_id);
+                            console.log('End station data (by user_id):', stationResponse.data);
+                            setEndStation(stationResponse.data);
+                        } else {
+                            throw err1;
+                        }
+                    }
                 } catch (err) {
                     console.error('Error loading end station:', err);
                 }
             }
             if (bookingData.actual_return_station_id) {
                 try {
-                    const stationResponse = await stationApi.getStationByUserId(bookingData.actual_return_station_id);
-                    setActualReturnStation(stationResponse.data);
+                    // Thử get by station_id trước
+                    try {
+                        const stationResponse = await stationApi.getStationById(bookingData.actual_return_station_id);
+                        console.log('Actual return station data (by station_id):', stationResponse.data);
+                        setActualReturnStation(stationResponse.data);
+                    } catch (err1: any) {
+                        // Nếu fail (404 hoặc lỗi khác), thử get by user_id
+                        if (err1?.response?.status === 404) {
+                            const stationResponse = await stationApi.getStationByUserId(bookingData.actual_return_station_id);
+                            console.log('Actual return station data (by user_id):', stationResponse.data);
+                            setActualReturnStation(stationResponse.data);
+                        } else {
+                            throw err1;
+                        }
+                    }
                 } catch (err) {
                     console.error('Error loading actual return station:', err);
                 }
@@ -525,16 +566,28 @@ export default function QuanLyBookingDetailPage() {
                 <BookingInfoCard title="Thông tin Trạm">
                     <InfoRow
                         label="Trạm nhận"
-                        value={startStation?.display_name || booking?.start_station_id?.substring(0, 8).toUpperCase() || '-'}
+                        value={
+                            startStation
+                                ? `${startStation.display_name || 'N/A'} (ID: ${startStation.station_id ? startStation.station_id : booking?.start_station_id || 'N/A'})`
+                                : booking?.start_station_id ? `ID: ${booking.start_station_id}` : '-'
+                        }
                     />
                     <InfoRow
                         label="Trạm trả"
-                        value={endStation?.display_name || booking?.end_station_id?.substring(0, 8).toUpperCase() || '-'}
+                        value={
+                            endStation
+                                ? `${endStation.display_name || 'N/A'} (ID: ${endStation.station_id ? endStation.station_id : booking?.end_station_id || 'N/A'})`
+                                : booking?.end_station_id ? `ID: ${booking.end_station_id}` : '-'
+                        }
                     />
                     {booking?.actual_return_station_id && (
                         <InfoRow
                             label="Trạm trả thực tế"
-                            value={actualReturnStation?.display_name || booking.actual_return_station_id.substring(0, 8).toUpperCase()}
+                            value={
+                                actualReturnStation
+                                    ? `${actualReturnStation.display_name || 'N/A'} (ID: ${actualReturnStation.station_id ? actualReturnStation.station_id : booking.actual_return_station_id})`
+                                    : `ID: ${booking.actual_return_station_id}`
+                            }
                         />
                     )}
                 </BookingInfoCard>
@@ -544,6 +597,12 @@ export default function QuanLyBookingDetailPage() {
                 <InfoRow
                     label="User ID"
                     value={booking?.user_id || '-'}
+                    valueStyle={{ fontWeight: '600' }}
+
+                />
+                <InfoRow
+                    label="Họ và tên"
+                    value={booking?.email || '-'}
                     valueStyle={{ fontWeight: '600' }}
                 />
             </BookingInfoCard>

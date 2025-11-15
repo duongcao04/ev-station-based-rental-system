@@ -20,72 +20,6 @@ const findStationByIdOr404 = async (station_id, res) => {
 };
 
 export const StationController = {
-  listStaff: async (req, res) => {
-    try {
-      const { station_id } = req.params;
-      const station = await findStationByIdOr404(station_id, res);
-      if (!station) return;
-
-      const staff = await StationModel.listStaff(station.station_id);
-      res.json({ station, staff });
-    } catch (e) {
-      console.error(e);
-      res.status(500).json({ error: "Server error" });
-    }
-  },
-
-  addStaff: async (req, res) => {
-    try {
-      const { station_id } = req.params;
-      const { staff_user_id, role = "staff" } = req.body || {};
-
-      if (!staff_user_id) {
-        return res.status(400).json({ error: "staff_user_id is required" });
-      }
-      if (!["staff", "manager"].includes(role)) {
-        return res
-          .status(400)
-          .json({ error: "Invalid role", allowed: ["staff", "manager"] });
-      }
-
-      const station = await findStationByIdOr404(station_id, res);
-      if (!station) return;
-
-      const added = await StationModel.addStaff(
-        station.station_id,
-        staff_user_id,
-        role
-      );
-      res.status(201).json(added);
-    } catch (e) {
-      console.error(e);
-      res.status(500).json({ error: "Server error" });
-    }
-  },
-
-  removeStaff: async (req, res) => {
-    try {
-      const { station_id, staff_user_id } = req.params;
-      const station = await findStationByIdOr404(station_id, res);
-      if (!station) return;
-
-      const removed = await StationModel.removeStaff(
-        station.station_id,
-        staff_user_id
-      );
-      if (!removed) {
-        return res
-          .status(404)
-          .json({ error: "Staff not found in station" });
-      }
-
-      res.json({ message: "Removed" });
-    } catch (e) {
-      console.error(e);
-      res.status(500).json({ error: "Server error" });
-    }
-  },
-
   list: async (req, res) => {
     try {
       const rows = await StationModel.listAll();
@@ -100,6 +34,18 @@ export const StationController = {
     try {
       const { user_id } = req.params;
       const row = await StationModel.getByUserId(user_id);
+      if (!row) return res.status(404).json({ error: "Not found" });
+      res.json(row);
+    } catch (e) {
+      console.error(e);
+      res.status(500).json({ error: "Server error" });
+    }
+  },
+
+  getById: async (req, res) => {
+    try {
+      const { station_id } = req.params;
+      const row = await StationModel.getById(station_id);
       if (!row) return res.status(404).json({ error: "Not found" });
       res.json(row);
     } catch (e) {

@@ -26,6 +26,24 @@ export const getProfile = async (req, res) => {
   }
 };
 
+// Endpoint riêng cho Booking Service lấy station_id (không ảnh hưởng frontend)
+export const getMyStationId = async (req, res) => {
+  try {
+    const user = await User.findOne({
+      where: { id: req.user.id },
+      attributes: ["id", "station_id"],
+    });
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    res.json({ success: true, user: { id: user.id, station_id: user.station_id } });
+  } catch (error) {
+    console.error("Error in getMyStationId", error);
+    res.status(500).json({ message: "Internal Error" });
+  }
+};
+
 export const register = async (req, res) => {
   try {
     const { email, phone_number, password } = req.body;

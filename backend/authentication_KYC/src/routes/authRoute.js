@@ -2,6 +2,7 @@ import express from "express";
 import {
   changePassword,
   getProfile,
+  getMyStationId,
   login,
   logout,
   refreshToken,
@@ -15,6 +16,7 @@ import {
 const router = express.Router();
 
 router.get("/profile", protectedRoute, getProfile);
+router.get("/my-station-id", protectedRoute, getMyStationId);
 router.post("/register", register);
 router.post("/login", login);
 router.post("/logout", logout);
