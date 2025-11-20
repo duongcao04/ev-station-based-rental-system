@@ -46,26 +46,67 @@ export function LichSuThueXeChiTietPage() {
         setBookingData(booking);
 
         // Load station info
+        // Lưu ý: booking.start_station_id có thể là station_id hoặc user_id
+        // Thử load theo station_id trước, nếu fail thì thử user_id
         if ((booking as any)?.start_station_id) {
           try {
-            const stationResponse = await stationApi.getStationByUserId((booking as any).start_station_id);
-            setStartStation(stationResponse.data);
+            // Thử get by station_id trước
+            try {
+              const stationResponse = await stationApi.getStationById((booking as any).start_station_id);
+              console.log('Start station data (by station_id):', stationResponse.data);
+              setStartStation(stationResponse.data);
+            } catch (err1: any) {
+              // Nếu fail (404 hoặc lỗi khác), thử get by user_id
+              if (err1?.response?.status === 404) {
+                const stationResponse = await stationApi.getStationByUserId((booking as any).start_station_id);
+                console.log('Start station data (by user_id):', stationResponse.data);
+                setStartStation(stationResponse.data);
+              } else {
+                throw err1;
+              }
+            }
           } catch (e) {
             console.error('Error loading start station:', e);
           }
         }
         if ((booking as any)?.end_station_id) {
           try {
-            const stationResponse = await stationApi.getStationByUserId((booking as any).end_station_id);
-            setEndStation(stationResponse.data);
+            // Thử get by station_id trước
+            try {
+              const stationResponse = await stationApi.getStationById((booking as any).end_station_id);
+              console.log('End station data (by station_id):', stationResponse.data);
+              setEndStation(stationResponse.data);
+            } catch (err1: any) {
+              // Nếu fail (404 hoặc lỗi khác), thử get by user_id
+              if (err1?.response?.status === 404) {
+                const stationResponse = await stationApi.getStationByUserId((booking as any).end_station_id);
+                console.log('End station data (by user_id):', stationResponse.data);
+                setEndStation(stationResponse.data);
+              } else {
+                throw err1;
+              }
+            }
           } catch (e) {
             console.error('Error loading end station:', e);
           }
         }
         if ((booking as any)?.actual_return_station_id) {
           try {
-            const stationResponse = await stationApi.getStationByUserId((booking as any).actual_return_station_id);
-            setActualReturnStation(stationResponse.data);
+            // Thử get by station_id trước
+            try {
+              const stationResponse = await stationApi.getStationById((booking as any).actual_return_station_id);
+              console.log('Actual return station data (by station_id):', stationResponse.data);
+              setActualReturnStation(stationResponse.data);
+            } catch (err1: any) {
+              // Nếu fail (404 hoặc lỗi khác), thử get by user_id
+              if (err1?.response?.status === 404) {
+                const stationResponse = await stationApi.getStationByUserId((booking as any).actual_return_station_id);
+                console.log('Actual return station data (by user_id):', stationResponse.data);
+                setActualReturnStation(stationResponse.data);
+              } else {
+                throw err1;
+              }
+            }
           } catch (e) {
             console.error('Error loading actual return station:', e);
           }
@@ -500,7 +541,12 @@ export function LichSuThueXeChiTietPage() {
                       <div className="flex justify-between items-center">
                         <span className="text-sm text-muted-foreground">Trạm nhận xe:</span>
                         <span className="font-semibold text-sm">
-                          {startStation?.display_name || (bookingData as any).start_station_id}
+                          {startStation?.display_name
+                            ? startStation.display_name
+                            : (bookingData as any).start_station_id
+                              ? `Trạm ${(bookingData as any).start_station_id.slice(-5).toUpperCase()}`
+                              : '-'
+                          }
                         </span>
                       </div>
                     )}
@@ -508,7 +554,12 @@ export function LichSuThueXeChiTietPage() {
                       <div className="flex justify-between items-center">
                         <span className="text-sm text-muted-foreground">Trạm trả xe dự kiến:</span>
                         <span className="font-semibold text-sm">
-                          {endStation?.display_name || (bookingData as any).end_station_id}
+                          {endStation?.display_name
+                            ? endStation.display_name
+                            : (bookingData as any).end_station_id
+                              ? `Trạm ${(bookingData as any).end_station_id.slice(-5).toUpperCase()}`
+                              : '-'
+                          }
                         </span>
                       </div>
                     )}
@@ -516,7 +567,12 @@ export function LichSuThueXeChiTietPage() {
                       <div className="flex justify-between items-center">
                         <span className="text-sm text-muted-foreground">Trạm trả xe thực tế:</span>
                         <span className="font-semibold text-sm text-blue-600">
-                          {actualReturnStation?.display_name || (bookingData as any).actual_return_station_id}
+                          {actualReturnStation?.display_name
+                            ? actualReturnStation.display_name
+                            : (bookingData as any).actual_return_station_id
+                              ? `Trạm ${(bookingData as any).actual_return_station_id.slice(-5).toUpperCase()}`
+                              : '-'
+                          }
                         </span>
                       </div>
                     )}

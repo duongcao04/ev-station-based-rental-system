@@ -1,17 +1,13 @@
-// Authentication & Authorization Middleware
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
 import path from 'path';
 
 dotenv.config({ path: path.resolve(process.cwd(), "../.env") });
 
-// Middleware để verify JWT token từ Auth Service
 export const authenticate = (req, res, next) => {
     try {
-        // Lấy token từ HTTP-only cookie (ưu tiên) hoặc Authorization header (fallback)
         let token = req.cookies?.accessToken;
 
-        // Fallback: Nếu không có trong cookie, thử lấy từ Authorization header
         if (!token) {
             const authHeader = req.headers['authorization'];
             token = authHeader && authHeader.split(' ')[1];
@@ -21,7 +17,6 @@ export const authenticate = (req, res, next) => {
             return res.status(401).json({ error: 'Authentication required', message: 'Token not provided' });
         }
 
-        // Verify JWT token với secret từ Auth Service
         jwt.verify(token, process.env.AUTH_ACCESS_TOKEN_SECRET, (err, decoded) => {
             if (err) {
                 console.error('JWT verification error:', err.message);
@@ -31,12 +26,10 @@ export const authenticate = (req, res, next) => {
                 return res.status(403).json({ error: 'Invalid token', message: err.message });
             }
 
-            // Token hợp lệ, lấy thông tin user từ decoded token
-            // Token payload: { userId: user.id, role: user.role, station_id?: station.id }
             req.user = {
                 id: decoded.userId,
                 role: decoded.role,
-                station_id: decoded.station_id || null  // station_id có thể không có nếu không phải staff
+                station_id: decoded.station_id || null
             };
 
             next();
@@ -47,7 +40,6 @@ export const authenticate = (req, res, next) => {
     }
 };
 
-// Middleware để check permissions
 export const authorize = (...allowedRoles) => {
     return (req, res, next) => {
         if (!req.user) {
@@ -66,23 +58,18 @@ export const authorize = (...allowedRoles) => {
     };
 };
 
-// Middleware để check ownership (renter chỉ được xem booking của mình)
 export const checkOwnership = async (req, res, next) => {
     try {
-        // Admin và Staff có thể truy cập tất cả bookings
         if (req.user.role === 'admin' || req.user.role === 'staff') {
             return next();
         }
 
-        // Renter chỉ được truy cập booking của mình
         if (req.user.role === 'renter') {
-            const { id } = req.params; // booking_id từ URL
-
+            const { id } = req.params;
             if (!id) {
                 return res.status(400).json({ error: 'Booking ID is required' });
             }
 
-            // Lấy thông tin booking để kiểm tra user_id
             const pool = (await import('../config/db.js')).default;
             const { rows } = await pool.query(
                 'SELECT user_id FROM bookings WHERE booking_id = $1',
@@ -110,45 +97,260 @@ export const checkOwnership = async (req, res, next) => {
     }
 };
 
-// Middleware để kiểm tra quyền check-in theo station
 export const checkCheckinPermission = async (req, res, next) => {
     try {
         const { id } = req.params;
 
-        // Admin có thể check-in tại bất kỳ station nào
         if (req.user.role === 'admin') {
             return next();
         }
 
-        // Staff chỉ có thể check-in tại station của mình
-        // TODO: Tạm thời bỏ qua check station_id vì chưa có station
-        // Khi có station, sẽ bật lại check này
         if (req.user.role === 'staff') {
-            // Kiểm tra booking có tồn tại không
             const pool = (await import('../config/db.js')).default;
-            const { rows } = await pool.query(
+            const bookingResult = await pool.query(
                 'SELECT start_station_id FROM bookings WHERE booking_id = $1',
                 [id]
             );
 
-            if (rows.length === 0) {
+            if (bookingResult.rows.length === 0) {
                 return res.status(404).json({ error: 'Booking not found' });
             }
 
-            // TODO: Khi có station, uncomment phần check station_id sau:
-            // const booking = rows[0];
-            // if (req.user.station_id && booking.start_station_id !== req.user.station_id) {
-            //     return res.status(403).json({
-            //         error: 'Staff can only check-in at their assigned station',
-            //         required_station: booking.start_station_id,
-            //         staff_station: req.user.station_id
-            //     });
-            // }
+            const booking = bookingResult.rows[0];
+            const startStationId = booking.start_station_id;
 
-            // Tạm thời: Staff có thể check-in tại bất kỳ station nào
+            if (!startStationId) {
+                return res.status(400).json({
+                    error: 'Booking does not have a start station'
+                });
+            }
+
+            let actualStationId = null;
+
+            try {
+                const stationCheck = await pool.query(
+                    `SELECT station_id FROM stations WHERE station_id = $1 LIMIT 1`,
+                    [startStationId]
+                );
+
+                if (stationCheck.rows.length > 0) {
+                    actualStationId = stationCheck.rows[0].station_id;
+                } else {
+                    const stationByUserId = await pool.query(
+                        `SELECT station_id FROM stations WHERE user_id = $1 LIMIT 1`,
+                        [startStationId]
+                    );
+
+                    if (stationByUserId.rows.length > 0) {
+                        actualStationId = stationByUserId.rows[0].station_id;
+                    }
+                }
+
+            } catch (dbError) {
+
+                try {
+                    const axios = (await import('axios')).default;
+                    const apiGatewayUrl = process.env.API_GATEWAY_URL || 'http://localhost:8000';
+                    const internalSecret = process.env.INTERNAL_SERVICE_SECRET || 'internal-secret-key-change-in-production';
+
+                    try {
+                        const stationResponse = await axios.get(
+                            `${apiGatewayUrl}/api/v1/stations/by-id/${startStationId}`,
+                            {
+                                headers: {
+                                    'Authorization': req.headers['authorization'] || '',
+                                    'x-internal-secret': internalSecret
+                                },
+                                timeout: 5000
+                            }
+                        );
+                        actualStationId = stationResponse.data?.station_id;
+                    } catch (err) {
+                        try {
+                            const stationResponse = await axios.get(
+                                `${apiGatewayUrl}/api/v1/stations/${startStationId}`,
+                                {
+                                    headers: {
+                                        'Authorization': req.headers['authorization'] || '',
+                                        'x-internal-secret': internalSecret
+                                    },
+                                    timeout: 5000
+                                }
+                            );
+                            actualStationId = stationResponse.data?.station_id;
+                        } catch (err2) {
+                            console.error('[checkCheckinPermission] Failed to get station:', err2.message);
+                        }
+                    }
+
+                } catch (apiError) {
+                    console.error('[checkCheckinPermission] Station Service API call failed:', apiError.message);
+                    return res.status(500).json({
+                        error: 'Unable to verify station assignment',
+                        message: 'Không thể xác thực quyền check-in. Vui lòng thử lại sau.'
+                    });
+                }
+            }
+
+            if (!actualStationId) {
+                return res.status(400).json({
+                    error: 'Unable to determine station_id for start station',
+                    message: 'Không thể xác định trạm bắt đầu'
+                });
+            }
+
+            const staffStationIds = [];
+            let userStationId = null;
+
+            try {
+                const ownerQuery = `SELECT station_id FROM stations WHERE user_id = $1`;
+                const ownerResult = await pool.query(ownerQuery, [req.user.id]);
+                ownerResult.rows.forEach(row => {
+                    if (row.station_id && !staffStationIds.includes(row.station_id)) {
+                        staffStationIds.push(row.station_id);
+                    }
+                });
+
+                try {
+                    const userQuery = `SELECT station_id FROM users WHERE id = $1`;
+                    const userResult = await pool.query(userQuery, [req.user.id]);
+                    if (userResult.rows.length > 0 && userResult.rows[0].station_id) {
+                        userStationId = userResult.rows[0].station_id;
+                    }
+                } catch (userDbError) {
+                    // Different database
+                }
+
+            } catch (dbError) {
+
+                try {
+                    const axios = (await import('axios')).default;
+                    const apiGatewayUrl = process.env.API_GATEWAY_URL || 'http://localhost:8000';
+                    const internalSecret = process.env.INTERNAL_SERVICE_SECRET || 'internal-secret-key-change-in-production';
+
+                    const allStationsResponse = await axios.get(
+                        `${apiGatewayUrl}/api/v1/stations`,
+                        {
+                            headers: {
+                                'Authorization': req.headers['authorization'] || '',
+                                'x-internal-secret': internalSecret
+                            },
+                            timeout: 5000
+                        }
+                    );
+
+                    const allStations = Array.isArray(allStationsResponse.data) ? allStationsResponse.data : [];
+
+                    for (const station of allStations) {
+                        if (station.user_id === req.user.id) {
+                            if (station.station_id && !staffStationIds.includes(station.station_id)) {
+                                staffStationIds.push(station.station_id);
+                            }
+                        }
+                    }
+
+                } catch (apiError) {
+                    console.error('[checkCheckinPermission] Station Service API call failed:', apiError.message);
+                    return res.status(500).json({
+                        error: 'Unable to verify station assignment',
+                        message: 'Không thể xác thực quyền check-in. Vui lòng thử lại sau.'
+                    });
+                }
+            }
+
+            if (!userStationId) {
+                try {
+                    const axios = (await import('axios')).default;
+                    const apiGatewayUrl = process.env.API_GATEWAY_URL || 'http://localhost:8000';
+                    const internalSecret = process.env.INTERNAL_SERVICE_SECRET || 'internal-secret-key-change-in-production';
+
+                    const userInfoRes = await axios.get(
+                        `${apiGatewayUrl}/api/v1/admin/users/${req.user.id}`,
+                        {
+                            headers: {
+                                'Authorization': req.headers['authorization'] || '',
+                                'x-internal-secret': internalSecret
+                            },
+                            timeout: 3000
+                        }
+                    );
+
+                    if (userInfoRes.data?.success && userInfoRes.data?.user?.station_id) {
+                        userStationId = userInfoRes.data.user.station_id;
+                    }
+                } catch (authErr) {
+                    // Ignore
+                }
+            }
+
+            if (userStationId) {
+                try {
+                    let actualUserStationId = userStationId;
+
+                    try {
+                        const resolveQuery = `SELECT station_id FROM stations WHERE station_id = $1 OR user_id = $1 LIMIT 1`;
+                        const resolveResult = await pool.query(resolveQuery, [userStationId]);
+                        if (resolveResult.rows.length > 0) {
+                            actualUserStationId = resolveResult.rows[0].station_id || userStationId;
+                        }
+                    } catch (resolveDbError) {
+                        try {
+                            const axios = (await import('axios')).default;
+                            const apiGatewayUrl = process.env.API_GATEWAY_URL || 'http://localhost:8000';
+                            const internalSecret = process.env.INTERNAL_SERVICE_SECRET || 'internal-secret-key-change-in-production';
+
+                            try {
+                                const stationRes = await axios.get(
+                                    `${apiGatewayUrl}/api/v1/stations/by-id/${userStationId}`,
+                                    {
+                                        headers: { 'x-internal-secret': internalSecret },
+                                        timeout: 3000
+                                    }
+                                );
+                                actualUserStationId = stationRes.data?.station_id || userStationId;
+                            } catch (err) {
+                                try {
+                                    const stationByUserRes = await axios.get(
+                                        `${apiGatewayUrl}/api/v1/stations/${userStationId}`,
+                                        {
+                                            headers: { 'x-internal-secret': internalSecret },
+                                            timeout: 3000
+                                        }
+                                    );
+                                    actualUserStationId = stationByUserRes.data?.station_id || userStationId;
+                                } catch (err2) {
+                                    // Ignore
+                                }
+                            }
+                        } catch (apiErr) {
+                            // Ignore
+                        }
+                    }
+
+                    if (!staffStationIds.includes(actualUserStationId)) {
+                        staffStationIds.push(actualUserStationId);
+                    }
+                    if (actualUserStationId !== userStationId && !staffStationIds.includes(userStationId)) {
+                        staffStationIds.push(userStationId);
+                    }
+                } catch (err) {
+                    if (!staffStationIds.includes(userStationId)) {
+                        staffStationIds.push(userStationId);
+                    }
+                }
+            }
+
+            if (!staffStationIds.includes(actualStationId)) {
+                return res.status(403).json({
+                    error: 'Staff can only check-in bookings at their assigned station',
+                    message: 'Bạn chỉ có thể check-in xe tại trạm được phân công của mình',
+                    required_station_id: actualStationId,
+                    staff_station_ids: staffStationIds,
+                    staff_id: req.user.id
+                });
+            }
         }
 
-        // Renter không được phép check-in
         if (req.user.role === 'renter') {
             return res.status(403).json({
                 error: 'Renters are not allowed to perform check-in operations'
@@ -162,14 +364,11 @@ export const checkCheckinPermission = async (req, res, next) => {
     }
 };
 
-// Middleware để kiểm tra quyền return (Admin và Staff có thể return tại bất kỳ station nào)
 export const checkReturnPermission = (req, res, next) => {
-    // Admin và Staff có thể return tại bất kỳ station nào
     if (req.user.role === 'admin' || req.user.role === 'staff') {
         return next();
     }
 
-    // Renter không được phép return
     if (req.user.role === 'renter') {
         return res.status(403).json({
             error: 'Renters are not allowed to perform return operations'
@@ -179,8 +378,6 @@ export const checkReturnPermission = (req, res, next) => {
     next();
 };
 
-// Middleware để verify internal service-to-service requests
-// Sử dụng internal secret key để xác thực requests từ Payment Service
 export const verifyInternalRequest = (req, res, next) => {
     try {
         const internalSecret = process.env.INTERNAL_SERVICE_SECRET || 'internal-secret-key-change-in-production';
@@ -198,7 +395,6 @@ export const verifyInternalRequest = (req, res, next) => {
             });
         }
 
-        // Mark request as internal (skip ownership checks)
         req.isInternal = true;
         next();
     } catch (error) {

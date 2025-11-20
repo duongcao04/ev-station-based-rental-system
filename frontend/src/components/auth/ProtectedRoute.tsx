@@ -1,29 +1,31 @@
 import { useAuthStore } from "@/stores/useAuthStore";
 import type { User } from "@/types/user";
 import { useEffect, useState } from "react";
-import { Navigate, Outlet } from "react-router";
+import { Navigate } from "react-router";
+import { toast } from "sonner";
 
 interface RoleProtectedRouteProps {
   allowedRoles: User["role"][];
+  children?: React.ReactNode;
 }
 
-const ProtectedRoute = ({ allowedRoles }: RoleProtectedRouteProps) => {
+const ProtectedRoute = ({
+  allowedRoles,
+  children,
+}: RoleProtectedRouteProps) => {
   const { accessToken, user, loading, refresh, fetchMe } = useAuthStore();
   const [starting, setStarting] = useState(true);
 
   const init = async () => {
     if (!accessToken) {
       await refresh();
-      // Sau khi refresh, lấy lại accessToken từ store để kiểm tra
       const currentAccessToken = useAuthStore.getState().accessToken;
       if (currentAccessToken && !user) {
         await fetchMe();
       }
     } else if (!user) {
-      // Nếu đã có accessToken nhưng chưa có user info, fetch luôn
       await fetchMe();
     }
-
     setStarting(false);
   };
 
@@ -39,29 +41,28 @@ const ProtectedRoute = ({ allowedRoles }: RoleProtectedRouteProps) => {
     );
   }
 
-  if (!accessToken) {
-    return <Navigate to="/login" replace />;
-  }
-
-  if (!user) {
+  if (!accessToken || !user) {
     return <Navigate to="/login" replace />;
   }
 
   if (!allowedRoles.includes(user.role)) {
-    // Redirect based on user role
+    let path = "/login";
     switch (user.role) {
       case "admin":
-        return <Navigate to="/admin/dashboard" replace />;
       case "staff":
-        return <Navigate to="/staff/dashboard" replace />;
+        path = "/dashboard";
+        break;
       case "renter":
-        return <Navigate to="/renters/me" replace />;
-      default:
-        return <Navigate to="/login" replace />;
+        path = "/";
+        break;
     }
+
+    toast.error("Bạn không có quyền truy cập vào trang này!");
+
+    return <Navigate to={path} replace />;
   }
 
-  return <Outlet />;
+  return <>{children}</>;
 };
 
 export default ProtectedRoute;

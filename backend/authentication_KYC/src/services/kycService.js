@@ -1,4 +1,4 @@
-import { Model, Op } from "sequelize";
+import { Model, Op, Sequelize } from "sequelize";
 import { RenterProfile, User } from "../libs/db.js";
 
 export const KYCService = {
@@ -30,6 +30,8 @@ export const KYCService = {
     };
     await profile.update(updateData);
 
+    await profile.reload();
+
     return profile;
   },
 
@@ -44,10 +46,45 @@ export const KYCService = {
         "note",
         "updated_at",
       ],
+      include: [
+        {
+          model: User,
+          as: "verified_by_staff",
+          attributes: ["id", "email"],
+          required: false,
+          include: [
+            {
+              model: RenterProfile,
+              as: "renter_profile",
+              attributes: ["full_name"],
+              required: false,
+            },
+          ],
+        },
+      ],
     });
     if (!profile) throw new Error("Profile not found");
 
-    return profile;
+    const result = profile.toJSON();
+    if (result.verified_by_staff_id && result.verified_by_staff) {
+      const staffProfile = result.verified_by_staff.renter_profile;
+      if (staffProfile && staffProfile.full_name) {
+        result.verified_by_staff_name = staffProfile.full_name;
+      } else {
+        const emailPrefix = result.verified_by_staff.email.split("@")[0];
+        result.verified_by_staff_name =
+          emailPrefix
+            .replace(/[._-]/g, " ")
+            .split(" ")
+            .map(
+              (word) =>
+                word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+            )
+            .join(" ") || emailPrefix;
+      }
+    }
+
+    return result;
   },
 
   async getKYCSubmissions({ status, page, q }) {
@@ -55,17 +92,29 @@ export const KYCService = {
     const offset = (page - 1) * limit;
 
     const whereProfile = {};
-    if (status) whereProfile.verification_status = status;
-    if (q) {
-      whereProfile[Op.or] = [{ full_name: { [Op.like]: `%${q}%` } }];
+    if (status) {
+      whereProfile.verification_status = status;
     }
 
     const whereUser = { role: "renter" };
+
     if (q) {
-      whereUser[Op.or] = [
-        { email: { [Op.like]: `%${q}%` } },
-        { phone_number: { [Op.like]: `%${q}%` } },
-      ];
+      const escapedQ = q.replace(/'/g, "''");
+      const searchPattern = `%${escapedQ}%`;
+
+      const searchCondition = Sequelize.literal(
+        `("RenterProfile"."full_name" ILIKE '${searchPattern}' OR "user"."email" ILIKE '${searchPattern}' OR "user"."phone_number" ILIKE '${searchPattern}')`
+      );
+
+      if (status) {
+        whereProfile[Op.and] = [
+          { verification_status: status },
+          searchCondition,
+        ];
+        delete whereProfile.verification_status;
+      } else {
+        whereProfile[Op.and] = [searchCondition];
+      }
     }
 
     const { rows, count } = await RenterProfile.findAndCountAll({
@@ -78,7 +127,22 @@ export const KYCService = {
           model: User,
           as: "user",
           attributes: ["email", "phone_number", "role"],
-          where: Object.keys(whereUser).length ? whereUser : undefined,
+          where: whereUser,
+          required: true,
+        },
+        {
+          model: User,
+          as: "verified_by_staff",
+          attributes: ["id", "email"],
+          required: false,
+          include: [
+            {
+              model: RenterProfile,
+              as: "renter_profile",
+              attributes: ["full_name"],
+              required: false,
+            },
+          ],
         },
       ],
       attributes: [
@@ -93,8 +157,36 @@ export const KYCService = {
       ],
     });
 
+    const formattedRows = rows.map((row) => {
+      const result = row.toJSON();
+
+      if (result.user) {
+        result.email = result.user.email;
+        result.phone_number = result.user.phone_number;
+      }
+
+      if (result.verified_by_staff_id && result.verified_by_staff) {
+        const staffProfile = result.verified_by_staff.renter_profile;
+        if (staffProfile && staffProfile.full_name) {
+          result.verified_by_staff_name = staffProfile.full_name;
+        } else {
+          const emailPrefix = result.verified_by_staff.email.split("@")[0];
+          result.verified_by_staff_name =
+            emailPrefix
+              .replace(/[._-]/g, " ")
+              .split(" ")
+              .map(
+                (word) =>
+                  word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+              )
+              .join(" ") || emailPrefix;
+        }
+      }
+      return result;
+    });
+
     return {
-      data: rows,
+      data: formattedRows,
       total: count,
       page: Number(page),
       totalPages: Math.ceil(count / limit),
@@ -123,14 +215,52 @@ export const KYCService = {
       updated_at: new Date(),
     });
 
-    await profile.reload();
+    await profile.reload({
+      include: [
+        {
+          model: User,
+          as: "verified_by_staff",
+          attributes: ["id", "email"],
+          required: false,
+          include: [
+            {
+              model: RenterProfile,
+              as: "renter_profile",
+              attributes: ["full_name"],
+              required: false,
+            },
+          ],
+        },
+      ],
+    });
+
+    const result = profile.toJSON();
+    if (result.verified_by_staff_id && result.verified_by_staff) {
+      const staffProfile = result.verified_by_staff.renter_profile;
+      if (staffProfile && staffProfile.full_name) {
+        result.verified_by_staff_name = staffProfile.full_name;
+      } else {
+        const emailPrefix = result.verified_by_staff.email.split("@")[0];
+        result.verified_by_staff_name =
+          emailPrefix
+            .replace(/[._-]/g, " ")
+            .split(" ")
+            .map(
+              (word) =>
+                word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+            )
+            .join(" ") || emailPrefix;
+      }
+    }
+
     return {
-      id: profile.id,
-      full_name: profile.full_name,
-      verification_status: profile.verification_status,
-      note_staff: profile.note,
-      verified_by_staff_id: profile.verified_by_staff_id,
-      updated_at: profile.updated_at,
+      id: result.id,
+      full_name: result.full_name,
+      verification_status: result.verification_status,
+      note_staff: result.note,
+      verified_by_staff_id: result.verified_by_staff_id,
+      verified_by_staff_name: result.verified_by_staff_name || null,
+      updated_at: result.updated_at,
     };
   },
 };

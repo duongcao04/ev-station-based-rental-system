@@ -30,6 +30,7 @@
   --accent: oklch(0.97 0 0);
   --accent-foreground: oklch(0.205 0 0);
   --destructive: oklch(0.577 0.245 27.325);
+  --destructive-foreground: oklch(0.98 0.02 270);
   --border: oklch(0.922 0 0);
   --input: oklch(0.922 0 0);
   --ring: oklch(0.708 0 0);
@@ -141,7 +142,8 @@
 
 /* Leaflet marker styles */
 .selected-station-marker {
-  filter: brightness(0) saturate(100%) invert(27%) sepia(51%) saturate(2878%) hue-rotate(346deg) brightness(104%) contrast(97%);
+  filter: brightness(0) saturate(100%) invert(27%) sepia(51%) saturate(2878%)
+    hue-rotate(346deg) brightness(104%) contrast(97%);
   /* Makes marker red when selected */
 }
 
@@ -149,7 +151,6 @@
 .leaflet-bottom.leaflet-right {
   display: none !important;
 }
-
 
 @utility container {
   max-width: 1440px;

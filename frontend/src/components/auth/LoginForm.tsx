@@ -1,15 +1,15 @@
-import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { z } from 'zod';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { Label } from '@radix-ui/react-label';
-import { useAuthStore } from '@/stores/useAuthStore';
-import { useNavigate } from 'react-router';
-import logo from '../../assets/logo.png';
-import { useLogin } from '../../lib/queries/useAuth';
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { z } from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Label } from "@radix-ui/react-label";
+import { useAuthStore } from "@/stores/useAuthStore";
+import { useNavigate } from "react-router";
+import { useQueryClient } from "@tanstack/react-query";
+import logo from "../../assets/logo.png";
 
 const signInSchema = z.object({
   username: z.string().min(1, "Tài khoản là email hoặc số điện thoại"),
@@ -22,9 +22,9 @@ export function LoginForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
-  const { signIn } = useAuthStore();
-  const { mutateAsync: loginMutate } = useLogin();
+  const signIn = useAuthStore((state) => state.signIn);
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const {
     register,
@@ -36,25 +36,42 @@ export function LoginForm({
 
   const onSubmit = async (data: SignInFormValues) => {
     const { username, password } = data;
-    const result = await loginMutate({ username, password });
+    const ok = await signIn(username, password);
+    if (!ok) return;
 
-    if (result.role) {
-      let targetPath = '/'; // default
-      switch (result.role) {
-        case 'admin':
-          targetPath = '/dashboard';
-          break;
-        case 'staff':
-          targetPath = '/staff/dashboard';
-          break;
-        case 'renter':
-          targetPath = '/';
-          break;
-      }
-      console.log('Navigating to:', targetPath);
-      // Sử dụng navigate với replace để thay thế history entry
-      navigate(targetPath, { replace: true });
+    // Đợi một chút để đảm bảo state đã được cập nhật
+    // Và đợi fetchMe hoàn thành (đã được gọi trong signIn)
+    await new Promise((resolve) => setTimeout(resolve, 100));
+
+    // Lấy user từ store sau khi đã fetchMe
+    const user = useAuthStore.getState().user;
+
+    if (!user || !user.role) {
+      console.error("User data not available after login");
+      return;
     }
+
+    // Invalidate React Query cache để refresh profile
+    if (queryClient) {
+      queryClient.invalidateQueries({ queryKey: ["profile"] });
+    }
+
+    let targetPath = "/";
+    switch (user.role) {
+      case "admin":
+        targetPath = "/dashboard";
+        break;
+      case "staff":
+        targetPath = "/dashboard";
+        break;
+      case "renter":
+        targetPath = "/";
+        break;
+      default:
+        targetPath = "/";
+    }
+    
+    navigate(targetPath, { replace: true });
   };
 
   return (

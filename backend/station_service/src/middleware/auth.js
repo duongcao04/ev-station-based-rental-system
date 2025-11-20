@@ -1,17 +1,24 @@
-// Authentication & Authorization Middleware
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
 import path from 'path';
 
 dotenv.config({ path: path.resolve(process.cwd(), "../.env") });
 
-// Middleware để verify JWT token từ Auth Service
 export const authenticate = (req, res, next) => {
     try {
-        // Lấy token từ HTTP-only cookie (ưu tiên) hoặc Authorization header (fallback)
+        const internalSecret = req.headers['x-internal-secret'];
+        const expectedSecret = process.env.INTERNAL_SERVICE_SECRET || 'internal-secret-key-change-in-production';
+
+        if (internalSecret && internalSecret === expectedSecret) {
+            req.user = {
+                id: 'internal-service',
+                role: 'admin'
+            };
+            return next();
+        }
+
         let token = req.cookies?.accessToken;
 
-        // Fallback: Nếu không có trong cookie, thử lấy từ Authorization header
         if (!token) {
             const authHeader = req.headers['authorization'];
             token = authHeader && authHeader.split(' ')[1];
@@ -21,7 +28,6 @@ export const authenticate = (req, res, next) => {
             return res.status(401).json({ error: 'Authentication required', message: 'Token not provided' });
         }
 
-        // Verify JWT token với secret từ Auth Service
         jwt.verify(token, process.env.AUTH_ACCESS_TOKEN_SECRET, (err, decoded) => {
             if (err) {
                 console.error('JWT verification error:', err.message);
@@ -31,8 +37,6 @@ export const authenticate = (req, res, next) => {
                 return res.status(403).json({ error: 'Invalid token', message: err.message });
             }
 
-            // Token hợp lệ, lấy thông tin user từ decoded token
-            // Token payload: { userId: user.id, role: user.role }
             req.user = {
                 id: decoded.userId,
                 role: decoded.role
@@ -63,18 +67,15 @@ export const ensureStationOwnership = (req, res, next) => {
         return res.status(403).json({ error: "Only staff/admin can modify stations" });
     }
 
-    // Admin có thể modify tất cả stations
     if (isAdmin) {
         return next();
     }
 
-    // Staff chỉ có thể modify station của mình
     const targetUserId = req.params.user_id ?? req.body.user_id;
     if (!targetUserId) {
         return res.status(400).json({ error: "user_id is required" });
     }
 
-    // So sánh user_id (có thể là UUID hoặc string)
     if (String(targetUserId) !== String(req.user.id)) {
         return res.status(403).json({
             error: "You can only modify your own station",

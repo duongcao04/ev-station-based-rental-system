@@ -3,12 +3,13 @@ export interface User {
   email: string;
   phoneNumber: string;
   role: "admin" | "staff" | "renter";
-  displayName?: string;
+  displayName: string;
   driverlicenseUrl?: string;
-  nationalidUrl?: String;
-  verificationStatus?: String;
-  verifiedStaffId?: String;
-  note?: String;
+  nationalidUrl?: string;
+  verificationStatus?: string;
+  verifiedStaffId?: string;
+  verifiedStaffName?: string | null;
+  note?: string;
   isRisky?: boolean;
   createdAt?: string;
   updatedAt?: string;

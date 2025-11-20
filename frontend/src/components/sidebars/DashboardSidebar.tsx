@@ -1,18 +1,13 @@
 import {
-  BookCopy,
-  BookOpen,
   Calendar,
-  Car,
-  CarTaxiFront,
-  ChevronDown,
   Home,
   Inbox,
+  Verified,
   Search,
   Settings,
-  Slack,
-  User2,
-} from 'lucide-react';
-import { Link } from 'react-router-dom';
+  BookOpen,
+} from "lucide-react";
+import { Link } from "react-router-dom";
 
 import logo from '@/assets/logo.png';
 
@@ -26,51 +21,48 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarMenuSub,
-  SidebarMenuSubItem,
-  SidebarSeparator,
-} from '@/components/ui/sidebar';
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from '../ui/collapsible';
+} from "@/components/ui/sidebar";
 
 // Menu items.
 const items = [
   {
-    title: 'Dashboard',
-    url: '/dashboard',
+    title: "Dashboard",
+    url: "/dashboard",
     icon: Home,
   },
   {
-    title: 'Trạm xe',
-    url: '/dashboard/tram-xe',
+    title: "Trạm xe",
+    url: "/dashboard/tram-xe",
     icon: Home,
   },
   {
-    title: 'Booking',
-    url: '/dashboard/bookings',
+    title: "Booking",
+    url: "/dashboard/bookings",
     icon: BookOpen,
   },
   {
-    title: 'Thành viên',
-    url: '#',
+    title: "Thành viên",
+    url: "/dashboard/menbers",
     icon: Inbox,
   },
   {
-    title: 'Xe',
-    url: '#',
+    title: "Xác thực KYC",
+    url: "/dashboard/kyc-verification",
+    icon: Verified,
+  },
+  {
+    title: "Xe",
+    url: "#",
     icon: Calendar,
   },
   {
-    title: 'Báo cáo',
-    url: '#',
+    title: "Báo cáo",
+    url: "#",
     icon: Search,
   },
   {
-    title: 'Cài đặt',
-    url: '/dashboard/setting',
+    title: "Cài đặt",
+    url: "/dashboard/setting",
     icon: Settings,
   },
 ];

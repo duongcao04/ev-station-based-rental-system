@@ -35,18 +35,18 @@ export const CarService = {
 				...rest,
 				// attach categories if provided
 				...(categoryIds && categoryIds.length ? { categories: { connect: categoryIds.map((id: string) => ({ id })) } } : {}),
-			} as any,
+			},
 			include: { brand: true, categories: true, specifications: true, featuredImages: true },
 		});
 	},
 	update: async (id: string, data: UpdateCarDto) => {
-		const { categoryIds, ...rest } = data || {} as any;
+		const { categoryIds, ...rest } = data || {};
 		return prisma.car.update({
 			where: { id },
 			data: {
 				...rest,
 				...(categoryIds ? { categories: { set: categoryIds.map((id: string) => ({ id })) } } : {}),
-			} as any,
+			},
 			include: { brand: true, categories: true, specifications: true, featuredImages: true },
 		});
 	},

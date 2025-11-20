@@ -8,6 +8,7 @@ import {
   REFRESH_TOKEN_TTL,
   registerUser,
 } from "../services/auth.js";
+import { StationService } from "../services/stationService.js";
 
 export const getProfile = async (req, res) => {
   try {
@@ -21,6 +22,24 @@ export const getProfile = async (req, res) => {
     res.status(200).json(profile);
   } catch (error) {
     console.error("Error in getProfile", error);
+    res.status(500).json({ message: "Internal Error" });
+  }
+};
+
+// Endpoint riêng cho Booking Service lấy station_id (không ảnh hưởng frontend)
+export const getMyStationId = async (req, res) => {
+  try {
+    const user = await User.findOne({
+      where: { id: req.user.id },
+      attributes: ["id", "station_id"],
+    });
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    res.json({ success: true, user: { id: user.id, station_id: user.station_id } });
+  } catch (error) {
+    console.error("Error in getMyStationId", error);
     res.status(500).json({ message: "Internal Error" });
   }
 };
@@ -98,24 +117,13 @@ export const login = async (req, res) => {
         maxAge: REFRESH_TOKEN_TTL,
       });
 
-      let stationId = null;
-      if (exist.role === "staff") {
-        const sql = `SELECT id FROM "station" WHERE user_id = :uid LIMIT 1;`;
-        const replacements = { uid: exist.id };
-        const [results] = await sequelize.query(sql, {
-          replacements,
-          type: sequelize.QueryTypes.SELECT,
-        });
-        if (results && results.id) stationId = results.id;
-      }
-
       //send access token in res
       return res.status(200).json({
         message: "Đăng nhập thành công",
         user_id: exist.id,
         email: exist.dataValues.email,
         role: exist.role,
-        station_id: stationId,
+        station_id: exist.station_id,
         accessToken: accessToken,
       });
     } else {

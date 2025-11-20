@@ -8,6 +8,10 @@ import adminRoute from "./routes/adminRoute.js";
 import kycRoute from "./routes/kycRoute.js";
 import cors from "cors";
 import path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 
 dotenv.config({ path: path.resolve(process.cwd(), "../.env") });
@@ -22,6 +26,9 @@ console.log(process.env.AUTH_PORT);
 app.use(express.json());
 app.use(cookie());
 app.use(cors({ origin: process.env.CLIENT_URL, credentials: true }));
+
+// Serve static files (uploads)
+app.use("/upload", express.static(path.join(__dirname, "../uploads")));
 
 //public routes
 app.use("/api/auth", authRoute);

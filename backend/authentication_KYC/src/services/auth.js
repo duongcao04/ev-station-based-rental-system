@@ -49,6 +49,7 @@ const registerUser = async ({
   phone_number,
   password,
   role = "renter",
+  station_id = null,
 }) => {
   if (!email || !phone_number || !password) {
     throw {
@@ -66,12 +67,19 @@ const registerUser = async ({
 
   const hashPassword = await bcrypt.hash(password, 10);
 
-  const user = await User.create({
+  const userData = {
     email,
     phone_number,
     password_hash: hashPassword,
     role,
-  });
+  };
+
+  // Only add station_id if provided and role is staff
+  if (station_id && role === "staff") {
+    userData.station_id = station_id;
+  }
+
+  const user = await User.create(userData);
 
   return user;
 };

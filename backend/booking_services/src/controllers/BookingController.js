@@ -7,18 +7,6 @@ export const createBooking = async (req, res) => {
     const { vehicle_id, payment_id, start_station_id, end_station_id, start_date, end_date, total_amount, calculated_price_details } = req.body;
     const user_id = req.user?.id;
 
-    console.log('📝 Create booking request:', {
-      user_id,
-      vehicle_id,
-      start_station_id,
-      end_station_id,
-      start_date,
-      end_date,
-      total_amount,
-      has_calculated_price_details: !!calculated_price_details
-    });
-
-    // Allow creating booking without payment_id; it can be attached later
     if (!vehicle_id || !start_station_id || !end_station_id || !start_date || !end_date || !total_amount) {
       return res.status(400).json({
         error: "Missing required fields",
@@ -68,7 +56,6 @@ export const createBooking = async (req, res) => {
       calculated_price_details: calculated_price_details || null,
     });
 
-    console.log(' Booking created successfully:', booking.booking_id);
     res.status(201).json(booking);
   } catch (e) {
     console.error(' Create booking error:', e);
@@ -91,13 +78,11 @@ export const checkin = async (req, res) => {
   try {
     const { id } = req.params;
 
-    // Kiểm tra booking có tồn tại không
     const existingBooking = await BookingModel.getById(id);
     if (!existingBooking) {
       return res.status(404).json({ error: "Booking not found" });
     }
 
-    // Kiểm tra trạng thái booking
     if (existingBooking.status !== 'booked') {
       return res.status(400).json({
         error: "Booking cannot be checked in",
@@ -120,18 +105,11 @@ export const returnVehicle = async (req, res) => {
   try {
     const { id } = req.params;
 
-    // Debug: Log request body
-    console.log('Request body:', req.body);
-    console.log('Request headers:', req.headers);
-
-    // Check if req.body exists
     if (!req.body) {
       return res.status(400).json({ error: "Request body is missing. Please send JSON data." });
     }
 
     const { actual_return_date, actual_return_station_id, penalty_fee } = req.body;
-
-    console.log('Return request:', { id, actual_return_date, actual_return_station_id, penalty_fee });
 
     if (!actual_return_date) {
       return res.status(400).json({ error: "actual_return_date is required" });
@@ -141,15 +119,11 @@ export const returnVehicle = async (req, res) => {
       return res.status(400).json({ error: "actual_return_station_id is required" });
     }
 
-    // Validate penalty_fee
     if (penalty_fee !== undefined && (isNaN(penalty_fee) || penalty_fee < 0)) {
       return res.status(400).json({ error: "penalty_fee must be a non-negative number" });
     }
 
-    // booking hiện tại
     const current = await BookingModel.getById(id);
-    console.log('Current booking:', current);
-
     if (!current) {
       return res.status(404).json({ error: "Booking not found" });
     }
@@ -158,27 +132,18 @@ export const returnVehicle = async (req, res) => {
       return res.status(400).json({ error: "Booking must be ongoing to return" });
     }
 
-    // ========== TÍNH TOÁN REFUND DEPOSIT ==========
-
-    // Phí phát sinh (Staff nhập thủ công)
     const totalPenalty = Number(penalty_fee) || 0;
-
-    // Lấy deposit amount từ calculated_price_details nếu có
     const depositAmount = current.calculated_price_details?.deposit || current.deposit_amount || 0;
 
-    // Tính refund amount
     let refundAmount = 0;
     let finalAmount = current.total_amount;
 
     if (depositAmount > 0) {
       if (totalPenalty === 0) {
-        // Không có phí phát sinh → hoàn full deposit
         refundAmount = depositAmount;
       } else if (totalPenalty < depositAmount) {
-        // Phí phát sinh < cọc → hoàn cọc trừ phí
         refundAmount = depositAmount - totalPenalty;
       } else {
-        // Phí phát sinh >= cọc → không hoàn, có thể phải thanh toán thêm
         refundAmount = 0;
         const additionalFee = totalPenalty - depositAmount;
         finalAmount = current.total_amount + additionalFee;
@@ -196,7 +161,6 @@ export const returnVehicle = async (req, res) => {
     });
     await client.query("COMMIT");
 
-    console.log('Return successful:', updated);
     res.json({
       booking: updated,
       breakdown: {
@@ -228,10 +192,10 @@ export const getBooking = async (req, res) => {
   }
 };
 
-// GET /v1/api/bookings/me - Renter xem booking của mình
+// GET /v1/api/bookings/me/history
 export const myBookings = async (req, res) => {
   try {
-    const user_id = req.user.id; // Lấy từ authenticated user
+    const user_id = req.user.id;
     const data = await BookingModel.listMine(user_id);
     res.json(data);
   } catch (e) {
@@ -240,23 +204,305 @@ export const myBookings = async (req, res) => {
   }
 };
 
-// GET /v1/api/bookings/all - Staff/Admin xem tất cả bookings
+// GET /v1/api/bookings/all
 export const getAllBookings = async (req, res) => {
   try {
     const { status, station_id, limit = 50, offset = 0 } = req.query;
+    const userRole = req.user?.role;
+    const userId = req.user?.id;
 
     let query = 'SELECT * FROM bookings';
     const params = [];
     const conditions = [];
 
+    if (userRole === 'staff' && userId) {
+      const staffStationIds = [];
+      let useDirectQuery = true;
+      let userStationId = null;
+
+      try {
+        const ownerQuery = `SELECT station_id FROM stations WHERE user_id = $1`;
+        const ownerResult = await pool.query(ownerQuery, [userId]);
+        ownerResult.rows.forEach(row => {
+          if (row.station_id && !staffStationIds.includes(row.station_id)) {
+            staffStationIds.push(row.station_id);
+          }
+        });
+
+        try {
+          const userQuery = `SELECT station_id FROM users WHERE id = $1`;
+          const userResult = await pool.query(userQuery, [userId]);
+          if (userResult.rows.length > 0 && userResult.rows[0].station_id) {
+            userStationId = userResult.rows[0].station_id;
+          }
+        } catch (userDbError) {
+          // Different database
+        }
+      } catch (dbError) {
+        useDirectQuery = false;
+      }
+
+      if (staffStationIds.length === 0 || !useDirectQuery) {
+        try {
+          const axios = (await import('axios')).default;
+          const apiGatewayUrl = process.env.API_GATEWAY_URL || 'http://localhost:8000';
+          const internalSecret = process.env.INTERNAL_SERVICE_SECRET || 'internal-secret-key-change-in-production';
+
+          const allStationsResponse = await axios.get(
+            `${apiGatewayUrl}/api/v1/stations`,
+            {
+              headers: {
+                'Authorization': req.headers['authorization'] || '',
+                'x-internal-secret': internalSecret
+              },
+              timeout: 5000
+            }
+          );
+
+          const allStations = Array.isArray(allStationsResponse.data) ? allStationsResponse.data : [];
+
+          if (!useDirectQuery) {
+            staffStationIds.length = 0;
+          }
+
+          for (const station of allStations) {
+            if (station.user_id === userId) {
+              if (station.station_id && !staffStationIds.includes(station.station_id)) {
+                staffStationIds.push(station.station_id);
+              }
+            }
+          }
+
+          if (!userStationId) {
+            try {
+              const authInternalSecret = process.env.INTERNAL_SERVICE_SECRET || 'internal-secret-key-change-in-production';
+              const userInfoRes = await axios.get(
+                `${apiGatewayUrl}/api/v1/admin/users/${userId}`,
+                {
+                  headers: {
+                    'Authorization': req.headers['authorization'] || '',
+                    'x-internal-secret': authInternalSecret
+                  },
+                  timeout: 3000
+                }
+              );
+
+              if (userInfoRes.data?.user?.station_id) {
+                userStationId = userInfoRes.data.user.station_id;
+              } else if (userInfoRes.data?.result?.station_id) {
+                userStationId = userInfoRes.data.result.station_id;
+              }
+            } catch (authErr) {
+              // Ignore
+            }
+          }
+
+        } catch (apiError) {
+          console.error('[getAllBookings] Station Service API call failed:', apiError.message);
+          return res.json([]);
+        }
+      }
+
+      if (!userStationId) {
+        try {
+          const axios = (await import('axios')).default;
+          const apiGatewayUrl = process.env.API_GATEWAY_URL || 'http://localhost:8000';
+          const userInfoRes = await axios.get(
+            `${apiGatewayUrl}/api/v1/auth/my-station-id`,
+            {
+              headers: {
+                'Authorization': req.headers['authorization'] || '',
+                'Cookie': req.headers['cookie'] || '',
+              },
+              timeout: 3000
+            }
+          );
+
+          if (userInfoRes.data?.user?.station_id) {
+            userStationId = userInfoRes.data.user.station_id;
+          }
+        } catch (authErr) {
+          // Ignore
+        }
+      }
+
+      if (staffStationIds.length === 0 && !userStationId) {
+        return res.json([]);
+      }
+
+      const matchedStationIds = [...staffStationIds];
+      const matchedUserIds = [];
+
+      if (userStationId) {
+        if (!matchedStationIds.includes(userStationId)) {
+          matchedStationIds.push(userStationId);
+        }
+        if (!matchedUserIds.includes(userStationId)) {
+          matchedUserIds.push(userStationId);
+        }
+
+        try {
+          let actualUserStationId = userStationId;
+          try {
+            const resolveQuery = `SELECT station_id FROM stations WHERE station_id = $1 OR user_id = $1 LIMIT 1`;
+            const resolveResult = await pool.query(resolveQuery, [userStationId]);
+            if (resolveResult.rows.length > 0) {
+              actualUserStationId = resolveResult.rows[0].station_id || userStationId;
+            }
+          } catch (resolveDbError) {
+            try {
+              const axios = (await import('axios')).default;
+              const apiGatewayUrl = process.env.API_GATEWAY_URL || 'http://localhost:8000';
+              const internalSecret = process.env.INTERNAL_SERVICE_SECRET || 'internal-secret-key-change-in-production';
+
+              try {
+                const stationRes = await axios.get(
+                  `${apiGatewayUrl}/api/v1/stations/by-id/${userStationId}`,
+                  {
+                    headers: { 'x-internal-secret': internalSecret },
+                    timeout: 3000
+                  }
+                );
+                actualUserStationId = stationRes.data?.station_id || userStationId;
+              } catch (err) {
+                try {
+                  const stationByUserRes = await axios.get(
+                    `${apiGatewayUrl}/api/v1/stations/${userStationId}`,
+                    {
+                      headers: { 'x-internal-secret': internalSecret },
+                      timeout: 3000
+                    }
+                  );
+                  actualUserStationId = stationByUserRes.data?.station_id || userStationId;
+                } catch (err2) {
+                  // Ignore
+                }
+              }
+            } catch (apiErr) {
+              // Ignore
+            }
+          }
+
+          if (!matchedStationIds.includes(actualUserStationId)) {
+            matchedStationIds.push(actualUserStationId);
+          }
+          if (!matchedUserIds.includes(userStationId)) {
+            matchedUserIds.push(userStationId);
+          }
+          if (actualUserStationId !== userStationId && !matchedStationIds.includes(userStationId)) {
+            matchedStationIds.push(userStationId);
+          }
+        } catch (err) {
+          if (!matchedStationIds.includes(userStationId)) {
+            matchedStationIds.push(userStationId);
+          }
+          if (!matchedUserIds.includes(userStationId)) {
+            matchedUserIds.push(userStationId);
+          }
+        }
+      }
+
+      try {
+        const allStationIdsForUserIdQuery = [...staffStationIds];
+        if (userStationId && !allStationIdsForUserIdQuery.includes(userStationId)) {
+          allStationIdsForUserIdQuery.push(userStationId);
+        }
+
+        if (allStationIdsForUserIdQuery.length > 0) {
+          const userIdQuery = `SELECT station_id, user_id FROM stations WHERE station_id = ANY($1::uuid[]) OR user_id = ANY($1::uuid[])`;
+          const userIdResult = await pool.query(userIdQuery, [allStationIdsForUserIdQuery]);
+          userIdResult.rows.forEach(row => {
+            if (row.station_id && !matchedStationIds.includes(row.station_id)) {
+              matchedStationIds.push(row.station_id);
+            }
+            if (row.user_id && !matchedUserIds.includes(row.user_id)) {
+              matchedUserIds.push(row.user_id);
+            }
+          });
+        }
+      } catch (dbError) {
+        try {
+          const axios = (await import('axios')).default;
+          const apiGatewayUrl = process.env.API_GATEWAY_URL || 'http://localhost:8000';
+          const internalSecret = process.env.INTERNAL_SERVICE_SECRET || 'internal-secret-key-change-in-production';
+
+          const allStationIdsForApi = [...staffStationIds];
+          if (userStationId && !allStationIdsForApi.includes(userStationId)) {
+            allStationIdsForApi.push(userStationId);
+          }
+
+          for (const stationId of allStationIdsForApi) {
+            try {
+              let stationData = null;
+              try {
+                const stationResponse = await axios.get(
+                  `${apiGatewayUrl}/api/v1/stations/by-id/${stationId}`,
+                  {
+                    headers: {
+                      'Authorization': req.headers['authorization'] || '',
+                      'x-internal-secret': internalSecret
+                    },
+                    timeout: 3000
+                  }
+                );
+                stationData = stationResponse.data;
+              } catch (err1) {
+                try {
+                  const stationByUserResponse = await axios.get(
+                    `${apiGatewayUrl}/api/v1/stations/${stationId}`,
+                    {
+                      headers: {
+                        'Authorization': req.headers['authorization'] || '',
+                        'x-internal-secret': internalSecret
+                      },
+                      timeout: 3000
+                    }
+                  );
+                  stationData = stationByUserResponse.data;
+                } catch (err2) {
+                  // Ignore
+                }
+              }
+
+              if (stationData) {
+                if (stationData.station_id && !matchedStationIds.includes(stationData.station_id)) {
+                  matchedStationIds.push(stationData.station_id);
+                }
+                if (stationData.user_id && !matchedUserIds.includes(stationData.user_id)) {
+                  matchedUserIds.push(stationData.user_id);
+                }
+              }
+            } catch (err) {
+              // Ignore
+            }
+          }
+        } catch (apiError) {
+          // Ignore
+        }
+      }
+
+      const allStationIds = [...matchedStationIds, ...matchedUserIds];
+
+      if (allStationIds.length > 0) {
+        const stationConditions = allStationIds.map((_, index) =>
+          `start_station_id = $${params.length + index + 1}`
+        ).join(' OR ');
+
+        conditions.push(`(${stationConditions})`);
+        params.push(...allStationIds);
+      } else {
+        return res.json([]);
+      }
+    }
+
+    if (userRole === 'admin' && station_id) {
+      conditions.push(`(start_station_id = $${params.length + 1} OR end_station_id = $${params.length + 1})`);
+      params.push(station_id);
+    }
+
     if (status) {
       conditions.push(`status = $${params.length + 1}`);
       params.push(status);
-    }
-
-    if (station_id) {
-      conditions.push(`(start_station_id = $${params.length + 1} OR end_station_id = $${params.length + 1})`);
-      params.push(station_id);
     }
 
     if (conditions.length > 0) {
@@ -267,13 +513,14 @@ export const getAllBookings = async (req, res) => {
     params.push(parseInt(limit), parseInt(offset));
 
     const { rows } = await pool.query(query, params);
+
     res.json(rows);
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: "Server error" });
   }
 };
-// PUT /v1/api/bookings/:id/payment
+// PUT /v1/api/bookings/internal/:id/payment
 export const updateBookingPayment = async (req, res) => {
   try {
     const { id } = req.params;
@@ -299,61 +546,45 @@ export const cancelBooking = async (req, res) => {
     const booking = await BookingModel.getById(id);
     if (!booking) return res.status(404).json({ error: "Booking not found" });
 
-
     if (booking.status !== "booked" && booking.status !== "ongoing") {
       return res.status(400).json({ error: "Only booked or ongoing bookings can be cancelled" });
     }
-
 
     if (penalty_fee !== undefined && (isNaN(penalty_fee) || penalty_fee < 0)) {
       return res.status(400).json({ error: "penalty_fee must be a non-negative number" });
     }
 
-
     const depositAmount = booking.calculated_price_details?.deposit || booking.deposit_amount || 0;
     const totalAmount = Number(booking.total_amount) || 0;
-
 
     let refundAmount = 0;
     let lateFee = 0;
     let additionalPaymentRequired = 0;
 
-
     if (booking.status === "booked") {
-      // Chưa check-in: hoàn toàn bộ tổng tiền (total_amount) vì chưa sử dụng xe
-      // total_amount bao gồm cả tiền thuê và tiền cọc
       if (totalAmount > 0) {
         refundAmount = totalAmount;
       }
       lateFee = 0;
-    }
-
-    else if (booking.status === "ongoing") {
-
+    } else if (booking.status === "ongoing") {
       const totalPenalty = Number(penalty_fee) || 0;
       lateFee = totalPenalty;
 
       if (depositAmount > 0) {
         if (totalPenalty === 0) {
-
           refundAmount = depositAmount;
         } else if (totalPenalty < depositAmount) {
-
           refundAmount = depositAmount - totalPenalty;
         } else {
-
           refundAmount = 0;
           additionalPaymentRequired = totalPenalty - depositAmount;
         }
       } else {
-
         if (totalPenalty > 0) {
           additionalPaymentRequired = totalPenalty;
         }
       }
     }
-
-    // Ownership đã được kiểm tra bởi middleware checkOwnership
     const cancelled = await BookingModel.cancel(id, { refund_amount: refundAmount, late_fee: lateFee });
     if (!cancelled) {
       return res.status(400).json({ error: "Cancel failed (state changed or booking not found)" });

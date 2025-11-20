@@ -45,6 +45,10 @@ const makeProxy = (target, pathRewrite) => {
             if (req.headers["authorization"]) {
                 proxyReq.setHeader("authorization", req.headers["authorization"]);
             }
+            // Forward internal secret header (for service-to-service calls)
+            if (req.headers["x-internal-secret"]) {
+                proxyReq.setHeader("x-internal-secret", req.headers["x-internal-secret"]);
+            }
             // Forward cookies
             if (req.headers.cookie) {
                 proxyReq.setHeader("cookie", req.headers.cookie);
@@ -111,11 +115,17 @@ app.use(
     makeProxy(SERVICES.AUTH, (path) => `/api/kyc${path}`)
 );
 
+// Route /upload/* → Auth Service (for static files)
+app.use(
+    "/upload",
+    makeProxy(SERVICES.AUTH, (path) => `/upload${path}`)
+);
+
 // ================== BOOKING SERVICE ==================
 app.use(
     "/api/v1/bookings",
     makeProxy(SERVICES.BOOKING, (path, req) => {
-       
+
         const newPath = `/api/v1/bookings${path === '/' ? '' : path}`;
         console.log(`[Gateway] Path rewrite: ${req.originalUrl} → ${newPath}`);
         return newPath;

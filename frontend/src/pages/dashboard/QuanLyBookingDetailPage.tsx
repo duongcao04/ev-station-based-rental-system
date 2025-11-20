@@ -3,11 +3,14 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { bookingApi } from '@/lib/api/booking.api';
 import { vehicleApi } from '@/lib/api/vehicle.api';
 import { stationApi } from '@/lib/api/station.api';
+import { paymentApi } from '@/lib/api/payment.api';
 import { formatVNDCurrency } from '@/lib/number';
 import { BookingInfoCard, InfoRow } from './components/BookingInfoCard';
 import { StatusBadge } from './components/StatusBadge';
 import { CheckinModal } from './components/CheckinModal';
 import { CheckoutModal } from './components/CheckoutModal';
+import { CancelModal } from './components/CancelModal';
+
 
 export default function QuanLyBookingDetailPage() {
     const { bookingId } = useParams();
@@ -17,14 +20,42 @@ export default function QuanLyBookingDetailPage() {
     const [startStation, setStartStation] = useState<any>(null);
     const [endStation, setEndStation] = useState<any>(null);
     const [actualReturnStation, setActualReturnStation] = useState<any>(null);
+    const [paymentData, setPaymentData] = useState<any>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<any>(null);
     const [showCheckinModal, setShowCheckinModal] = useState(false);
     const [showCheckoutModal, setShowCheckoutModal] = useState(false);
+    const [showCancelModal, setShowCancelModal] = useState(false);
     const [isProcessing, setIsProcessing] = useState(false);
     const [actualReturnDate, setActualReturnDate] = useState('');
     const [actualReturnStationId, setActualReturnStationId] = useState('');
     const [penaltyFee, setPenaltyFee] = useState('');
+    const [cancelPenaltyFee, setCancelPenaltyFee] = useState('');
+
+
+
+    // State cho danh sách stations
+    const [stations, setStations] = useState<any[]>([]);
+    const [isLoadingStations, setIsLoadingStations] = useState(false);
+
+
+    useEffect(() => {
+        loadStations();
+    }, []);
+
+    const loadStations = async () => {
+        try {
+            setIsLoadingStations(true);
+            const response = await stationApi.getAllStations();
+            const stationsData = Array.isArray(response.data) ? response.data : [];
+            setStations(stationsData);
+        } catch (err) {
+            console.error('Error loading stations:', err);
+            setStations([]);
+        } finally {
+            setIsLoadingStations(false);
+        }
+    };
 
     useEffect(() => {
         if (bookingId) {
@@ -44,26 +75,67 @@ export default function QuanLyBookingDetailPage() {
             setBooking(bookingData);
 
             // Load station info
+            // Lưu ý: booking.start_station_id có thể là station_id hoặc user_id
+            // Thử load theo station_id trước, nếu fail thì thử user_id
             if (bookingData.start_station_id) {
                 try {
-                    const stationResponse = await stationApi.getStationByUserId(bookingData.start_station_id);
-                    setStartStation(stationResponse.data);
+                    // Thử get by station_id trước
+                    try {
+                        const stationResponse = await stationApi.getStationById(bookingData.start_station_id);
+                        console.log('Start station data (by station_id):', stationResponse.data);
+                        setStartStation(stationResponse.data);
+                    } catch (err1: any) {
+                        // Nếu fail (404 hoặc lỗi khác), thử get by user_id
+                        if (err1?.response?.status === 404) {
+                            const stationResponse = await stationApi.getStationByUserId(bookingData.start_station_id);
+                            console.log('Start station data (by user_id):', stationResponse.data);
+                            setStartStation(stationResponse.data);
+                        } else {
+                            throw err1;
+                        }
+                    }
                 } catch (err) {
                     console.error('Error loading start station:', err);
                 }
             }
             if (bookingData.end_station_id) {
                 try {
-                    const stationResponse = await stationApi.getStationByUserId(bookingData.end_station_id);
-                    setEndStation(stationResponse.data);
+                    // Thử get by station_id trước
+                    try {
+                        const stationResponse = await stationApi.getStationById(bookingData.end_station_id);
+                        console.log('End station data (by station_id):', stationResponse.data);
+                        setEndStation(stationResponse.data);
+                    } catch (err1: any) {
+                        // Nếu fail (404 hoặc lỗi khác), thử get by user_id
+                        if (err1?.response?.status === 404) {
+                            const stationResponse = await stationApi.getStationByUserId(bookingData.end_station_id);
+                            console.log('End station data (by user_id):', stationResponse.data);
+                            setEndStation(stationResponse.data);
+                        } else {
+                            throw err1;
+                        }
+                    }
                 } catch (err) {
                     console.error('Error loading end station:', err);
                 }
             }
             if (bookingData.actual_return_station_id) {
                 try {
-                    const stationResponse = await stationApi.getStationByUserId(bookingData.actual_return_station_id);
-                    setActualReturnStation(stationResponse.data);
+                    // Thử get by station_id trước
+                    try {
+                        const stationResponse = await stationApi.getStationById(bookingData.actual_return_station_id);
+                        console.log('Actual return station data (by station_id):', stationResponse.data);
+                        setActualReturnStation(stationResponse.data);
+                    } catch (err1: any) {
+                        // Nếu fail (404 hoặc lỗi khác), thử get by user_id
+                        if (err1?.response?.status === 404) {
+                            const stationResponse = await stationApi.getStationByUserId(bookingData.actual_return_station_id);
+                            console.log('Actual return station data (by user_id):', stationResponse.data);
+                            setActualReturnStation(stationResponse.data);
+                        } else {
+                            throw err1;
+                        }
+                    }
                 } catch (err) {
                     console.error('Error loading actual return station:', err);
                 }
@@ -77,6 +149,19 @@ export default function QuanLyBookingDetailPage() {
                     console.error('Error loading vehicle:', err);
                 }
             }
+
+            // Load payment data if payment_id exists
+            if (bookingData.payment_id) {
+                try {
+                    const paymentResponse = await paymentApi.getPayment(bookingData.payment_id);
+                    const payment = paymentResponse.data?.payment;
+                    if (payment) {
+                        setPaymentData(payment);
+                    }
+                } catch (err) {
+                    console.error('Error loading payment:', err);
+                }
+            }
         } catch (err: any) {
             console.error('Error loading booking:', err);
             setError(err?.response?.data?.error || err?.message || 'Không thể tải thông tin booking');
@@ -85,12 +170,64 @@ export default function QuanLyBookingDetailPage() {
         }
     };
 
+    const isPaymentSucceeded = () => paymentData?.status?.toLowerCase() === 'succeeded';
+
+    const renderPaymentStatus = () => {
+        const status = booking?.status?.toLowerCase();
+        const hasCheckedIn = status === 'ongoing' || status === 'completed';
+
+        if (!booking?.payment_id) {
+            return (
+                <span
+                    style={{
+                        fontSize: '16px',
+                        fontWeight: 700,
+                        color: hasCheckedIn ? '#16a34a' : '#dc2626',
+                    }}
+                >
+                    {formatVNDCurrency(hasCheckedIn ? 0 : booking?.total_amount || 0)}
+                </span>
+            );
+        }
+
+        if (!paymentData) {
+            return <span style={{ fontSize: '14px', color: '#666' }}>Đang tải...</span>;
+        }
+
+        const paymentSucceeded = isPaymentSucceeded();
+        const remainingAmount = paymentSucceeded || hasCheckedIn
+            ? 0
+            : booking?.total_amount || 0;
+
+        return (
+            <span
+                style={{
+                    fontSize: '20px',
+                    fontWeight: 700,
+                    color: remainingAmount === 0 ? '#16a34a' : '#dc2626',
+                }}
+            >
+                {formatVNDCurrency(remainingAmount)}
+            </span>
+        );
+    };
+
     const handleCheckin = async () => {
         if (!bookingId) return;
 
         try {
             setIsProcessing(true);
             await bookingApi.checkinBooking(bookingId);
+
+            // Nếu booking có payment_id, cập nhật payment status thành 'succeeded'
+            if (booking?.payment_id && !isPaymentSucceeded()) {
+                try {
+                    await paymentApi.updatePaymentStatus(booking.payment_id, 'succeeded');
+                } catch (paymentErr) {
+                    console.error('Error updating payment status:', paymentErr);
+                }
+            }
+
             alert('Check-in thành công!');
             setShowCheckinModal(false);
             await loadBookingDetails();
@@ -129,6 +266,41 @@ export default function QuanLyBookingDetailPage() {
         } catch (err) {
             console.error('Error checking out:', err);
             alert((err as any)?.response?.data?.error || (err as any)?.message || 'Không thể check-out');
+        } finally {
+            setIsProcessing(false);
+        }
+    };
+
+    const handleCancelBooking = async () => {
+        if (!bookingId) return;
+
+        const status = booking?.status?.toLowerCase();
+        if (status !== 'booked' && status !== 'ongoing') {
+            alert('Chỉ có thể hủy booking ở trạng thái "Đã đặt" hoặc "Đang thuê"');
+            return;
+        }
+
+        try {
+            setIsProcessing(true);
+            const penaltyFeeValue = cancelPenaltyFee ? parseFloat(cancelPenaltyFee) : undefined;
+            const response = await bookingApi.cancelBooking(bookingId, penaltyFeeValue);
+            const breakdown = response.data?.breakdown;
+
+            let successMessage = 'Hủy booking thành công!';
+            if (breakdown) {
+                if (breakdown.additional_payment_required > 0) {
+                    successMessage += `\n\nLưu ý: Khách hàng cần thanh toán thêm ${formatVNDCurrency(breakdown.additional_payment_required)} do phí phát sinh vượt quá tiền cọc.`;
+                } else if (breakdown.refund_amount > 0) {
+                    successMessage += `\n\nTiền hoàn: ${formatVNDCurrency(breakdown.refund_amount)}`;
+                }
+            }
+            alert(successMessage);
+            setShowCancelModal(false);
+            setCancelPenaltyFee('');
+            await loadBookingDetails();
+        } catch (err) {
+            console.error('Error cancelling booking:', err);
+            alert((err as any)?.response?.data?.error || (err as any)?.message || 'Không thể hủy booking');
         } finally {
             setIsProcessing(false);
         }
@@ -209,6 +381,7 @@ export default function QuanLyBookingDetailPage() {
 
     const canCheckin = booking?.status?.toLowerCase() === 'booked';
     const canCheckout = booking?.status?.toLowerCase() === 'ongoing';
+    const canCancel = booking?.status?.toLowerCase() === 'booked' || booking?.status?.toLowerCase() === 'ongoing';
 
     return (
         <div style={{ padding: '24px', maxWidth: '1400px', margin: '0 auto' }}>
@@ -275,6 +448,23 @@ export default function QuanLyBookingDetailPage() {
                             Check-out
                         </button>
                     )}
+
+                    {canCancel && (
+                        <button
+                            onClick={() => setShowCancelModal(true)}
+                            style={{
+                                padding: '8px 16px',
+                                backgroundColor: '#dc2626',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '6px',
+                                cursor: 'pointer',
+                                fontWeight: '500'
+                            }}
+                        >
+                            Hủy Booking
+                        </button>
+                    )}
                 </div>
             </div>
 
@@ -331,6 +521,12 @@ export default function QuanLyBookingDetailPage() {
                             valueStyle={{ fontFamily: 'monospace', fontSize: '12px' }}
                         />
                     )}
+                    <InfoRow
+                        label="Số tiền cần thanh toán"
+                        value={renderPaymentStatus()}
+                    />
+
+
                 </BookingInfoCard>
 
                 <BookingInfoCard title="Thông tin Xe">
@@ -370,16 +566,28 @@ export default function QuanLyBookingDetailPage() {
                 <BookingInfoCard title="Thông tin Trạm">
                     <InfoRow
                         label="Trạm nhận"
-                        value={startStation?.display_name || booking?.start_station_id?.substring(0, 8).toUpperCase() || '-'}
+                        value={
+                            startStation
+                                ? `${startStation.display_name || 'N/A'} (ID: ${startStation.station_id ? startStation.station_id : booking?.start_station_id || 'N/A'})`
+                                : booking?.start_station_id ? `ID: ${booking.start_station_id}` : '-'
+                        }
                     />
                     <InfoRow
                         label="Trạm trả"
-                        value={endStation?.display_name || booking?.end_station_id?.substring(0, 8).toUpperCase() || '-'}
+                        value={
+                            endStation
+                                ? `${endStation.display_name || 'N/A'} (ID: ${endStation.station_id ? endStation.station_id : booking?.end_station_id || 'N/A'})`
+                                : booking?.end_station_id ? `ID: ${booking.end_station_id}` : '-'
+                        }
                     />
                     {booking?.actual_return_station_id && (
                         <InfoRow
                             label="Trạm trả thực tế"
-                            value={actualReturnStation?.display_name || booking.actual_return_station_id.substring(0, 8).toUpperCase()}
+                            value={
+                                actualReturnStation
+                                    ? `${actualReturnStation.display_name || 'N/A'} (ID: ${actualReturnStation.station_id ? actualReturnStation.station_id : booking.actual_return_station_id})`
+                                    : `ID: ${booking.actual_return_station_id}`
+                            }
                         />
                     )}
                 </BookingInfoCard>
@@ -389,6 +597,12 @@ export default function QuanLyBookingDetailPage() {
                 <InfoRow
                     label="User ID"
                     value={booking?.user_id || '-'}
+                    valueStyle={{ fontWeight: '600' }}
+
+                />
+                <InfoRow
+                    label="Họ và tên"
+                    value={booking?.email || '-'}
                     valueStyle={{ fontWeight: '600' }}
                 />
             </BookingInfoCard>
@@ -402,7 +616,12 @@ export default function QuanLyBookingDetailPage() {
 
             <CheckoutModal
                 isOpen={showCheckoutModal}
-                onClose={() => setShowCheckoutModal(false)}
+                onClose={() => {
+                    setShowCheckoutModal(false);
+                    setActualReturnDate('');
+                    setActualReturnStationId('');
+                    setPenaltyFee('');
+                }}
                 onConfirm={handleCheckout}
                 isProcessing={isProcessing}
                 actualReturnDate={actualReturnDate}
@@ -411,6 +630,21 @@ export default function QuanLyBookingDetailPage() {
                 onActualReturnDateChange={setActualReturnDate}
                 onActualReturnStationIdChange={setActualReturnStationId}
                 onPenaltyFeeChange={setPenaltyFee}
+                stations={stations}
+                isLoadingStations={isLoadingStations}
+            />
+
+            <CancelModal
+                isOpen={showCancelModal}
+                onClose={() => {
+                    setShowCancelModal(false);
+                    setCancelPenaltyFee('');
+                }}
+                onConfirm={handleCancelBooking}
+                isProcessing={isProcessing}
+                bookingStatus={booking?.status}
+                penaltyFee={cancelPenaltyFee}
+                onPenaltyFeeChange={setCancelPenaltyFee}
             />
         </div>
     );

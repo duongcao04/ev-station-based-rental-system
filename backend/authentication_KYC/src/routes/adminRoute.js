@@ -5,7 +5,7 @@ import {
   getAllRoles,
   getAllUsers,
   getUser,
-  updateUserRole,
+  updateUserProfile,
 } from "../controllers/adminController.js";
 
 const router = express.Router();
@@ -15,7 +15,7 @@ router.use(protectedRoute, authorize("admin"));
 router.post("/create-account", createAccount);
 router.get("/users", getAllUsers);
 router.get("/users/:id", getUser);
-router.patch("/users/:id/role", updateUserRole);
+router.patch("/users/:id", updateUserProfile);
 router.get("/roles", getAllRoles);
 
 export default router;

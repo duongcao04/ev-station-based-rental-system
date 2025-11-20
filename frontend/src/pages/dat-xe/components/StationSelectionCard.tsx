@@ -9,7 +9,10 @@ interface Station {
 interface StationSelectionCardProps {
     startStation: string;
     endStation: string;
-    stations: Station[];
+    pickupStations: Station[];
+    returnStations: Station[];
+    isLoadingPickupStations?: boolean;
+    isLoadingReturnStations?: boolean;
     onStartStationChange: (value: string) => void;
     onEndStationChange: (value: string) => void;
 }
@@ -17,7 +20,10 @@ interface StationSelectionCardProps {
 export function StationSelectionCard({
     startStation,
     endStation,
-    stations,
+    pickupStations,
+    returnStations,
+    isLoadingPickupStations = false,
+    isLoadingReturnStations = false,
     onStartStationChange,
     onEndStationChange,
 }: StationSelectionCardProps) {
@@ -31,25 +37,36 @@ export function StationSelectionCard({
             </div>
             <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                    <label className="block text-sm font-semibold mb-3 text-gray-700">Điểm nhận xe</label>
+                    <label className="block text-sm font-semibold mb-3 text-gray-700">
+                        Điểm nhận xe
+                    </label>
                     <Select
-                        placeholder="Chọn điểm nhận"
+                        placeholder={isLoadingPickupStations ? "Đang tải..." : "Chọn điểm nhận"}
                         className="w-full"
                         size="large"
                         value={startStation}
                         onChange={onStartStationChange}
-                        options={stations.map((s) => ({ value: s.id, label: s.name }))}
+                        loading={isLoadingPickupStations}
+                        disabled={isLoadingPickupStations || pickupStations.length === 0}
+                        options={pickupStations.map((s) => ({ value: s.id, label: s.name }))}
+                        notFoundContent={isLoadingPickupStations ? "Đang tải..." : "Không có trạm nào có xe này"}
                     />
                 </div>
                 <div>
-                    <label className="block text-sm font-semibold mb-3 text-gray-700">Điểm trả xe</label>
+                    <label className="block text-sm font-semibold mb-3 text-gray-700">
+                        Điểm trả xe
+
+                    </label>
                     <Select
-                        placeholder="Chọn điểm trả"
+                        placeholder={isLoadingReturnStations ? "Đang tải..." : "Chọn điểm trả"}
                         className="w-full"
                         size="large"
                         value={endStation}
                         onChange={onEndStationChange}
-                        options={stations.map((s) => ({ value: s.id, label: s.name }))}
+                        loading={isLoadingReturnStations}
+                        disabled={isLoadingReturnStations || returnStations.length === 0}
+                        options={returnStations.map((s) => ({ value: s.id, label: s.name }))}
+                        notFoundContent={isLoadingReturnStations ? "Đang tải..." : "Không có trạm nào"}
                     />
                 </div>
             </div>
