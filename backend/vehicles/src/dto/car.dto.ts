@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 // Decimal as string to avoid float issues in JSON
-const DecimalString = z.string().regex(/^\d+(?:\.\d{1,2})?$/, "Must be decimal with up to 2 places");
+const DecimalString = z.string();
 
 export const CreateCarDto = z.object({
 	regularPrice: DecimalString,
@@ -14,9 +14,8 @@ export const CreateCarDto = z.object({
 	isInStock: z.boolean(),
 	description: z.string().nullable().optional(),
 	thumbnailUrl: z.string().url(),
-	stationIds: z.array(z.string().uuid().nullable().optional()).default([]),
-	brandId: z.string().uuid().nullable().optional(),
-	categoryIds: z.array(z.string().uuid()).optional(),
+	brandId: z.string().nullable().optional(),
+	categoryIds: z.array(z.string()).optional(),
 });
 export type CreateCarDto = z.infer<typeof CreateCarDto>;
 

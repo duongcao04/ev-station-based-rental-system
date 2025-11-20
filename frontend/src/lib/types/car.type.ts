@@ -13,13 +13,14 @@ export type TCar = {
 	id: string,
 	displayName: string,
 	sku: string,
-	slug: string
+	quantity: number,
+	slug: string,
 	depositPrice?: number
 	regularPrice: number,
 	salePrice: number,
 	categories?: TCategory[],
 	brand?: TBrand,
-	inStock: boolean,
+	isInStock: boolean,
 	specifications?: TCarSpecification[]
 	description?: string
 	uom: TUom
