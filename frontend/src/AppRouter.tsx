@@ -1,7 +1,7 @@
-import { lazy, Suspense } from "react";
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
-import "./index.css";
-import { Toaster } from "sonner";
+import { lazy, Suspense } from 'react';
+import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+import './index.css';
+import { Toaster } from 'sonner';
 
 const LoginPage = lazy(() => import("@/pages/auth/LoginPage"));
 const RegisterPage = lazy(() => import("@/pages/auth/RegisterPage"));
@@ -35,7 +35,7 @@ import KYCVerificationPage from "./pages/dashboard/KYCVerificationPage";
 // eslint-disable-next-line react-refresh/only-export-components
 export const router = createBrowserRouter([
   {
-    path: "/",
+    path: '/',
     errorElement: (
       <Suspense fallback={null}>
         <ErrorPage />
@@ -51,7 +51,7 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: "/thue-xe-tu-lai",
+        path: '/thue-xe-tu-lai',
         element: (
           <MainLayout>
             <ThueXeTuLaiPage />
@@ -59,7 +59,7 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: "/huong-dan-thue-xe",
+        path: '/huong-dan-thue-xe',
         element: (
           <MainLayout>
             <HuongDanThueXe />
@@ -67,7 +67,7 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: "/lien-he",
+        path: '/lien-he',
         element: (
           <MainLayout>
             <LienHePage />
@@ -75,7 +75,7 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: "/tram-xe",
+        path: '/tram-xe',
         element: (
           <MainLayout>
             <TramXePage />
@@ -83,7 +83,7 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: "/login",
+        path: '/login',
         element: (
           <Suspense fallback={null}>
             <LoginPage />
@@ -91,7 +91,7 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: "/register",
+        path: '/register',
         element: (
           <Suspense fallback={null}>
             <RegisterPage />
@@ -99,7 +99,7 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: "/chi-tiet-xe/:slug",
+        path: '/chi-tiet-xe/:slug',
         element: (
           <MainLayout>
             <ChiTietXePage />
@@ -107,7 +107,7 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: "/dat-xe/:vehicleId",
+        path: '/dat-xe/:vehicleId',
         element: (
           <MainLayout>
             <CreateBookingPage />
@@ -115,7 +115,7 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: "/thanh-toan/:bookingId",
+        path: '/thanh-toan/:bookingId',
         element: (
           <MainLayout>
             <PaymentPage />
@@ -123,7 +123,7 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: "/thanh-toan/ket-qua",
+        path: '/thanh-toan/ket-qua',
         element: (
           <MainLayout>
             <PaymentResultPage />
@@ -131,7 +131,7 @@ export const router = createBrowserRouter([
         ),
       },
       // Catch-all
-      { path: "*", element: <ErrorPage /> },
+      { path: '*', element: <ErrorPage /> },
     ],
   },
   {
@@ -166,7 +166,7 @@ export const router = createBrowserRouter([
         ),
       }, // /tai-khoan  -> Profile
       {
-        path: "lich-su-thue",
+        path: 'lich-su-thue',
         element: (
           <ProtectedRoute allowedRoles={["renter"]}>
             <AccountLayout>
@@ -176,7 +176,7 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: "lich-su-thue/*",
+        path: 'lich-su-thue/*',
         element: (
           <ProtectedRoute allowedRoles={["renter"]}>
             <AccountLayout>
@@ -186,7 +186,7 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: "xac-thuc-kyc",
+        path: 'xac-thuc-kyc',
         element: (
           <ProtectedRoute allowedRoles={["renter"]}>
             <AccountLayout>
@@ -226,9 +226,61 @@ export const router = createBrowserRouter([
             </DashboardLayout>
           </ProtectedRoute>
         ),
+        children: [
+          {
+            index: true,
+            element: (
+              <DashboardLayout>
+                <DashboardPage />
+              </DashboardLayout>
+            ),
+          },
+          {
+            path: '/dashboard/tram-xe',
+            element: (
+              <DashboardLayout>
+                <QuanLyTramXePage />
+              </DashboardLayout>
+            ),
+          },
+          {
+            path: '/dashboard/bookings',
+            element: (
+              <DashboardLayout>
+                <QuanLyBookingPage />
+              </DashboardLayout>
+            ),
+          },
+          {
+            path: '/dashboard/xe-dien',
+            element: (
+              <DashboardLayout>
+                <QuanLyXeDienPage />
+              </DashboardLayout>
+            ),
+          },
+          {
+            path: '/dashboard/bookings/:bookingId',
+            element: (
+              <DashboardLayout>
+                <QuanLyBookingDetailPage />
+              </DashboardLayout>
+            ),
+          },
+          {
+            path: '/dashboard/setting',
+            element: (
+              <DashboardLayout>
+                <SettingsPage />
+              </DashboardLayout>
+            ),
+          },
+          // Catch-all
+          { path: '*', element: <ErrorPage /> },
+        ],
       },
       {
-        path: "/dashboard/tram-xe",
+        path: '/dashboard/tram-xe',
         element: (
           <ProtectedRoute allowedRoles={["admin"]}>
             <DashboardLayout>
@@ -288,7 +340,7 @@ export const router = createBrowserRouter([
         ),
       },
       // Catch-all
-      { path: "*", element: <ErrorPage /> },
+      { path: '*', element: <ErrorPage /> },
     ],
   },
 ]);
@@ -297,7 +349,7 @@ export default function AppRouter() {
   return (
     <>
       <RouterProvider router={router} />
-      <Toaster position="top-right" richColors />
+      <Toaster position='top-right' richColors />
     </>
   );
 }

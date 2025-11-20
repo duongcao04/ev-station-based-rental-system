@@ -43,22 +43,30 @@ model CarSpecification {
 }
 
 model Car {
-  id             String             @id @default(uuid())
-  regularPrice   Decimal            @db.Decimal(10, 2)
-  salePrice      Decimal?           @db.Decimal(10, 2)
-  depositPrice   Decimal?           @db.Decimal(10, 2)
-  quantity       Int?
-  isInStock      Boolean
-  description    String?
-  thumbnailUrl   String
-  brandId        String?
-  displayName    String
-  sku            String
-  slug           String
-  brand          Brand?             @relation(fields: [brandId], references: [id])
-  featuredImages CarImage[]
-  specifications CarSpecification[]
-  categories     Category[]         @relation("CarToCategory")
+  id              String             @id @default(uuid())
+  regularPrice    Decimal            @db.Decimal(10, 2)
+  salePrice       Decimal?           @db.Decimal(10, 2)
+  depositPrice    Decimal?           @db.Decimal(10, 2)
+  quantity        Int?
+  isInStock       Boolean
+  description     String?
+  thumbnailUrl    String
+  brandId         String?
+  displayName     String
+  sku             String
+  slug            String
+  status          CarStatus          @default(available)
+  seatingCapacity Int                @default(4)
+  brand           Brand?             @relation(fields: [brandId], references: [id])
+  featuredImages  CarImage[]
+  specifications  CarSpecification[]
+  categories      Category[]         @relation("CarToCategory")
+}
+
+enum CarStatus {
+  available
+  rented
+  maintenance
 }
 
 model CarImage {

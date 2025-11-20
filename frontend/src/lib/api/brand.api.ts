@@ -1,6 +1,6 @@
 import { axiosClient } from "@/lib/axios";
 
-export const bandApi = {
+export const brandApi = {
 	getBrands: () => axiosClient.get('/v1/brands'),
 	getBrand: (id: string | number) => axiosClient.get(`/v1/brands/${id}`),
 	createBrand: (data: any) => axiosClient.post('/v1/brands', data),

@@ -1,3 +1,6 @@
+-- CreateEnum
+CREATE TYPE "CarStatus" AS ENUM ('available', 'rented', 'maintenance');
+
 -- CreateTable
 CREATE TABLE "SpecificationType" (
     "id" TEXT NOT NULL,
@@ -49,6 +52,11 @@ CREATE TABLE "Car" (
     "description" TEXT,
     "thumbnailUrl" TEXT NOT NULL,
     "brandId" TEXT,
+    "displayName" TEXT NOT NULL,
+    "sku" TEXT NOT NULL,
+    "slug" TEXT NOT NULL,
+    "status" "CarStatus" NOT NULL DEFAULT 'available',
+    "seatingCapacity" INTEGER NOT NULL DEFAULT 4,
 
     CONSTRAINT "Car_pkey" PRIMARY KEY ("id")
 );

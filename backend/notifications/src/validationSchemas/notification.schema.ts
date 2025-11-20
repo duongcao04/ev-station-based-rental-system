@@ -1,16 +1,37 @@
-import * as Yup from 'yup';
-import { NotificationType } from '@prisma/client';
+import * as yup from "yup";
 
-export const createNotificationSchema = Yup.object().shape({
-	userId: Yup.string().required(),
-	message: Yup.string().required(),
-	title: Yup.string().optional(),
-	isRead: Yup.boolean().default(false).optional(),
-	type: Yup.string()
-		.oneOf(Object.values(NotificationType))
-		.required(),
-	url: Yup.string()
-		.optional(),
+export const sendNotificationSchema = yup.object({
+	userId: yup.string().required("userId is required"),
+	title: yup.string().nullable(),
+	message: yup.string().required("message is required"),
+	type: yup
+		.mixed<"NEW_MESSAGE" | "NEW_FOLLOWER" | "SYSTEM_ALERT" | "BOOKING_CONFIRMED" | "BOOKING_REMINDER" | "INFO">()
+		.oneOf(
+			[
+				"NEW_MESSAGE",
+				"NEW_FOLLOWER",
+				"SYSTEM_ALERT",
+				"BOOKING_CONFIRMED",
+				"BOOKING_REMINDER",
+				"INFO",
+			],
+			"Invalid notification type",
+		)
+		.default("INFO"),
+	url: yup.string().url("url must be a valid URL").optional().nullable(),
+	// Optional extra payload for FCM (e.g., { bookingId: "123" })
+	data: yup
+		.object()
+		.optional()
+		.default({})
+		.test(
+			"string-values-only",
+			"data values must be strings",
+			(value) => {
+				if (!value) return true;
+				return Object.values(value).every((v) => typeof v === "string");
+			},
+		),
 });
 
-export type CreateNotificationDto = Yup.InferType<typeof createNotificationSchema>;
+export type SendNotificationDto = yup.InferType<typeof sendNotificationSchema>;

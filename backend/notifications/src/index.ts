@@ -5,6 +5,7 @@ import path from "path";
 import rootRouter from "./routes";
 
 dotenv.config({ path: path.resolve(process.cwd(), "../.env") });
+// dotenv.config({ path: path.resolve(process.cwd(), "../.env") });
 const app = express();
 
 app.use(cors({ origin: process.env.CLIENT_URL || '*', credentials: true }));
