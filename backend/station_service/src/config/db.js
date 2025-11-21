@@ -7,11 +7,11 @@ dotenv.config({ path: path.resolve(process.cwd(), "../.env") });
 
 // Database configuration for Station Service
 const pool = new Pool({
-  user: process.env.STATION_DB_USER || 'postgres',
-  host: process.env.STATION_DB_HOST || 'localhost',
-  database: process.env.STATION_DB_NAME || 'station_service_db',
-  password: process.env.STATION_DB_PASSWORD || 'root1234',
-  port: process.env.STATION_DB_PORT || 5432,
+  user: process.env.DB_USER || "postgres",
+  host: process.env.DB_HOST || "database",
+  database: process.env.STATION_DB_NAME || "station_service_db",
+  password: process.env.DB_PASSWORD || "root1234",
+  port: Number(process.env.DB_PORT) || 5432,
 });
 
 // Test database connection

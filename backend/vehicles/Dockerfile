@@ -2,6 +2,10 @@
 FROM oven/bun:1.1.24-alpine AS base
 WORKDIR /app
 
+# Install build tooling required for native deps (e.g., bcrypt/node-gyp)
+RUN apk add --no-cache python3 make g++ \
+  && ln -sf python3 /usr/bin/python
+
 
 # ---- Deps ----
 FROM base AS deps
@@ -17,7 +21,8 @@ FROM base AS build
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 # Build TS -> dist (tuỳ script build trong package.json)
-RUN if [ -f tsconfig.json ]; then bun x tsc -p tsconfig.json; fi
+
+# RUN if [ -f tsconfig.json ]; then bun x tsc -p tsconfig.json; fi
 
 
 # ---- Run ----

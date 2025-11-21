@@ -7,11 +7,11 @@ dotenv.config({ path: path.resolve(process.cwd(), "../.env") });
 
 // Database configuration for Booking Service
 const pool = new Pool({
-  user: process.env.PAY_DB_USER || 'postgres',
-  host: process.env.PAY_DB_HOST || 'localhost',
-  database: process.env.PAY_DB_NAME || 'payment_service_db',
-  password: process.env.PAY_DB_PASSWORD || 'root1234',
-  port: process.env.PAY_DB_PORT || 5432,
+  user: process.env.DB_USER || "postgres",
+  host: process.env.DB_HOST || "database",
+  database: process.env.PAY_DB_NAME || "payment_service_db",
+  password: process.env.DB_PASSWORD || "root1234",
+  port: Number(process.env.DB_PORT) || 5432,
 });
 
 // Test database connection

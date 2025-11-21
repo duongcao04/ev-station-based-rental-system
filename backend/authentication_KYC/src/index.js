@@ -39,9 +39,9 @@ app.use("/api/renters", renterRoute);
 app.use("/api/kyc", kycRoute);
 
 await connectDB(
-  process.env.AUTH_DB_NAME,
-  process.env.AUTH_DB_USER,
-  process.env.AUTH_DB_PASSWORD
+  process.env.AUTH_DB_NAME || "auth_service_db",
+  process.env.DB_USER || "postgres",
+  process.env.DB_PASSWORD || "root1234"
 ).then(() => {
   app.listen(PORT, () => {
     console.log(`Server is listening on port ${PORT}...`);
