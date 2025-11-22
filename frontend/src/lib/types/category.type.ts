@@ -1,6 +1,8 @@
 export type TCategory = {
 	id: string
-	name: string
+	displayName: string
+	description: string
+	thumbnailUrl?: string
 	createdAt?: Date
 	updatedAt?: Date
 }

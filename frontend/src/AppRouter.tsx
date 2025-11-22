@@ -29,6 +29,8 @@ import ThueXeTuLaiPage from './pages/thue-xe-tu-lai/ThueXeTuLaiPage';
 import TramXePage from './pages/tram-xe/TramXePage';
 import QuanLyThuongHieuPage from './pages/dashboard/QuanLyThuongHieuPage';
 import ChiTietThuongHieuPage from './pages/dashboard/ChiTietThuongHieuPage';
+import QuanLyDanhMucPage from './pages/dashboard/QuanLyDanhMucPage';
+import ChiTietDanhMucPage from './pages/dashboard/ChiTietDanhMucPage';
 
 const LoginPage = lazy(() => import('@/pages/auth/LoginPage'));
 const RegisterPage = lazy(() => import('@/pages/auth/RegisterPage'));
@@ -270,6 +272,28 @@ export const router = createBrowserRouter([
             element: (
               <DashboardLayout>
                 <ChiTietThuongHieuPage />
+              </DashboardLayout>
+            ),
+          },
+          { path: '*', element: <ErrorPage /> },
+        ],
+      },
+      {
+        path: '/dashboard/danh-muc',
+        children: [
+          {
+            index: true,
+            element: (
+              <DashboardLayout>
+                <QuanLyDanhMucPage />
+              </DashboardLayout>
+            ),
+          },
+          {
+            path: '/dashboard/danh-muc/:categoryId',
+            element: (
+              <DashboardLayout>
+                <ChiTietDanhMucPage />
               </DashboardLayout>
             ),
           },
