@@ -27,6 +27,8 @@ import PaymentPage from './pages/thanh-toan/PaymentPage';
 import PaymentResultPage from './pages/thanh-toan/PaymentResultPage';
 import ThueXeTuLaiPage from './pages/thue-xe-tu-lai/ThueXeTuLaiPage';
 import TramXePage from './pages/tram-xe/TramXePage';
+import QuanLyThuongHieuPage from './pages/dashboard/QuanLyThuongHieuPage';
+import ChiTietThuongHieuPage from './pages/dashboard/ChiTietThuongHieuPage';
 
 const LoginPage = lazy(() => import('@/pages/auth/LoginPage'));
 const RegisterPage = lazy(() => import('@/pages/auth/RegisterPage'));
@@ -251,6 +253,28 @@ export const router = createBrowserRouter([
             <QuanLyXeDienPage />
           </DashboardLayout>
         ),
+      },
+      {
+        path: '/dashboard/thuong-hieu',
+        children: [
+          {
+            index: true,
+            element: (
+              <DashboardLayout>
+                <QuanLyThuongHieuPage />
+              </DashboardLayout>
+            ),
+          },
+          {
+            path: '/dashboard/thuong-hieu/:brandId',
+            element: (
+              <DashboardLayout>
+                <ChiTietThuongHieuPage />
+              </DashboardLayout>
+            ),
+          },
+          { path: '*', element: <ErrorPage /> },
+        ],
       },
       {
         path: '/dashboard/bookings/:bookingId',

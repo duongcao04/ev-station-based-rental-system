@@ -12,12 +12,14 @@ import { useCategories } from '@/lib/queries/useCategory';
 import {
   useCreateVehicleMutation,
   useDeleteVehicleMutation,
+  useUpdateVehicleMutation,
   useVehicles,
 } from '@/lib/queries/useVehicles';
 import { useState } from 'react';
 import { DataTable } from './components/VehicleDataTable';
 import { ThemXeModal } from './components/ThemXeModal';
 import type { TCar } from '../../lib/types/car.type';
+import { SuaXeModal } from './components/SuaXeModal';
 
 export default function QuanLyXeDienPage() {
   const { data, isLoading } = useVehicles();
@@ -27,19 +29,19 @@ export default function QuanLyXeDienPage() {
     useCreateVehicleMutation();
   const { mutateAsync: deleteVehicleMutation, isPending: isDeleting } =
     useDeleteVehicleMutation();
+  const { mutateAsync: updateVehicleMutate, isPending: isUpdating } =
+    useUpdateVehicleMutation();
 
   const [editingVehicle, setEditingVehicle] = useState<TCar | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   const handleEdit = (vehicle: TCar) => {
     setEditingVehicle(vehicle);
-    console.log('Edit vehicle:', vehicle);
-    // TODO: Implement edit modal/form
+    setIsEditModalOpen(true);
   };
 
   const handleDelete = async (vehicleId: string) => {
     deleteVehicleMutation({ id: vehicleId });
-    console.log('Delete vehicle:', vehicleId);
-    // TODO: Implement delete API call
   };
 
   return (
@@ -55,7 +57,7 @@ export default function QuanLyXeDienPage() {
         </div>
 
         <ThemXeModal
-          brands={!isLoading ? brands : []}
+          brands={brands}
           categories={!isLoading ? categories : []}
           onSubmit={async (data) => {
             await createVehicleMutate(data);
@@ -80,6 +82,23 @@ export default function QuanLyXeDienPage() {
           />
         </CardContent>
       </Card>
+
+      <SuaXeModal
+        brands={!isLoading ? brands : []}
+        categories={!isLoading ? categories : []}
+        onSubmit={async (data) => {
+          await updateVehicleMutate(data);
+        }}
+        loading={isUpdating}
+        editingVehicle={editingVehicle}
+        open={isEditModalOpen}
+        onOpenChange={(open) => {
+          if (!open) {
+            setEditingVehicle(null);
+          }
+          setIsEditModalOpen(open);
+        }}
+      />
     </div>
   );
 }

@@ -6,7 +6,6 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -19,35 +18,40 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import {
-  CreateCarSchema,
-  type CreateCarFormData,
+  UpdateCarSchema,
+  type UpdateCarFormData,
 } from '@/lib/schemas/car.schema';
 import { useFormik } from 'formik';
-import { Plus } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { toFormikValidationSchema } from 'zod-formik-adapter';
 import type { TCategory } from '../../../lib/types/category.type';
 import type { TBrand } from '../../../lib/types/brand.type';
+import type { TCar } from '@/lib/types/car.type';
 
 export interface Brand {
   id: string;
   name: string;
 }
 
-interface CreateCarModalProps {
+interface EditCarModalProps {
   brands: TBrand[];
   categories: TCategory[];
-  onSubmit: (data: CreateCarFormData) => Promise<void>;
+  onSubmit: (data: UpdateCarFormData) => Promise<void>;
   loading?: boolean;
+  editingVehicle: TCar | null;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }
 
-export function ThemXeModal({
+export function SuaXeModal({
   brands,
   categories,
   onSubmit,
   loading = false,
-}: CreateCarModalProps) {
-  const [open, setOpen] = useState(false);
+  editingVehicle,
+  open,
+  onOpenChange,
+}: EditCarModalProps) {
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   const formik = useFormik({
@@ -65,11 +69,13 @@ export function ThemXeModal({
       brandId: '',
       categoryIds: [] as string[],
     },
-    validationSchema: toFormikValidationSchema(CreateCarSchema),
+    validationSchema: toFormikValidationSchema(UpdateCarSchema),
     onSubmit: async (values) => {
       setSubmitError(null);
+      if (!editingVehicle) return;
       try {
-        const payload: CreateCarFormData = {
+        const payload: UpdateCarFormData = {
+          id: editingVehicle.id,
           displayName: values.displayName,
           regularPrice: parseFloat(values.regularPrice),
           salePrice: parseFloat(values.salePrice) || undefined,
@@ -85,10 +91,7 @@ export function ThemXeModal({
         };
 
         await onSubmit(payload);
-
-        // Reset form on success
-        formik.resetForm();
-        setOpen(false);
+        onOpenChange(false);
       } catch (error) {
         const message =
           error instanceof Error ? error.message : 'Lỗi không xác định';
@@ -97,7 +100,24 @@ export function ThemXeModal({
     },
   });
 
-  console.log(formik.values);
+  useEffect(() => {
+    if (editingVehicle) {
+      formik.setValues({
+        displayName: editingVehicle.displayName || '',
+        regularPrice: editingVehicle.regularPrice?.toString() || '',
+        salePrice: editingVehicle.salePrice?.toString() || '',
+        depositPrice: editingVehicle.depositPrice?.toString() || '',
+        sku: editingVehicle.sku || '',
+        slug: editingVehicle.slug || '',
+        quantity: editingVehicle.quantity?.toString() || '',
+        isInStock: editingVehicle.isInStock || true,
+        description: editingVehicle.description || '',
+        thumbnailUrl: editingVehicle.thumbnailUrl || '',
+        brandId: editingVehicle.brand?.id || '',
+        categoryIds: editingVehicle.categories?.map((c) => c.id) || [],
+      });
+    }
+  }, [editingVehicle]);
 
   const getFieldError = (fieldName: keyof typeof formik.values) => {
     return formik.touched[fieldName] && formik.errors[fieldName]
@@ -115,21 +135,15 @@ export function ThemXeModal({
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button size='sm'>
-          <Plus className='mr-2 h-4 w-4' />
-          Thêm mới xe
-        </Button>
-      </DialogTrigger>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         className='max-h-[90vh] overflow-y-auto'
         style={{ maxWidth: 1000 }}
       >
         <DialogHeader>
-          <DialogTitle>Thêm mới xe</DialogTitle>
+          <DialogTitle>Chỉnh sửa xe</DialogTitle>
           <DialogDescription>
-            Nhập thông tin xe mới vào hệ thống
+            Cập nhật thông tin xe trong hệ thống
           </DialogDescription>
         </DialogHeader>
 
@@ -381,7 +395,7 @@ export function ThemXeModal({
             <Button
               type='button'
               variant='outline'
-              onClick={() => setOpen(false)}
+              onClick={() => onOpenChange(false)}
             >
               Hủy
             </Button>

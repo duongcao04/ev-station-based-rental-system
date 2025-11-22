@@ -47,6 +47,9 @@ COPY --from=builder --chown=nodejs:nodejs /app/dist ./dist
 COPY --from=builder --chown=nodejs:nodejs /app/src ./src
 COPY --from=builder --chown=nodejs:nodejs /app/package*.json ./
 
+# Copy CSV backup files
+COPY --chown=nodejs:nodejs ./backup/*.csv ./backup/
+
 # Switch to non-root user
 USER nodejs
 

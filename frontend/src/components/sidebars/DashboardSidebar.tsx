@@ -1,13 +1,15 @@
 import {
-  Calendar,
   Home,
-  Inbox,
-  Verified,
-  Search,
   Settings,
   BookOpen,
-} from "lucide-react";
-import { Link } from "react-router-dom";
+  BookCopy,
+  Car,
+  CarTaxiFront,
+  ChevronDown,
+  User2,
+  BrickWallShieldIcon,
+} from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 import logo from '@/assets/logo.png';
 
@@ -21,51 +23,14 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-} from "@/components/ui/sidebar";
-
-// Menu items.
-const items = [
-  {
-    title: "Dashboard",
-    url: "/dashboard",
-    icon: Home,
-  },
-  {
-    title: "Trạm xe",
-    url: "/dashboard/tram-xe",
-    icon: Home,
-  },
-  {
-    title: "Booking",
-    url: "/dashboard/bookings",
-    icon: BookOpen,
-  },
-  {
-    title: "Thành viên",
-    url: "/dashboard/menbers",
-    icon: Inbox,
-  },
-  {
-    title: "Xác thực KYC",
-    url: "/dashboard/kyc-verification",
-    icon: Verified,
-  },
-  {
-    title: "Xe",
-    url: "#",
-    icon: Calendar,
-  },
-  {
-    title: "Báo cáo",
-    url: "#",
-    icon: Search,
-  },
-  {
-    title: "Cài đặt",
-    url: "/dashboard/setting",
-    icon: Settings,
-  },
-];
+  SidebarMenuSub,
+  SidebarSeparator,
+} from '@/components/ui/sidebar';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@radix-ui/react-collapsible';
 
 export function DashboardSidebar() {
   return (
@@ -109,7 +74,7 @@ export function DashboardSidebar() {
               <SidebarMenuItem key='tram-xe'>
                 <SidebarMenuButton asChild>
                   <Link to='/dashboard/tram-xe'>
-                    <Home />
+                    <Car />
                     <span>Trạm xe</span>
                   </Link>
                 </SidebarMenuButton>
@@ -122,7 +87,7 @@ export function DashboardSidebar() {
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
-              <Collapsible defaultOpen className='group/vehicle'>
+              <Collapsible>
                 <SidebarMenuItem>
                   <CollapsibleTrigger asChild>
                     <SidebarMenuButton>
@@ -156,7 +121,7 @@ export function DashboardSidebar() {
                       <SidebarMenuItem key='thuong-hieu'>
                         <SidebarMenuButton asChild>
                           <Link to='/dashboard/thuong-hieu'>
-                            <Slack />
+                            <BrickWallShieldIcon />
                             <span>Thương hiệu</span>
                           </Link>
                         </SidebarMenuButton>
