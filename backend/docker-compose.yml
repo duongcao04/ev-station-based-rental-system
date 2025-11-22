@@ -38,28 +38,6 @@ services:
     depends_on:
       - database
 
-  booking-service:
-    build:
-      context: ./booking_services
-    container_name: booking_service
-    restart: always
-    environment:
-      NODE_ENV: ${NODE_ENV:-development}
-      BOOKING_PORT: ${BOOKING_PORT:-4000}
-      WEB_CLIENT_URL: ${WEB_CLIENT_URL:-http://localhost:5173}
-      DB_HOST: ${DB_HOST}
-      DB_PORT: ${DB_PORT}
-      DB_USER: ${DB_USER}
-      DB_PASSWORD: ${DB_PASSWORD}
-      BOOKING_DB_NAME: ${BOOKING_DB_NAME:-booking_service_db}
-      AUTH_ACCESS_TOKEN_SECRET: ${AUTH_ACCESS_TOKEN_SECRET:-supersecretaccess}
-      API_GATEWAY_URL: ${API_GATEWAY_URL:-http://api-gateway:8000}
-      INTERNAL_SERVICE_SECRET: ${INTERNAL_SERVICE_SECRET:-internal-secret-key}
-    ports:
-      - "4000:4000"
-    depends_on:
-      - database
-
   payment-service:
     build:
       context: ./payment_services
