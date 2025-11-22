@@ -15,11 +15,12 @@ const PORT = Number(process.env.API_GATEWAY_PORT) || 8000;
 
 const pick = (v, def) => (typeof v === "string" && v.trim() ? v.trim() : def);
 const SERVICES = {
-    AUTH: pick(process.env.AUTH_SERVICE_URL, "http://localhost:5001"),
-    BOOKING: pick(process.env.BOOKING_SERVICE_URL, "http://localhost:4000"),
-    PAYMENT: pick(process.env.PAYMENT_SERVICE_URL, "http://localhost:5000"),
-    VEHICLES: pick(process.env.VEHICLES_SERVICE_URL, "http://localhost:8099"),
-    STATION: pick(process.env.STATION_SERVICE_URL, "http://localhost:6000"),
+    AUTH: pick(process.env.AUTH_SERVICE_URL, "http://auth_service:5001"),
+    BOOKING: pick(process.env.BOOKING_SERVICE_URL, "http://booking_service:4000"),
+    PAYMENT: pick(process.env.PAYMENT_SERVICE_URL, "http://payment_service:5000"),
+    VEHICLES: pick(process.env.VEHICLES_SERVICE_URL, "http://vehicles_service:8099"),
+    STATION: pick(process.env.STATION_SERVICE_URL, "http://station_service:6000"),
+    NOTIFICATIONS: pick(process.env.NOTIFICATIONS_SERVICE_URL, "http://notifications_service:9000"),
 };
 
 
@@ -38,33 +39,31 @@ const makeProxy = (target, pathRewrite) => {
         target,
         changeOrigin: true,
         ws: false,
-        proxyTimeout: 30000, // Tăng timeout lên 30s
+        proxyTimeout: 3600000,
         pathRewrite: pathRewrite || {},
         onProxyReq: (proxyReq, req) => {
-            // Forward Authorization header
+
             if (req.headers["authorization"]) {
                 proxyReq.setHeader("authorization", req.headers["authorization"]);
             }
-            // Forward internal secret header (for service-to-service calls)
+
             if (req.headers["x-internal-secret"]) {
                 proxyReq.setHeader("x-internal-secret", req.headers["x-internal-secret"]);
             }
-            // Forward cookies
+
             if (req.headers.cookie) {
                 proxyReq.setHeader("cookie", req.headers.cookie);
             }
-            // Forward real IP
+
             proxyReq.setHeader("x-forwarded-for", req.ip || req.socket?.remoteAddress);
             proxyReq.setHeader("x-forwarded-host", req.hostname);
 
-            // Log proxy request for debugging
+
             console.log(`[Gateway] Proxying ${req.method} ${req.originalUrl} → ${target}${proxyReq.path}`);
         },
         onProxyRes: (proxyRes, req, res) => {
             // Log response (optional)
             console.log(`[Gateway] ${req.method} ${req.originalUrl} → ${proxyRes.statusCode}`);
-            // Note: Set-Cookie headers tự động được forward bởi http-proxy-middleware
-            // khi selfHandleResponse: false
         },
         onError: (err, req, res) => {
             console.error(`[Gateway] Proxy error to ${target}:`, err.message, err.code);
@@ -83,7 +82,7 @@ const makeProxy = (target, pathRewrite) => {
 };
 
 // ===== Healthcheck Gateway =====
-app.get("/healthz", (_req, res) =>
+app.get("/health", (_req, res) =>
     res.json({ ok: true, service: "api-gateway", time: new Date().toISOString() })
 );
 
