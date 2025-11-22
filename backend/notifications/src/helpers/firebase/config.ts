@@ -1,14 +1,12 @@
 import admin from 'firebase-admin';
-import path from 'path';
+import fs from 'fs';
+
+const keyPath = process.env.GOOGLE_APPLICATION_CREDENTIALS!;
+const json = JSON.parse(fs.readFileSync(keyPath, 'utf8'));
 
 if (!admin.apps.length) {
 	admin.initializeApp({
-		credential: admin.credential.cert(
-			// Option 1: load from local file (dev only)
-			require(path.join(__dirname, './firebase-service-account.json'))
-			// Option 2: parse JSON from env:
-			// JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_JSON as string)
-		),
+		credential: admin.credential.cert(json),
 	});
 }
 

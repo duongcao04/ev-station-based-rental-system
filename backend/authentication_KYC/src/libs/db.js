@@ -15,7 +15,7 @@ export const connectDB = async (database, username, password) => {
   const dbPassword = password || "";
 
   sequelize = new Sequelize(database, username, dbPassword, {
-    host: process.env.DB_HOST || "database",
+    host: process.env.DB_HOST || "localhost",
     port: Number(process.env.DB_PORT) || 5432,
     dialect: "postgres",
     logging: false, // Set to console.log for debugging

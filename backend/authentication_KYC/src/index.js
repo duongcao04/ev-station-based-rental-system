@@ -25,7 +25,7 @@ console.log(process.env.AUTH_PORT);
 //middlewares
 app.use(express.json());
 app.use(cookie());
-app.use(cors({ origin: process.env.CLIENT_URL, credentials: true }));
+app.use(cors({ origin: process.env.WEB_CLIENT_URL, credentials: true }));
 
 // Serve static files (uploads)
 app.use("/upload", express.static(path.join(__dirname, "../uploads")));

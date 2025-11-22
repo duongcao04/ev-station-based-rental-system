@@ -4,7 +4,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("VEHICLES_DATABASE_URL")
+  url      = env("VEHICLE_DATABASE_URL")
 }
 
 model SpecificationType {

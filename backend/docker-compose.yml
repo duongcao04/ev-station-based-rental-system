@@ -23,7 +23,7 @@ services:
     environment:
       NODE_ENV: ${NODE_ENV:-development}
       AUTH_PORT: ${AUTH_PORT:-5001}
-      CLIENT_URL: ${CLIENT_URL:-http://localhost:5173}
+      WEB_CLIENT_URL: ${WEB_CLIENT_URL:-http://localhost:5173}
       DB_HOST: ${DB_HOST}
       DB_PORT: ${DB_PORT}
       DB_USER: ${DB_USER}
@@ -46,7 +46,7 @@ services:
     environment:
       NODE_ENV: ${NODE_ENV:-development}
       BOOKING_PORT: ${BOOKING_PORT:-4000}
-      CLIENT_URL: ${CLIENT_URL:-http://localhost:5173}
+      WEB_CLIENT_URL: ${WEB_CLIENT_URL:-http://localhost:5173}
       DB_HOST: ${DB_HOST}
       DB_PORT: ${DB_PORT}
       DB_USER: ${DB_USER}
@@ -68,7 +68,7 @@ services:
     environment:
       NODE_ENV: ${NODE_ENV:-development}
       PAY_PORT: ${PAY_PORT:-5000}
-      CLIENT_URL: ${CLIENT_URL:-http://localhost:5173}
+      WEB_CLIENT_URL: ${WEB_CLIENT_URL:-http://localhost:5173}
       DB_HOST: ${DB_HOST}
       DB_PORT: ${DB_PORT}
       DB_USER: ${DB_USER}
@@ -91,7 +91,7 @@ services:
     environment:
       NODE_ENV: ${NODE_ENV:-development}
       STATION_PORT: ${STATION_PORT:-6000}
-      CLIENT_URL: ${CLIENT_URL:-http://localhost:5173}
+      WEB_CLIENT_URL: ${WEB_CLIENT_URL:-http://localhost:5173}
       DB_HOST: ${DB_HOST}
       DB_PORT: ${DB_PORT}
       DB_USER: ${DB_USER}
@@ -109,33 +109,40 @@ services:
       context: ./vehicles
     container_name: vehicles_service
     restart: always
+    env_file:
+      - .env
     environment:
       NODE_ENV: ${VEHICLES_NODE_ENV:-production}
-      VEHICLES_PORT: ${VEHICLES_PORT:-8099}
-      CLIENT_URL: ${CLIENT_URL:-http://localhost:5173}
-      VEHICLES_DATABASE_URL: ${VEHICLES_DATABASE_URL}
-      DATABASE_URL: ${VEHICLES_DATABASE_URL}
+      VEHICLE_PORT: ${VEHICLE_PORT:-8099}
+      WEB_CLIENT_URL: ${WEB_CLIENT_URL:-http://localhost:5173}
+      VEHICLE_DATABASE_URL: ${VEHICLE_DATABASE_URL:-postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-root1234}@${DB_HOST:-database}:${DB_PORT:-5432}/${VEHICLE_DB_NAME:-vehicle_service_db}?schema=public}
       AUTH_ACCESS_TOKEN_SECRET: ${AUTH_ACCESS_TOKEN_SECRET:-supersecretaccess}
     ports:
       - "8099:8099"
     depends_on:
       - database
 
-# notifications-service:
-#   build:
-#     context: ./notifications
-#   container_name: notifications_service
-#   restart: always
-#   environment:
-#     NODE_ENV: ${NOTIFICATIONS_NODE_ENV:-production}
-#     PORT: ${NOTIFICATIONS_PORT:-9000}
-#     CLIENT_URL: ${CLIENT_URL:-http://localhost:5173}
-#     DATABASE_URL: ${NOTIFICATIONS_DATABASE_URL:-postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-root1234}@${DB_HOST:-database}:${DB_PORT:-5432}/notifications_service_db?schema=public}
-#     AUTH_ACCESS_TOKEN_SECRET: ${AUTH_ACCESS_TOKEN_SECRET:-supersecretaccess}
-#   ports:
-#     - "${NOTIFICATIONS_PORT:-9000}:${NOTIFICATIONS_PORT:-9000}"
-#   depends_on:
-#     - database
+  notifications-service:
+    build:
+      context: ./notifications
+    container_name: notifications_service
+    restart: always
+    env_file:
+      - .env
+    volumes:
+      # đường dẫn từ host (root) -> đường dẫn trong container
+      - ./firebase-service-account.json:/run/secrets/firebase-service-account.json:ro
+    environment:
+      NODE_ENV: ${NOTIFICATIONS_NODE_ENV:-production}
+      NOTIFICATION_PORT: ${NOTIFICATIONS_PORT:-9000}
+      WEB_CLIENT_URL: ${WEB_CLIENT_URL:-http://localhost:5173}
+      NOTIFICATION_DATABASE_URL: ${NOTIFICATION_DATABASE_URL:-postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-root1234}@${DB_HOST:-database}:${DB_PORT:-5432}/${NOTIFICATION_DB_NAME:-notification_service_db}?schema=public}
+      AUTH_ACCESS_TOKEN_SECRET: ${AUTH_ACCESS_TOKEN_SECRET:-supersecretaccess}
+      GOOGLE_APPLICATION_CREDENTIALS: /run/secrets/firebase-service-account.json
+    ports:
+      - "${NOTIFICATIONS_PORT:-9000}:${NOTIFICATIONS_PORT:-9000}"
+    depends_on:
+      - database
 
   api-gateway:
     build:
@@ -145,13 +152,13 @@ services:
     environment:
       NODE_ENV: ${NODE_ENV:-development}
       API_GATEWAY_PORT: ${API_GATEWAY_PORT:-8000}
-      CLIENT_URL: ${CLIENT_URL:-http://localhost:5173}
+      WEB_CLIENT_URL: ${WEB_CLIENT_URL:-http://localhost:5173}
       AUTH_SERVICE_URL: ${AUTH_SERVICE_URL:-http://auth-service:5001}
       BOOKING_SERVICE_URL: ${BOOKING_SERVICE_URL:-http://booking-service:4000}
       PAYMENT_SERVICE_URL: ${PAYMENT_SERVICE_URL:-http://payment-service:5000}
       VEHICLES_SERVICE_URL: ${VEHICLES_SERVICE_URL:-http://vehicles-service:8099}
       STATION_SERVICE_URL: ${STATION_SERVICE_URL:-http://station-service:6000}
-      # NOTIFICATIONS_SERVICE_URL: ${NOTIFICATIONS_SERVICE_URL:-http://notifications-service:9000}
+      NOTIFICATIONS_SERVICE_URL: ${NOTIFICATIONS_SERVICE_URL:-http://notifications-service:9000}
     ports:
       - "8000:8000"
     depends_on:
@@ -160,5 +167,5 @@ services:
       - payment-service
       - vehicles-service
       - station-service
-      # - notifications-service
+      - notifications-service
 
