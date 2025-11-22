@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "bun nodemon src/index.ts",
     "debug": "node --inspect src/index.js",
+    "build": "tsc -p tsconfig.json",
     "start": "ts-node src/index.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },

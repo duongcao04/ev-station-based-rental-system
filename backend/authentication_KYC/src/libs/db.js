@@ -10,21 +10,21 @@ export const connectDB = async (database, username, password) => {
   if (!database || !username) {
     throw new Error("Database name and username are required");
   }
-  
+
   // Ensure password is a string (can be empty string, but not undefined/null)
   const dbPassword = password || "";
-  
+
   sequelize = new Sequelize(database, username, dbPassword, {
-    host: process.env.AUTH_DB_HOST || "localhost",
-    port: Number(process.env.AUTH_DB_PORT) || 5432,
+    host: process.env.DB_HOST || "localhost",
+    port: Number(process.env.DB_PORT) || 5432,
     dialect: "postgres",
     logging: false, // Set to console.log for debugging
   });
-  
+
   try {
     await sequelize.authenticate();
     console.log(`✅ Database connection established: ${database}`);
-    
+
     User = await createUserModel(sequelize);
     RenterProfile = await createRenterProfileModel(sequelize);
 

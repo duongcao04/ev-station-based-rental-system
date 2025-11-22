@@ -1,45 +1,171 @@
-name: eren-station
-version: '3.8'
+version: "3.8"
 
 services:
-  postgres:
-    container_name: eren_postgres
-    image: postgres:14.1-alpine
+  database:
+    image: postgres:16
+    container_name: postgres_db
     restart: always
     environment:
-      - POSTGRES_DB=postgres
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-root1234}
+      POSTGRES_DB: ${DB_NAME:-ev_rental}
     ports:
-      - '5432:5432'
+      - "5432:5432"
     volumes:
-      - D:/.database/postgresql:/var/lib/postgresql/data
+      - "D:/Database/PostgreSQL/data:/var/lib/postgresql/data"
+      - "D:/Database/PostgreSQL/tablespaces:/tablespaces"
 
-  mongodb:
-    container_name: eren_mongodb
-    image: mongo
+  auth-service:
+    build:
+      context: ./authentication_KYC
+    container_name: auth_service
     restart: always
     environment:
-      MONGO_INITDB_ROOT_USERNAME: root
-      MONGO_INITDB_ROOT_PASSWORD: root1234
+      NODE_ENV: ${NODE_ENV:-development}
+      AUTH_PORT: ${AUTH_PORT:-5001}
+      WEB_CLIENT_URL: ${WEB_CLIENT_URL:-http://localhost:5173}
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      AUTH_DB_NAME: ${AUTH_DB_NAME:-auth_service_db}
+      AUTH_ACCESS_TOKEN_SECRET: ${AUTH_ACCESS_TOKEN_SECRET:-supersecretaccess}
+      AUTH_REFRESH_TOKEN_SECRET: ${AUTH_REFRESH_TOKEN_SECRET:-supersecretrefresh}
+      USE_API_GATEWAY: ${USE_API_GATEWAY:-"true"}
+      API_GATEWAY_URL: ${API_GATEWAY_URL:-http://api-gateway:8000}
     ports:
-      - '27017:27017'
-    volumes:
-      - D:/.database/mongo:/data/db
+      - "5001:5001"
+    depends_on:
+      - database
 
-  redis:
-    container_name: eren_redis
-    image: redis:latest
+  booking-service:
+    build:
+      context: ./booking_services
+    container_name: booking_service
+    restart: always
+    environment:
+      NODE_ENV: ${NODE_ENV:-development}
+      BOOKING_PORT: ${BOOKING_PORT:-4000}
+      WEB_CLIENT_URL: ${WEB_CLIENT_URL:-http://localhost:5173}
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      BOOKING_DB_NAME: ${BOOKING_DB_NAME:-booking_service_db}
+      AUTH_ACCESS_TOKEN_SECRET: ${AUTH_ACCESS_TOKEN_SECRET:-supersecretaccess}
+      API_GATEWAY_URL: ${API_GATEWAY_URL:-http://api-gateway:8000}
+      INTERNAL_SERVICE_SECRET: ${INTERNAL_SERVICE_SECRET:-internal-secret-key}
     ports:
-      - '6379:6379'
-    command: redis-server --save 20 1 --loglevel warning --requirepass eYVX7EwVmmxKPCDmwMtyKVge8oLd2t81
-    volumes:
-      - D:/.database/redis:/data
+      - "4000:4000"
+    depends_on:
+      - database
 
-volumes:
-  postgres:
-    driver: local
-  mongodb:
-    driver: local
-  cache:
-    driver: local
+  payment-service:
+    build:
+      context: ./payment_services
+    container_name: payment_service
+    restart: always
+    environment:
+      NODE_ENV: ${NODE_ENV:-development}
+      PAY_PORT: ${PAY_PORT:-5000}
+      WEB_CLIENT_URL: ${WEB_CLIENT_URL:-http://localhost:5173}
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      PAY_DB_NAME: ${PAY_DB_NAME:-payment_service_db}
+      AUTH_ACCESS_TOKEN_SECRET: ${AUTH_ACCESS_TOKEN_SECRET:-supersecretaccess}
+      INTERNAL_SERVICE_SECRET: ${INTERNAL_SERVICE_SECRET:-internal-secret-key}
+      API_GATEWAY_URL: ${API_GATEWAY_URL:-http://api-gateway:8000}
+      PAYMENT_RETURN_URL: ${PAYMENT_RETURN_URL:-http://localhost:5173}
+    ports:
+      - "5000:5000"
+    depends_on:
+      - database
+
+  station-service:
+    build:
+      context: ./station_service
+    container_name: station_service
+    restart: always
+    environment:
+      NODE_ENV: ${NODE_ENV:-development}
+      STATION_PORT: ${STATION_PORT:-6000}
+      WEB_CLIENT_URL: ${WEB_CLIENT_URL:-http://localhost:5173}
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      STATION_DB_NAME: ${STATION_DB_NAME:-station_service_db}
+      AUTH_ACCESS_TOKEN_SECRET: ${AUTH_ACCESS_TOKEN_SECRET:-supersecretaccess}
+      INTERNAL_SERVICE_SECRET: ${INTERNAL_SERVICE_SECRET:-internal-secret-key}
+    ports:
+      - "6000:6000"
+    depends_on:
+      - database
+
+  vehicles-service:
+    build:
+      context: ./vehicles
+    container_name: vehicles_service
+    restart: always
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: ${VEHICLES_NODE_ENV:-production}
+      VEHICLE_PORT: ${VEHICLE_PORT:-8099}
+      WEB_CLIENT_URL: ${WEB_CLIENT_URL:-http://localhost:5173}
+      VEHICLE_DATABASE_URL: ${VEHICLE_DATABASE_URL:-postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-root1234}@${DB_HOST:-database}:${DB_PORT:-5432}/${VEHICLE_DB_NAME:-vehicle_service_db}?schema=public}
+      AUTH_ACCESS_TOKEN_SECRET: ${AUTH_ACCESS_TOKEN_SECRET:-supersecretaccess}
+    ports:
+      - "8099:8099"
+    depends_on:
+      - database
+
+  notifications-service:
+    build:
+      context: ./notifications
+    container_name: notifications_service
+    restart: always
+    env_file:
+      - .env
+    volumes:
+      # đường dẫn từ host (root) -> đường dẫn trong container
+      - ./firebase-service-account.json:/run/secrets/firebase-service-account.json:ro
+    environment:
+      NODE_ENV: ${NOTIFICATIONS_NODE_ENV:-production}
+      NOTIFICATION_PORT: ${NOTIFICATIONS_PORT:-9000}
+      WEB_CLIENT_URL: ${WEB_CLIENT_URL:-http://localhost:5173}
+      NOTIFICATION_DATABASE_URL: ${NOTIFICATION_DATABASE_URL:-postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-root1234}@${DB_HOST:-database}:${DB_PORT:-5432}/${NOTIFICATION_DB_NAME:-notification_service_db}?schema=public}
+      AUTH_ACCESS_TOKEN_SECRET: ${AUTH_ACCESS_TOKEN_SECRET:-supersecretaccess}
+      GOOGLE_APPLICATION_CREDENTIALS: /run/secrets/firebase-service-account.json
+    ports:
+      - "${NOTIFICATIONS_PORT:-9000}:${NOTIFICATIONS_PORT:-9000}"
+    depends_on:
+      - database
+
+  api-gateway:
+    build:
+      context: ./api-gateway
+    container_name: api_gateway
+    restart: always
+    environment:
+      NODE_ENV: ${NODE_ENV:-development}
+      API_GATEWAY_PORT: ${API_GATEWAY_PORT:-8000}
+      WEB_CLIENT_URL: ${WEB_CLIENT_URL:-http://localhost:5173}
+      AUTH_SERVICE_URL: ${AUTH_SERVICE_URL:-http://auth-service:5001}
+      BOOKING_SERVICE_URL: ${BOOKING_SERVICE_URL:-http://booking-service:4000}
+      PAYMENT_SERVICE_URL: ${PAYMENT_SERVICE_URL:-http://payment-service:5000}
+      VEHICLES_SERVICE_URL: ${VEHICLES_SERVICE_URL:-http://vehicles-service:8099}
+      STATION_SERVICE_URL: ${STATION_SERVICE_URL:-http://station-service:6000}
+      NOTIFICATIONS_SERVICE_URL: ${NOTIFICATIONS_SERVICE_URL:-http://notifications-service:9000}
+    ports:
+      - "8000:8000"
+    depends_on:
+      - auth-service
+      - booking-service
+      - payment-service
+      - vehicles-service
+      - station-service
+      - notifications-service
+

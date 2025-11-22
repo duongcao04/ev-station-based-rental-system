@@ -1,36 +1,37 @@
+import MainLayout from '@/components/layouts/MainLayout';
 import { lazy, Suspense } from 'react';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
-import './index.css';
 import { Toaster } from 'sonner';
+import ProtectedRoute from './components/auth/ProtectedRoute';
+import AccountLayout from './components/layouts/AccountLayout';
+import DashboardLayout from './components/layouts/DashboardLayout';
+import './index.css';
+import ChiTietXePage from './pages/chi-tiet-xe/ChiTietXePage';
+import DashboardPage from './pages/dashboard/DashboardPage';
+import KYCVerificationPage from './pages/dashboard/KYCVerificationPage';
+import MenbersManagementPage from './pages/dashboard/MenbersManagemetPage';
+import QuanLyBookingDetailPage from './pages/dashboard/QuanLyBookingDetailPage';
+import QuanLyBookingPage from './pages/dashboard/QuanLyBookingPage';
+import QuanLyTramXePage from './pages/dashboard/QuanLyTramXePage';
+import QuanLyXeDienPage from './pages/dashboard/QuanLyXeDienPage';
+import SettingsPage from './pages/dashboard/SettingPage';
+import CreateBookingPage from './pages/dat-xe/CreateBookingPage';
+import HuongDanThueXe from './pages/huong-dan-thue-xe/HuongDanThueXe';
+import LienHePage from './pages/lien-he/LienHePage';
+import { LichSuThueXeChiTietPage } from './pages/tai-khoan/LichSuThueXeChiTietPage';
+import { LichSuThueXePage } from './pages/tai-khoan/LichSuThueXePage';
+import RenterSettingsPage from './pages/tai-khoan/SettingPage';
+import ThongTinTaiKhoanPage from './pages/tai-khoan/ThongTinTaiKhoanPage';
+import XacThucKYC from './pages/tai-khoan/XacThucKYC';
+import PaymentPage from './pages/thanh-toan/PaymentPage';
+import PaymentResultPage from './pages/thanh-toan/PaymentResultPage';
+import ThueXeTuLaiPage from './pages/thue-xe-tu-lai/ThueXeTuLaiPage';
+import TramXePage from './pages/tram-xe/TramXePage';
 
-const LoginPage = lazy(() => import("@/pages/auth/LoginPage"));
-const RegisterPage = lazy(() => import("@/pages/auth/RegisterPage"));
-import MainLayout from "@/components/layouts/MainLayout";
-import ThueXeTuLaiPage from "./pages/thue-xe-tu-lai/ThueXeTuLaiPage";
-import DashboardLayout from "./components/layouts/DashboardLayout";
-import DashboardPage from "./pages/dashboard/DashboardPage";
-import ChiTietXePage from "./pages/chi-tiet-xe/ChiTietXePage";
-import CreateBookingPage from "./pages/dat-xe/CreateBookingPage";
-import PaymentPage from "./pages/thanh-toan/PaymentPage";
-import PaymentResultPage from "./pages/thanh-toan/PaymentResultPage";
-import QuanLyTramXePage from "./pages/dashboard/QuanLyTramXePage";
-import QuanLyBookingPage from "./pages/dashboard/QuanLyBookingPage";
-import QuanLyBookingDetailPage from "./pages/dashboard/QuanLyBookingDetailPage";
-import AccountLayout from "./components/layouts/AccountLayout";
-import ThongTinTaiKhoanPage from "./pages/tai-khoan/ThongTinTaiKhoanPage";
-import XacThucKYC from "./pages/tai-khoan/XacThucKYC";
-import { LichSuThueXePage } from "./pages/tai-khoan/LichSuThueXePage";
-import { LichSuThueXeChiTietPage } from "./pages/tai-khoan/LichSuThueXeChiTietPage";
-import ProtectedRoute from "./components/auth/ProtectedRoute";
-const HomePage = lazy(() => import("@/pages/home/HomePage"));
-const ErrorPage = lazy(() => import("@/pages/error/ErrorPage"));
-import HuongDanThueXe from "./pages/huong-dan-thue-xe/HuongDanThueXe";
-import LienHePage from "./pages/lien-he/LienHePage";
-import TramXePage from "./pages/tram-xe/TramXePage";
-import SettingsPage from "./pages/dashboard/SettingPage";
-import RenterSettingsPage from "./pages/tai-khoan/SettingPage";
-import MenbersManagementPage from "./pages/dashboard/MenbersManagemetPage";
-import KYCVerificationPage from "./pages/dashboard/KYCVerificationPage";
+const LoginPage = lazy(() => import('@/pages/auth/LoginPage'));
+const RegisterPage = lazy(() => import('@/pages/auth/RegisterPage'));
+const HomePage = lazy(() => import('@/pages/home/HomePage'));
+const ErrorPage = lazy(() => import('@/pages/error/ErrorPage'));
 
 // eslint-disable-next-line react-refresh/only-export-components
 export const router = createBrowserRouter([
@@ -135,7 +136,7 @@ export const router = createBrowserRouter([
     ],
   },
   {
-    path: "/xe/:slug",
+    path: '/xe/:slug',
     element: (
       <MainLayout>
         <ChiTietXePage />
@@ -148,7 +149,7 @@ export const router = createBrowserRouter([
     ),
   },
   {
-    path: "/tai-khoan",
+    path: '/tai-khoan',
     errorElement: (
       <Suspense fallback={null}>
         <ErrorPage />
@@ -158,7 +159,7 @@ export const router = createBrowserRouter([
       {
         index: true,
         element: (
-          <ProtectedRoute allowedRoles={["renter"]}>
+          <ProtectedRoute allowedRoles={['renter']}>
             <AccountLayout>
               <ThongTinTaiKhoanPage />
             </AccountLayout>
@@ -168,7 +169,7 @@ export const router = createBrowserRouter([
       {
         path: 'lich-su-thue',
         element: (
-          <ProtectedRoute allowedRoles={["renter"]}>
+          <ProtectedRoute allowedRoles={['renter']}>
             <AccountLayout>
               <LichSuThueXePage />
             </AccountLayout>
@@ -178,7 +179,7 @@ export const router = createBrowserRouter([
       {
         path: 'lich-su-thue/*',
         element: (
-          <ProtectedRoute allowedRoles={["renter"]}>
+          <ProtectedRoute allowedRoles={['renter']}>
             <AccountLayout>
               <LichSuThueXeChiTietPage />
             </AccountLayout>
@@ -188,7 +189,7 @@ export const router = createBrowserRouter([
       {
         path: 'xac-thuc-kyc',
         element: (
-          <ProtectedRoute allowedRoles={["renter"]}>
+          <ProtectedRoute allowedRoles={['renter']}>
             <AccountLayout>
               <XacThucKYC />
             </AccountLayout>
@@ -196,9 +197,9 @@ export const router = createBrowserRouter([
         ),
       }, // /tai-khoan/xac-thuc-kyc
       {
-        path: "cai-dat",
+        path: 'cai-dat',
         element: (
-          <ProtectedRoute allowedRoles={["renter"]}>
+          <ProtectedRoute allowedRoles={['renter']}>
             <AccountLayout>
               <RenterSettingsPage />
             </AccountLayout>
@@ -206,11 +207,11 @@ export const router = createBrowserRouter([
         ),
       },
 
-      { path: "*", element: <ErrorPage /> },
+      { path: '*', element: <ErrorPage /> },
     ],
   },
   {
-    path: "/dashboard",
+    path: '/dashboard',
     errorElement: (
       <Suspense fallback={null}>
         <ErrorPage />
@@ -220,69 +221,57 @@ export const router = createBrowserRouter([
       {
         index: true,
         element: (
-          <ProtectedRoute allowedRoles={["admin", "staff"]}>
+          <ProtectedRoute allowedRoles={['admin', 'staff']}>
             <DashboardLayout>
               <DashboardPage />
             </DashboardLayout>
           </ProtectedRoute>
         ),
-        children: [
-          {
-            index: true,
-            element: (
-              <DashboardLayout>
-                <DashboardPage />
-              </DashboardLayout>
-            ),
-          },
-          {
-            path: '/dashboard/tram-xe',
-            element: (
-              <DashboardLayout>
-                <QuanLyTramXePage />
-              </DashboardLayout>
-            ),
-          },
-          {
-            path: '/dashboard/bookings',
-            element: (
-              <DashboardLayout>
-                <QuanLyBookingPage />
-              </DashboardLayout>
-            ),
-          },
-          {
-            path: '/dashboard/xe-dien',
-            element: (
-              <DashboardLayout>
-                <QuanLyXeDienPage />
-              </DashboardLayout>
-            ),
-          },
-          {
-            path: '/dashboard/bookings/:bookingId',
-            element: (
-              <DashboardLayout>
-                <QuanLyBookingDetailPage />
-              </DashboardLayout>
-            ),
-          },
-          {
-            path: '/dashboard/setting',
-            element: (
-              <DashboardLayout>
-                <SettingsPage />
-              </DashboardLayout>
-            ),
-          },
-          // Catch-all
-          { path: '*', element: <ErrorPage /> },
-        ],
       },
       {
         path: '/dashboard/tram-xe',
         element: (
-          <ProtectedRoute allowedRoles={["admin"]}>
+          <DashboardLayout>
+            <QuanLyTramXePage />
+          </DashboardLayout>
+        ),
+      },
+      {
+        path: '/dashboard/bookings',
+        element: (
+          <DashboardLayout>
+            <QuanLyBookingPage />
+          </DashboardLayout>
+        ),
+      },
+      {
+        path: '/dashboard/xe-dien',
+        element: (
+          <DashboardLayout>
+            <QuanLyXeDienPage />
+          </DashboardLayout>
+        ),
+      },
+      {
+        path: '/dashboard/bookings/:bookingId',
+        element: (
+          <DashboardLayout>
+            <QuanLyBookingDetailPage />
+          </DashboardLayout>
+        ),
+      },
+      {
+        path: '/dashboard/setting',
+        element: (
+          <DashboardLayout>
+            <SettingsPage />
+          </DashboardLayout>
+        ),
+      },
+      {
+        path: '/dashboard/tram-xe',
+        element: (
+          <ProtectedRoute allowedRoles={['admin']}>
             <DashboardLayout>
               <QuanLyTramXePage />
             </DashboardLayout>
@@ -290,9 +279,9 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: "/dashboard/bookings",
+        path: '/dashboard/bookings',
         element: (
-          <ProtectedRoute allowedRoles={["admin", "staff"]}>
+          <ProtectedRoute allowedRoles={['admin', 'staff']}>
             <DashboardLayout>
               <QuanLyBookingPage />
             </DashboardLayout>
@@ -300,9 +289,9 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: "/dashboard/bookings/:bookingId",
+        path: '/dashboard/bookings/:bookingId',
         element: (
-          <ProtectedRoute allowedRoles={["admin", "staff"]}>
+          <ProtectedRoute allowedRoles={['admin', 'staff']}>
             <DashboardLayout>
               <QuanLyBookingDetailPage />
             </DashboardLayout>
@@ -310,9 +299,9 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: "/dashboard/menbers",
+        path: '/dashboard/menbers',
         element: (
-          <ProtectedRoute allowedRoles={["admin"]}>
+          <ProtectedRoute allowedRoles={['admin']}>
             <DashboardLayout>
               <MenbersManagementPage />
             </DashboardLayout>
@@ -320,9 +309,9 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: "/dashboard/kyc-verification",
+        path: '/dashboard/kyc-verification',
         element: (
-          <ProtectedRoute allowedRoles={["admin", "staff"]}>
+          <ProtectedRoute allowedRoles={['admin', 'staff']}>
             <DashboardLayout>
               <KYCVerificationPage />
             </DashboardLayout>
@@ -330,9 +319,9 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: "/dashboard/setting",
+        path: '/dashboard/setting',
         element: (
-          <ProtectedRoute allowedRoles={["admin", "staff"]}>
+          <ProtectedRoute allowedRoles={['admin', 'staff']}>
             <DashboardLayout>
               <SettingsPage />
             </DashboardLayout>

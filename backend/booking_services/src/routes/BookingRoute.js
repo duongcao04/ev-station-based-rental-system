@@ -13,8 +13,7 @@ import { authenticate, authorize, checkOwnership, checkCheckinPermission, checkR
 
 const router = express.Router();
 
-// Internal routes (for service-to-service communication) - NO authentication required
-// These routes use internal secret key instead
+
 router.put("/internal/:id/payment", verifyInternalRequest, updateBookingPayment);
 
 // Apply authentication to all other routes
