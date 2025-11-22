@@ -4,18 +4,18 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { TableHeader } from '../../components/ui/table-header';
-import { useBrands } from '../../lib/queries/useBrand';
+import { useCategories } from '../../lib/queries/useCategory';
 
-export default function QuanLyThuongHieuPage() {
+export default function QuanLyDanhMucPage() {
   const [error, setError] = useState('');
-  const { data: brands, isLoading } = useBrands();
+  const { data: categories, isLoading } = useCategories();
 
   return (
     <div className='p-8'>
       <TableHeader
-        title='Thương hiệu'
-        description='Manage vehicle brands'
-        createHref='/dashboard/thuong-hieu/them-moi'
+        title='Danh mục'
+        description='Manage vehicle categories'
+        createHref='/dashboard/danh-muc/them-moi'
       />
 
       {error && (
@@ -37,17 +37,17 @@ export default function QuanLyThuongHieuPage() {
               </tr>
             </thead>
             <tbody>
-              {brands.map((brand) => (
+              {categories.map((category) => (
                 <tr
-                  key={brand.id}
+                  key={category.id}
                   className='border-b border-border hover:bg-muted/50'
                 >
-                  <td className='py-3 px-4'>{brand.displayName}</td>
+                  <td className='py-3 px-4'>{category.displayName}</td>
                   <td className='py-3 px-4 text-muted-foreground'>
-                    {brand.description}
+                    {category.description}
                   </td>
                   <td className='py-3 px-4 flex gap-2'>
-                    <Link to={`/dashboard/thuong-hieu/${brand.id}`}>
+                    <Link to={`/dashboard/danh-muc/${category.id}`}>
                       <Button variant='outline' size='sm'>
                         Edit
                       </Button>
@@ -55,7 +55,7 @@ export default function QuanLyThuongHieuPage() {
                     <Button
                       variant='destructive'
                       size='sm'
-                      // onClick={() => deleteBrand(brand.id)}
+                      // onClick={() => deleteCategory(category.id)}
                     >
                       Delete
                     </Button>

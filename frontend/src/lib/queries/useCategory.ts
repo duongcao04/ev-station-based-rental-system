@@ -8,7 +8,7 @@ export const useCategories = () => {
 		queryKey: ["categories"],
 		queryFn: () => categoryApi.getCategories(),
 		select(res) {
-			return res
+			return res.data
 		},
 	})
 	const categories = useMemo(() => {
@@ -32,7 +32,7 @@ export const useCategoryDetail = (id?: string) => {
 		},
 		enabled: !!id,
 		select(res) {
-			return res
+			return res?.data
 		},
 	})
 	return { data, isLoading: isLoading || isFetching }

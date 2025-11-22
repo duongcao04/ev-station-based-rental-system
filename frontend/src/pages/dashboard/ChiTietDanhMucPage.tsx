@@ -6,37 +6,39 @@ import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { toFormikValidationSchema } from 'zod-formik-adapter';
 import {
-  useBrandDetail,
-  useCreateBrandMutation,
-  useUpdateBrandMutation,
-} from '../../lib/queries/useBrand';
+  useCategoryDetail,
+  useUpdateCategoryMutation,
+} from '../../lib/queries/useCategory';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
-  CreateBrandSchema,
-  type CreateBrandFormData,
-} from '../../lib/schemas/brand.schema';
+  CreateCategorySchema,
+  type CreateCategoryFormData,
+} from '../../lib/schemas/category.schema';
 import { Label } from '../../components/ui/label';
 import { Input } from '../../components/ui/input';
 import { Textarea } from '../../components/ui/textarea';
+import { useCreateCategoryMutation } from '../../lib/queries/useCategory';
 
-export default function BrandForm() {
+export default function ChiTietDanhMucPage() {
   const navigate = useNavigate();
   const params = useParams();
-  const id = params.brandId as string;
+  const id = params.categoryId as string;
   const isNew = id === 'new';
 
-  const { data: brand, isLoading } = useBrandDetail(!isNew ? id : undefined);
-  const createMutation = useCreateBrandMutation();
-  const updateMutation = useUpdateBrandMutation();
-  console.log(brand);
+  const { data: category, isLoading } = useCategoryDetail(
+    !isNew ? id : undefined
+  );
+  const createMutation = useCreateCategoryMutation();
+  const updateMutation = useUpdateCategoryMutation();
+  console.log(category);
 
-  const formik = useFormik<CreateBrandFormData>({
+  const formik = useFormik<CreateCategoryFormData>({
     initialValues: {
       displayName: '',
       thumbnailUrl: '',
       description: '',
     },
-    validationSchema: toFormikValidationSchema(CreateBrandSchema),
+    validationSchema: toFormikValidationSchema(CreateCategorySchema),
     enableReinitialize: true,
     onSubmit: async (values) => {
       try {
@@ -45,23 +47,23 @@ export default function BrandForm() {
         } else {
           await updateMutation.mutateAsync({ id, ...values });
         }
-        navigate('/dashboard/thuong-hieu');
+        navigate('/dashboard/danh-muc');
       } catch (error) {
         console.error(error);
-        toast.error('Failed to save brand');
+        toast.error('Failed to save category');
       }
     },
   });
 
   useEffect(() => {
-    if (brand && !isNew) {
+    if (category && !isNew) {
       formik.setValues({
-        displayName: brand.displayName || '',
-        description: brand.description || '',
-        thumbnailUrl: brand.thumbnailUrl || '',
+        displayName: category.displayName || '',
+        description: category.description || '',
+        thumbnailUrl: category.thumbnailUrl || '',
       });
     }
-  }, [brand, isNew]);
+  }, [category, isNew]);
 
   const isSubmitting = createMutation.isPending || updateMutation.isPending;
 
@@ -74,7 +76,7 @@ export default function BrandForm() {
   return (
     <div className='p-8 max-w-2xl'>
       <h1 className='text-3xl font-bold text-foreground mb-6'>
-        {isNew ? 'Create Brand' : 'Edit Brand'}
+        {isNew ? 'Create Category' : 'Edit Category'}
       </h1>
 
       <form onSubmit={formik.handleSubmit} className='space-y-6'>
@@ -139,7 +141,7 @@ export default function BrandForm() {
           <Button
             type='button'
             variant='outline'
-            onClick={() => navigate('/dashboard/thuong-hieu')}
+            onClick={() => navigate('/dashboard/danh-muc')}
           >
             Cancel
           </Button>
