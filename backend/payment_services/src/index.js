@@ -9,7 +9,7 @@ dotenv.config({ path: path.resolve(process.cwd(), "../.env") });
 
 const app = express();
 
-app.use(cors({ origin: process.env.CLIENT_URL || '*', credentials: true }));
+app.use(cors({ origin: process.env.WEB_CLIENT_URL || '*', credentials: true }));
 app.use(cookieParser()); // Parse HTTP-only cookies
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));

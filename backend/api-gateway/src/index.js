@@ -28,7 +28,7 @@ app.use(morgan("dev"));
 app.use(cookieParser());
 app.use(
     cors({
-        origin: pick(process.env.CLIENT_URL, "http://localhost:5173"),
+        origin: pick(process.env.WEB_CLIENT_URL, "http://localhost:5173"),
         credentials: true,
     })
 );
@@ -39,7 +39,7 @@ const makeProxy = (target, pathRewrite) => {
         target,
         changeOrigin: true,
         ws: false,
-        proxyTimeout: 3600000,
+        proxyTimeout: 30000,
         pathRewrite: pathRewrite || {},
         onProxyReq: (proxyReq, req) => {
 
@@ -62,8 +62,8 @@ const makeProxy = (target, pathRewrite) => {
             console.log(`[Gateway] Proxying ${req.method} ${req.originalUrl} → ${target}${proxyReq.path}`);
         },
         onProxyRes: (proxyRes, req, res) => {
-            // Log response (optional)
             console.log(`[Gateway] ${req.method} ${req.originalUrl} → ${proxyRes.statusCode}`);
+
         },
         onError: (err, req, res) => {
             console.error(`[Gateway] Proxy error to ${target}:`, err.message, err.code);
@@ -87,34 +87,30 @@ app.get("/health", (_req, res) =>
 );
 
 // ================== AUTH SERVICE ==================
-// Route /api/v1/auth/* và /api/auth/* → Auth Service
+
 app.use(
     "/api/v1/auth",
     makeProxy(SERVICES.AUTH, (path) => `/api/auth${path}`)
 );
 
 
-// Route /api/v1/admin/* và /api/admin/* → Auth Service
 app.use(
     "/api/v1/admin",
     makeProxy(SERVICES.AUTH, (path) => `/api/admin${path}`)
 );
 
 
-// Route /api/v1/renters/* và /api/renters/* → Auth Service
 app.use(
     "/api/v1/renters",
     makeProxy(SERVICES.AUTH, (path) => `/api/renters${path}`)
 );
 
 
-// Route /api/v1/kyc/* và /api/kyc/* → Auth Service
 app.use(
     "/api/v1/kyc",
     makeProxy(SERVICES.AUTH, (path) => `/api/kyc${path}`)
 );
 
-// Route /upload/* → Auth Service (for static files)
 app.use(
     "/upload",
     makeProxy(SERVICES.AUTH, (path) => `/upload${path}`)
@@ -132,35 +128,30 @@ app.use(
 );
 
 // ================== PAYMENT SERVICE ==================
-// Route /api/v1/payments/* → Payment Service
 app.use(
     "/api/v1/payments",
     makeProxy(SERVICES.PAYMENT, (path) => `/api/v1/payments${path}`)
 );
 
 // ================== VEHICLES SERVICE ==================
-// Route /api/v1/vehicles/* và /v1/vehicles/* → Vehicles Service
+
 app.use(
     "/api/v1/vehicles",
     makeProxy(SERVICES.VEHICLES, (path) => `/api/v1/vehicles${path}`)
 );
 
-
-// Route /api/v1/brands/* và /v1/brands/* → Vehicles Service
 app.use(
     "/api/v1/brands",
     makeProxy(SERVICES.VEHICLES, (path) => `/api/v1/brands${path}`)
 );
 
 
-// Route /api/v1/categories/* và /v1/categories/* → Vehicles Service
 app.use(
     "/api/v1/categories",
     makeProxy(SERVICES.VEHICLES, (path) => `/api/v1/categories${path}`)
 );
 
 
-// Route /api/v1/specification-types/* và /v1/specification-types/* → Vehicles Service
 app.use(
     "/api/v1/specification-types",
     makeProxy(SERVICES.VEHICLES, (path) => `/api/v1/specification-types${path}`)
@@ -171,10 +162,19 @@ app.use(
 );
 
 // ================== STATION SERVICE ==================
-// Route /api/v1/stations/* → Station Service
 app.use(
     "/api/v1/stations",
     makeProxy(SERVICES.STATION, (path) => `/api/v1/stations${path}`)
+);
+
+// ================== NOTIFICATION SERVICE ==================
+app.use(
+    "/api/v1/notifications",
+    makeProxy(SERVICES.NOTIFICATIONS, (path) => `/api/v1/notifications${path}`)
+);
+app.use(
+    "/api/v1/device",
+    makeProxy(SERVICES.NOTIFICATIONS, (path) => `/api/v1/device${path}`)
 );
 
 // ===== 404 Gateway (chỉ bật sau cùng) =====
@@ -194,5 +194,6 @@ app.listen(PORT, () => {
         PAYMENT: SERVICES.PAYMENT,
         VEHICLES: SERVICES.VEHICLES,
         STATION: SERVICES.STATION,
+        NOTIFICATIONS: SERVICES.NOTIFICATIONS,
     });
 });

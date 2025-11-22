@@ -1,46 +1,61 @@
-# ---- Base ----
-FROM oven/bun:1.1.24-alpine AS base
+# Stage 1: Dependencies
+FROM node:20-alpine AS deps
 WORKDIR /app
 
+# Install OpenSSL for Prisma
+RUN apk add --no-cache openssl libc6-compat
 
-# ---- Deps ----
-FROM base AS deps
-COPY bun.lock package.json tsconfig.json ./
-# Nếu có prisma, copy luôn để generate ở layer deps
-COPY prisma ./prisma
-RUN bun install --frozen-lockfile
-RUN if [ -d prisma ]; then bun x prisma generate; fi
+# Copy package files
+COPY package*.json ./
+COPY prisma ./prisma/
 
+# Install dependencies
+RUN npm install
 
-# ---- Build ----
-FROM base AS build
+# Generate Prisma Client
+RUN npx prisma generate
+
+# Stage 2: Builder
+FROM node:20-alpine AS builder
+WORKDIR /app
+
+# Copy dependencies from deps stage
 COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps /app/prisma ./prisma
+
+# Copy source code
 COPY . .
-# Build TS -> dist (tuỳ script build trong package.json)
-RUN if [ -f tsconfig.json ]; then bun x tsc -p tsconfig.json; fi
 
+# Build TypeScript (if needed)
+RUN npm run build || echo "No build script found"
 
-# ---- Run ----
-FROM base AS runner
-ENV NODE_ENV=production
-COPY --from=build /app/node_modules ./node_modules
-COPY --from=build /app/dist ./dist
-COPY --from=build /app/prisma ./prisma
-COPY package.json .
+# Stage 3: Runner
+FROM node:20-alpine AS runner
+WORKDIR /app
 
+# Install OpenSSL for Prisma
+RUN apk add --no-cache openssl libc6-compat
 
-# Bảo mật user non-root
-RUN addgroup -S app && adduser -S app -G app
-USER app
+# Create non-root user
+RUN addgroup --system --gid 1001 nodejs && \
+    adduser --system --uid 1001 nodejs
 
+# Copy necessary files from builder
+COPY --from=builder --chown=nodejs:nodejs /app/node_modules ./node_modules
+COPY --from=builder --chown=nodejs:nodejs /app/prisma ./prisma
+COPY --from=builder --chown=nodejs:nodejs /app/dist ./dist
+COPY --from=builder --chown=nodejs:nodejs /app/src ./src
+COPY --from=builder --chown=nodejs:nodejs /app/package*.json ./
 
-# Prisma migrate khi khởi động (tuỳ chọn)
-# Có thể gọi trong CMD/Entrypoint nếu muốn tự động deploy migrations
+# Switch to non-root user
+USER nodejs
 
+# Expose port
+EXPOSE 9000
 
-ENV PORT=4000
-EXPOSE 4000
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+    CMD node -e "require('http').get('http://localhost:9000/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"
 
-
-# Nếu code compile ra dist/index.js
-CMD ["bun", "run", "dist/index.js"]
+# Start application with Prisma migrations
+CMD ["sh", "-c", "npx prisma migrate deploy && node dist/index.js"]

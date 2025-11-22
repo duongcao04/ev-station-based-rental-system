@@ -16,7 +16,7 @@ PORT=
 # P/s: One microservice should have one database
 DATABASE_URL=
 # Client url for CORS origin 
-CLIENT_URL=
+WEB_CLIENT_URL=
 ```
 ### Provide Firebase Admin SDK Config
 ```bash 
