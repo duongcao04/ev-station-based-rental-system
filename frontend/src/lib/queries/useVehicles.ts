@@ -1,7 +1,7 @@
 import { vehicleApi } from '@/lib/api/vehicle.api';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import type { CreateCarFormData } from '../schemas/car.schema';
+import type { CreateCarFormData, UpdateCarFormData } from '../schemas/car.schema';
 
 export const useVehicles = () => {
 	const { data, isLoading, isFetching } = useQuery({
@@ -48,6 +48,27 @@ export const useCreateVehicleMutation = () => {
 		onError: (error) => {
 			console.error(error)
 			toast.error("Thêm mới xe thất bại")
+		},
+	})
+}
+
+export const useUpdateVehicleMutation = () => {
+	return useMutation({
+		mutationFn: async (data: UpdateCarFormData) => {
+			const { id, ...rest } = data;
+			return vehicleApi.updateVehicle(id, {
+				...rest,
+				regularPrice: data.regularPrice?.toString(),
+				salePrice: data.salePrice?.toString(),
+				depositPrice: data.depositPrice?.toString()
+			})
+		},
+		onSuccess: () => {
+			toast.success("Cập nhật xe thành công")
+		},
+		onError: (error) => {
+			console.error(error)
+			toast.error("Cập nhật xe thất bại")
 		},
 	})
 }

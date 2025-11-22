@@ -21,3 +21,9 @@ export const CreateCarSchema = z.object({
 })
 
 export type CreateCarFormData = z.infer<typeof CreateCarSchema>
+
+export const UpdateCarSchema = CreateCarSchema.partial().extend({
+	id: z.string(),
+});
+
+export type UpdateCarFormData = z.infer<typeof UpdateCarSchema>;

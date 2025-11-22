@@ -1,6 +1,6 @@
 export type TSpecificationType = {
-	id: string,
-	label: string,
-	icon?: string,
-	description?: string
+	id: string
+	name: string
+	createdAt?: Date
+	updatedAt?: Date
 }

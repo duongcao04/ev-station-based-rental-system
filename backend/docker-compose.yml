@@ -38,6 +38,28 @@ services:
     depends_on:
       - database
 
+  booking-service:
+    build:
+      context: ./booking_services
+    container_name: booking_service
+    restart: always
+    environment:
+      NODE_ENV: ${NODE_ENV:-development}
+      BOOKING_PORT: ${BOOKING_PORT:-4000}
+      WEB_CLIENT_URL: ${WEB_CLIENT_URL:-http://localhost:5173}
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      BOOKING_DB_NAME: ${BOOKING_DB_NAME:-booking_service_db}
+      AUTH_ACCESS_TOKEN_SECRET: ${AUTH_ACCESS_TOKEN_SECRET:-supersecretaccess}
+      API_GATEWAY_URL: ${API_GATEWAY_URL:-http://api-gateway:8000}
+      INTERNAL_SERVICE_SECRET: ${INTERNAL_SERVICE_SECRET:-internal-secret-key}
+    ports:
+      - "4000:4000"
+    depends_on:
+      - database
+
   payment-service:
     build:
       context: ./payment_services
@@ -131,12 +153,12 @@ services:
       NODE_ENV: ${NODE_ENV:-development}
       API_GATEWAY_PORT: ${API_GATEWAY_PORT:-8000}
       WEB_CLIENT_URL: ${WEB_CLIENT_URL:-http://localhost:5173}
-      AUTH_SERVICE_URL: ${AUTH_SERVICE_URL:-http://auth-service:5001}
-      BOOKING_SERVICE_URL: ${BOOKING_SERVICE_URL:-http://booking-service:4000}
-      PAYMENT_SERVICE_URL: ${PAYMENT_SERVICE_URL:-http://payment-service:5000}
-      VEHICLES_SERVICE_URL: ${VEHICLES_SERVICE_URL:-http://vehicles-service:8099}
-      STATION_SERVICE_URL: ${STATION_SERVICE_URL:-http://station-service:6000}
-      NOTIFICATIONS_SERVICE_URL: ${NOTIFICATIONS_SERVICE_URL:-http://notifications-service:9000}
+      AUTH_SERVICE_URL: ${AUTH_SERVICE_URL:-http://auth_service:5001}
+      BOOKING_SERVICE_URL: ${BOOKING_SERVICE_URL:-http://booking_service:4000}
+      PAYMENT_SERVICE_URL: ${PAYMENT_SERVICE_URL:-http://payment_service:5000}
+      VEHICLES_SERVICE_URL: ${VEHICLES_SERVICE_URL:-http://vehicles_service:8099}
+      STATION_SERVICE_URL: ${STATION_SERVICE_URL:-http://station_service:6000}
+      NOTIFICATIONS_SERVICE_URL: ${NOTIFICATIONS_SERVICE_URL:-http://notifications_service:9000}
     ports:
       - "8000:8000"
     depends_on:
