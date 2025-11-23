@@ -116,6 +116,7 @@ services:
       VEHICLE_PORT: ${VEHICLE_PORT:-8099}
       WEB_CLIENT_URL: ${WEB_CLIENT_URL:-http://localhost:5173}
       VEHICLE_DATABASE_URL: ${VEHICLE_DATABASE_URL:-postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-root1234}@${DB_HOST:-database}:${DB_PORT:-5432}/${VEHICLE_DB_NAME:-vehicle_service_db}?schema=public}
+      DATABASE_URL: ${VEHICLE_DATABASE_URL:-postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-root1234}@${DB_HOST:-database}:${DB_PORT:-5432}/${VEHICLE_DB_NAME:-vehicle_service_db}?schema=public}
       AUTH_ACCESS_TOKEN_SECRET: ${AUTH_ACCESS_TOKEN_SECRET:-supersecretaccess}
     ports:
       - "8099:8099"

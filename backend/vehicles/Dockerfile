@@ -1,21 +1,33 @@
-# Stage 1: Dependencies
-FROM node:20-alpine AS deps
+# -----------------------------------------------------------------------------
+# Stage 0: base (shared)
+# -----------------------------------------------------------------------------
+FROM node:20-alpine AS base
 WORKDIR /app
-
-# Install OpenSSL for Prisma
 RUN apk add --no-cache openssl libc6-compat
+
+# Copy package files first (for better caching)
+COPY package*.json ./
+# copy lock file if exists
+COPY pnpm-lock.yaml* yarn.lock* package-lock.json* bun.lock* ./
+
+# -----------------------------------------------------------------------------
+# Stage 1: deps - install dependencies and generate Prisma client
+# -----------------------------------------------------------------------------
+FROM base AS deps
+
+# install deps
+RUN npm install
 
 # Copy package files
 COPY package*.json ./
 COPY prisma ./prisma/
 
-# Install dependencies
-RUN npm install
-
-# Generate Prisma Client
+# If you use prisma client generation
 RUN npx prisma generate
 
-# Stage 2: Builder
+# -----------------------------------------------------------------------------
+# Stage 2: builder - build 
+# -----------------------------------------------------------------------------
 FROM node:20-alpine AS builder
 WORKDIR /app
 
@@ -29,12 +41,17 @@ COPY . .
 # Build TypeScript (if needed)
 RUN npm run build || echo "No build script found"
 
-# Stage 3: Runner
+# -----------------------------------------------------------------------------
+# Stage 3: runner - minimal runtime image
+# -----------------------------------------------------------------------------
 FROM node:20-alpine AS runner
 WORKDIR /app
 
-# Install OpenSSL for Prisma
-RUN apk add --no-cache openssl libc6-compat
+# Install OpenSSL for Prisma AND postgresql-client for psql command
+RUN apk update && apk add --no-cache \
+    openssl \
+    libc6-compat \
+    postgresql16-client
 
 # Create non-root user
 RUN addgroup --system --gid 1001 nodejs && \
@@ -46,9 +63,11 @@ COPY --from=builder --chown=nodejs:nodejs /app/prisma ./prisma
 COPY --from=builder --chown=nodejs:nodejs /app/dist ./dist
 COPY --from=builder --chown=nodejs:nodejs /app/src ./src
 COPY --from=builder --chown=nodejs:nodejs /app/package*.json ./
+COPY ./src/database ./database
 
-# Copy CSV backup files
-COPY --chown=nodejs:nodejs ./backup/*.csv ./backup/
+# make entrypoint executable
+COPY ./entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
 
 # Switch to non-root user
 USER nodejs
@@ -60,5 +79,6 @@ EXPOSE 8099
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
     CMD node -e "require('http').get('http://localhost:8099/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"
 
+ENTRYPOINT ["/entrypoint.sh"]
 # Start application with Prisma migrations
 CMD ["sh", "-c", "npx prisma migrate deploy && node dist/index.js"]
