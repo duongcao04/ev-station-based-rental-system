@@ -52,15 +52,15 @@ COPY --from=builder --chown=nodejs:nodejs /app/package*.json ./
 COPY ./database ./database
 
 # make entrypoint executable
-COPY ./entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
+COPY ./entrypoint.sh ./entrypoint.sh
+RUN sed -i 's/\r$//' ./entrypoint.sh && chmod +x ./entrypoint.sh
 
 # Switch to non-root user
 USER nodejs
 
 EXPOSE 6000
 
-ENTRYPOINT ["/entrypoint.sh"]
+ENTRYPOINT ["sh","./entrypoint.sh"]
 # Start application
 CMD ["node", "src/index.js"]
 
