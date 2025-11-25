@@ -44,6 +44,7 @@ CREATE TABLE IF NOT EXISTS renter_profiles (
 
 -- =============================================
 -- 1. SEED DATA
+-- Password for all users: 'password123'
 -- =============================================
 INSERT INTO users (id, email, phone_number, password_hash, role, station_id, created_at, updated_at) VALUES
 -- ADMIN
@@ -51,7 +52,7 @@ INSERT INTO users (id, email, phone_number, password_hash, role, station_id, cre
     '18e2d4a4-88f7-4c06-8cf6-6a3b7a97b0e1',
     'admin@system.com',
     '0900000001',
-    '$2b$10$EpRnTzVlqHNP0.fKb.UvC.avXDsw8h8.5m/KX.B.sBNr.J7k/9n.6',
+    '$2b$10$PpOFCl05MS7TmNSzBNRn7uJANwnGej.YltTTca9c4DBOhDjLjX0h.',
     'admin',
     NULL,
     NOW(), NOW()
@@ -61,7 +62,7 @@ INSERT INTO users (id, email, phone_number, password_hash, role, station_id, cre
     '7c9bbf53-93cb-4b08-b530-8eb4fc0bcb8f',
     'staff.hanoi@station.com',
     '0910000001',
-    '$2b$10$EpRnTzVlqHNP0.fKb.UvC.avXDsw8h8.5m/KX.B.sBNr.J7k/9n.6',
+    '$2b$10$PpOFCl05MS7TmNSzBNRn7uJANwnGej.YltTTca9c4DBOhDjLjX0h.',
     'staff',
     '650e8400-e29b-41d4-a716-446655440001',
     NOW(), NOW()
@@ -70,7 +71,7 @@ INSERT INTO users (id, email, phone_number, password_hash, role, station_id, cre
     'c2efbcd1-56ac-4a62-9913-b07b4b1c44c3',
     'staff.hcm@station.com',
     '0910000002',
-    '$2b$10$EpRnTzVlqHNP0.fKb.UvC.avXDsw8h8.5m/KX.B.sBNr.J7k/9n.6',
+    '$2b$10$PpOFCl05MS7TmNSzBNRn7uJANwnGej.YltTTca9c4DBOhDjLjX0h.',
     'staff',
     '650e8400-e29b-41d4-a716-446655440002',
     NOW(), NOW()
@@ -79,7 +80,7 @@ INSERT INTO users (id, email, phone_number, password_hash, role, station_id, cre
     'd8a4c1b5-73ee-4218-8321-f6323f145288',
     'staff.danang@station.com',
     '0910000003',
-    '$2b$10$EpRnTzVlqHNP0.fKb.UvC.avXDsw8h8.5m/KX.B.sBNr.J7k/9n.6',
+    '$2b$10$PpOFCl05MS7TmNSzBNRn7uJANwnGej.YltTTca9c4DBOhDjLjX0h.',
     'staff',
     '650e8400-e29b-41d4-a716-446655440003',
     NOW(), NOW()
@@ -89,7 +90,7 @@ INSERT INTO users (id, email, phone_number, password_hash, role, station_id, cre
     'f0d4c479-02bb-4ee1-a2c4-6a95ffb06664',
     'nguyen.van.a@gmail.com',
     '0988888888',
-    '$2b$10$EpRnTzVlqHNP0.fKb.UvC.avXDsw8h8.5m/KX.B.sBNr.J7k/9n.6',
+    '$2b$10$PpOFCl05MS7TmNSzBNRn7uJANwnGej.YltTTca9c4DBOhDjLjX0h.',
     'renter',
     NULL,
     NOW(), NOW()

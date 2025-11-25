@@ -105,6 +105,8 @@ export const StationController = {
           }
         })
       );
+      console.log(vehiclesWithInfo);
+
 
       res.json(vehiclesWithInfo);
     } catch (e) {
