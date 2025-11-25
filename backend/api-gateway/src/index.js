@@ -13,14 +13,14 @@ const app = express();
 const PORT = Number(process.env.API_GATEWAY_PORT) || 8000;
 
 
-const pick = (v, def) => (typeof v === "string" && v.trim() ? v.trim() : def);
+// const pick = (v, def) => (typeof v === "string" && v.trim() ? v.trim() : def);
 const SERVICES = {
-    AUTH: pick(process.env.AUTH_SERVICE_URL, "http://auth_service:5001"),
-    BOOKING: pick(process.env.BOOKING_SERVICE_URL, "http://booking_service:4000"),
-    PAYMENT: pick(process.env.PAYMENT_SERVICE_URL, "http://payment_service:5000"),
-    VEHICLES: pick(process.env.VEHICLES_SERVICE_URL, "http://vehicles_service:8099"),
-    STATION: pick(process.env.STATION_SERVICE_URL, "http://station_service:6000"),
-    NOTIFICATIONS: pick(process.env.NOTIFICATIONS_SERVICE_URL, "http://notifications_service:9000"),
+    AUTH: String(process.env.AUTH_SERVICE_URL),
+    BOOKING: String(process.env.BOOKING_SERVICE_URL),
+    PAYMENT: String(process.env.PAYMENT_SERVICE_URL),
+    VEHICLES: String(process.env.VEHICLES_SERVICE_URL),
+    STATION: String(process.env.STATION_SERVICE_URL),
+    NOTIFICATIONS: String(process.env.NOTIFICATIONS_SERVICE_URL),
 };
 
 
@@ -28,7 +28,7 @@ app.use(morgan("dev"));
 app.use(cookieParser());
 app.use(
     cors({
-        origin: pick(process.env.WEB_CLIENT_URL, "http://localhost:5173"),
+        origin: String(process.env.WEB_CLIENT_URL),
         credentials: true,
     })
 );
@@ -137,7 +137,7 @@ app.use(
 
 app.use(
     "/api/v1/vehicles",
-    makeProxy(SERVICES.VEHICLES, (path) => `/api/v1/vehicles${path}`)
+    makeProxy("http://vehicles_service:8099", (path) => `/api/v1/vehicles${path}`)
 );
 
 app.use(

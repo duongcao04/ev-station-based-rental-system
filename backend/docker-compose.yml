@@ -156,12 +156,12 @@ services:
       NODE_ENV: ${NODE_ENV:-development}
       API_GATEWAY_PORT: ${API_GATEWAY_PORT:-8000}
       WEB_CLIENT_URL: ${WEB_CLIENT_URL:-http://localhost:5173}
-      AUTH_SERVICE_URL: ${AUTH_SERVICE_URL:-http://auth_service:5001}
-      BOOKING_SERVICE_URL: ${BOOKING_SERVICE_URL:-http://booking_service:4000}
-      PAYMENT_SERVICE_URL: ${PAYMENT_SERVICE_URL:-http://payment_service:5000}
-      VEHICLES_SERVICE_URL: ${VEHICLES_SERVICE_URL:-http://vehicles_service:8099}
-      STATION_SERVICE_URL: ${STATION_SERVICE_URL:-http://station_service:6000}
-      NOTIFICATIONS_SERVICE_URL: ${NOTIFICATIONS_SERVICE_URL:-http://notifications_service:9000}
+      AUTH_SERVICE_URL: http://auth_service:${AUTH_PORT:-5001}
+      BOOKING_SERVICE_URL: http://booking_service:${BOOKING_PORT:-4000}
+      PAYMENT_SERVICE_URL: http://payment_service:${PAY_PORT:-5000}
+      VEHICLES_SERVICE_URL: http://vehicles_service:${VEHICLE_PORT:-8099}
+      STATION_SERVICE_URL: http://station_service:${STATION_PORT:-6000}
+      NOTIFICATIONS_SERVICE_URL: http://notifications_service:${NOTIFICATIONS_PORT:-9000}
     ports:
       - "8000:8000"
     depends_on:
