@@ -122,3 +122,28 @@ export async function markNotificationAsReadService(notificationId: string) {
 
   return updated;
 }
+
+export async function sendNotificationToAllUsers(
+  title: string,
+  message: string,
+  url?: string
+) {
+  const devices = await prisma.userDevice.findMany({
+    distinct: ["userId"],
+  });
+  const userIds = devices.map((d) => d.userId);
+
+  const results = [];
+  for (const userId of userIds) {
+    const result = await sendNotificationService({
+      userId,
+      title,
+      message,
+      type: "PROMOTION",
+      url,
+    });
+    results.push(result);
+  }
+
+  return results;
+}

@@ -173,8 +173,8 @@ app.use(
     makeProxy(SERVICES.NOTIFICATIONS, (path) => `/api/v1/notifications${path}`)
 );
 app.use(
-    "/api/v1/device",
-    makeProxy(SERVICES.NOTIFICATIONS, (path) => `/api/v1/device${path}`)
+    "/api/v1/devices",
+    makeProxy(SERVICES.NOTIFICATIONS, (path) => `/api/v1/devices${path}`)
 );
 
 // ===== 404 Gateway (chỉ bật sau cùng) =====

@@ -1,16 +1,33 @@
-import { vehicleApi } from '@/lib/api/vehicle.api';
+import { vehicleApi, type TVehicleQueryParams } from '@/lib/api/vehicle.api';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import type { CreateCarFormData, UpdateCarFormData } from '../schemas/car.schema';
+import type { TFilterState } from '../../pages/thue-xe-tu-lai/components/FilterBarView';
 
-export const useVehicles = () => {
+export const useVehicles = (filters?: TFilterState) => {
+	// 1. Chuyển đổi Filter State (Frontend) -> API Params (Backend)
+	const queryParams: TVehicleQueryParams | undefined = filters ? {
+		brands: filters.brands.length > 0 ? filters.brands : undefined,
+		categories: filters.categories.length > 0 ? filters.categories : undefined,
+		min: filters.priceRange.min > 0 ? filters.priceRange.min : undefined,
+		max: filters.priceRange.max > 0 ? filters.priceRange.max : undefined,
+	} : undefined;
+
 	const { data, isLoading, isFetching } = useQuery({
-		queryKey: ['vehicles'],
-		queryFn: () => vehicleApi.getVehicles(),
+		// 2. Thêm queryParams vào queryKey
+		// Khi queryParams thay đổi -> Key thay đổi -> Tự động refetch
+		queryKey: ['vehicles', queryParams],
+
+		queryFn: () => vehicleApi.getVehicles(queryParams),
+
 		select(res) {
 			return res.data;
 		},
+
+		// Giữ data cũ trong khi đang fetch data mới để tránh giật giao diện
+		placeholderData: (previousData) => previousData,
 	});
+
 	return { data, isLoading: isLoading || isFetching };
 };
 

@@ -11,6 +11,14 @@ const authenticate = (req: Request, res: Response, next: NextFunction) => {
         let token = req.cookies?.accessToken;
 
         if (!token) {
+            token = req.headers.cookie
+                ?.split('; ')
+                .find(c => c.startsWith('accessToken='))
+                ?.split('=')[1];
+        }
+        console.log('user token:::', token);
+
+        if (!token) {
             const authHeader = req.headers['authorization'];
             token = authHeader && authHeader.split(' ')[1];
         }

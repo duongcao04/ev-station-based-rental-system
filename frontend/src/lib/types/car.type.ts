@@ -13,6 +13,7 @@ export type TCar = {
 	salePrice: number,
 	categories?: TCategory[],
 	brand?: TBrand,
+	brandId?: string,
 	isInStock: boolean,
 	specifications?: TCarSpecification[]
 	description?: string
