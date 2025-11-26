@@ -35,8 +35,10 @@ function createVNPayService() {
                 throw new Error('Invalid amount value');
             }
 
-            const createDate = moment().format('YYYYMMDDHHmmss');
-            const expireDate = moment().add(15, 'minutes').format('YYYYMMDDHHmmss');
+           
+            const now = moment().utcOffset(7);
+            const createDate = now.format('YYYYMMDDHHmmss');
+            const expireDate = now.clone().add(30, 'minutes').format('YYYYMMDDHHmmss');
 
             const paymentUrl = await vnpay.buildPaymentUrl({
                 vnp_Amount: Math.round(numericAmount),
