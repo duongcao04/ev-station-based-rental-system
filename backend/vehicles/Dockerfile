@@ -63,11 +63,11 @@ COPY --from=builder --chown=nodejs:nodejs /app/prisma ./prisma
 COPY --from=builder --chown=nodejs:nodejs /app/dist ./dist
 COPY --from=builder --chown=nodejs:nodejs /app/src ./src
 COPY --from=builder --chown=nodejs:nodejs /app/package*.json ./
-COPY ./src/database ./database
+COPY --from=builder --chown=nodejs:nodejs /app/src/database ./database
 
-# make entrypoint executable
-COPY ./entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
+# Copy entrypoint script and make it executable
+COPY --chown=nodejs:nodejs ./entrypoint.sh ./
+RUN sed -i 's/\r$//' ./entrypoint.sh && chmod +x ./entrypoint.sh
 
 # Switch to non-root user
 USER nodejs
@@ -79,6 +79,8 @@ EXPOSE 8099
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
     CMD node -e "require('http').get('http://localhost:8099/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"
 
-ENTRYPOINT ["/entrypoint.sh"]
+# Use relative path since WORKDIR is /app
+ENTRYPOINT ["sh","./entrypoint.sh"]
+
 # Start application with Prisma migrations
 CMD ["sh", "-c", "npx prisma migrate deploy && node dist/index.js"]

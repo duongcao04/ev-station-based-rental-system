@@ -11,84 +11,12 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Bell, BookOpen, MessageSquare, Users } from 'lucide-react';
 import { Button } from './ui/button';
+import { useNotifications } from '@/lib/queries/useNotifications';
+import { useNavigate } from 'react-router-dom';
+import { type Notification } from '@/lib/types/notification.type';
+import { Skeleton } from './ui/skeleton';
 
-type NotificationType =
-  | 'NEW_MESSAGE'
-  | 'NEW_FOLLOWER'
-  | 'SYSTEM_ALERT'
-  | 'BOOKING_CONFIRMED'
-  | 'BOOKING_REMINDER'
-  | 'INFO';
-
-interface Notification {
-  id: string;
-  title?: string;
-  message: string;
-  isRead: boolean;
-  type: NotificationType;
-  url?: string;
-  createdAt: Date;
-  updatedAt: Date;
-  userId: string;
-}
-
-const FAKE_NOTIFICATIONS: Notification[] = [
-  {
-    id: '1',
-    title: 'New Message',
-    message: 'You have a new message from John Doe',
-    isRead: false,
-    type: 'NEW_MESSAGE',
-    url: '/messages/123',
-    createdAt: new Date(Date.now() - 5 * 60000),
-    updatedAt: new Date(Date.now() - 5 * 60000),
-    userId: 'user-1',
-  },
-  {
-    id: '2',
-    title: 'Booking Confirmed',
-    message: 'Your booking for apartment at 123 Main St is confirmed',
-    isRead: false,
-    type: 'BOOKING_CONFIRMED',
-    url: '/bookings/456',
-    createdAt: new Date(Date.now() - 30 * 60000),
-    updatedAt: new Date(Date.now() - 30 * 60000),
-    userId: 'user-1',
-  },
-  {
-    id: '3',
-    title: 'Booking Reminder',
-    message: 'Your booking viewing is scheduled for tomorrow at 2:00 PM',
-    isRead: true,
-    type: 'BOOKING_REMINDER',
-    url: '/bookings/789',
-    createdAt: new Date(Date.now() - 2 * 60 * 60000),
-    updatedAt: new Date(Date.now() - 2 * 60 * 60000),
-    userId: 'user-1',
-  },
-  {
-    id: '4',
-    title: 'New Follower',
-    message: 'Sarah Johnson followed your profile',
-    isRead: true,
-    type: 'NEW_FOLLOWER',
-    url: '/profile/sarah',
-    createdAt: new Date(Date.now() - 24 * 60 * 60000),
-    updatedAt: new Date(Date.now() - 24 * 60 * 60000),
-    userId: 'user-1',
-  },
-  {
-    id: '5',
-    message: 'System maintenance scheduled for tonight at 10 PM',
-    isRead: true,
-    type: 'SYSTEM_ALERT',
-    createdAt: new Date(Date.now() - 48 * 60 * 60000),
-    updatedAt: new Date(Date.now() - 48 * 60 * 60000),
-    userId: 'user-1',
-  },
-];
-
-function getNotificationIcon(type: NotificationType) {
+function getNotificationIcon(type: Notification['type']) {
   switch (type) {
     case 'NEW_MESSAGE':
       return <MessageSquare className='h-4 w-4' />;
@@ -105,7 +33,23 @@ function getNotificationIcon(type: NotificationType) {
 }
 
 export function NotificationDropdown() {
-  const unreadCount = FAKE_NOTIFICATIONS.filter((n) => !n.isRead).length;
+  const { notifications, isLoading, markAsRead } = useNotifications();
+  console.log(notifications);
+  
+  const navigate = useNavigate();
+
+  const unreadCount = notifications?.length
+    ? notifications?.filter((n) => !n.isRead).length
+    : 0;
+
+  const handleNotificationClick = (notification: Notification) => {
+    if (!notification.isRead) {
+      markAsRead(notification.id);
+    }
+    if (notification.url) {
+      navigate(notification.url);
+    }
+  };
 
   return (
     <DropdownMenu>
@@ -122,10 +66,17 @@ export function NotificationDropdown() {
           Notifications ({unreadCount})
         </DropdownMenuLabel>
         <DropdownMenuGroup className='max-h-96 overflow-x-hidden overflow-y-auto'>
-          {FAKE_NOTIFICATIONS.length > 0 ? (
-            FAKE_NOTIFICATIONS.map((notification) => (
+          {isLoading ? (
+            <div className='p-2 space-y-2'>
+              <Skeleton className='h-16 w-full' />
+              <Skeleton className='h-16 w-full' />
+              <Skeleton className='h-16 w-full' />
+            </div>
+          ) : notifications && notifications.length > 0 ? (
+            notifications.map((notification) => (
               <div key={notification.id}>
                 <DropdownMenuItem
+                  onClick={() => handleNotificationClick(notification)}
                   className={`flex flex-col gap-1 cursor-pointer px-3 py-2 ${
                     !notification.isRead ? 'bg-accent/50' : ''
                   }`}
@@ -166,7 +117,7 @@ export function NotificationDropdown() {
   );
 }
 
-function formatTime(date: Date): string {
+function formatTime(date: string): string {
   const now = new Date();
   const diffMs = now.getTime() - new Date(date).getTime();
   const diffMins = Math.floor(diffMs / 60000);

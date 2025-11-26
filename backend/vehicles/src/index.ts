@@ -20,5 +20,4 @@ const port = (process.env.VEHICLE_PORT || 8099);
 app.listen(port, () => {
   console.log(`Vehicle service port:::${port}`);
   console.log(process.env.VEHICLE_PORT);
-
 });

@@ -6,13 +6,13 @@ import path from 'path';
 dotenv.config({ path: path.resolve(process.cwd(), "../.env") });
 
 
-const API_GATEWAY_URL = process.env.API_GATEWAY_URL || 'http://localhost:8000';
+const VEHICLE_SERVICE_URL = process.env.VEHICLES_SERVICE_URL || 'http://vehicles_service:8099';
 
 
 export const getVehicleInfo = async (vehicleId) => {
     try {
         // Gọi qua API Gateway: /api/v1/vehicles/:id
-        const response = await axios.get(`${API_GATEWAY_URL}/api/v1/vehicles/${vehicleId}`, {
+        const response = await axios.get(`${VEHICLE_SERVICE_URL}/api/v1/vehicles/${vehicleId}`, {
             timeout: 10000, 
         });
         return response.data;

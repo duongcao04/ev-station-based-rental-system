@@ -8,6 +8,7 @@ import {
   ChevronDown,
   User2,
   BrickWallShieldIcon,
+  ShieldCheck,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -132,9 +133,17 @@ export function DashboardSidebar() {
               </Collapsible>
               <SidebarMenuItem key='thanh-vien'>
                 <SidebarMenuButton asChild>
-                  <Link to='/dashboard/thanh-vien'>
+                  <Link to='/dashboard/members'>
                     <User2 />
                     <span>Thành viên</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem key='kyc-verification'>
+                <SidebarMenuButton asChild>
+                  <Link to='/dashboard/kyc-verification'>
+                    <ShieldCheck />
+                    <span>Quản lý KYC</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>

@@ -1,281 +1,337 @@
 import { Button } from '@/components/ui/button';
 import { Image } from 'antd';
-import { ChevronLeft, ChevronRight, Gauge, Users, Zap } from 'lucide-react';
+import {
+  ChevronLeft,
+  ChevronRight,
+  Info,
+  CheckCircle2,
+  ShieldCheck,
+  Trophy,
+} from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Skeleton } from '../../components/ui/skeleton';
 import { useVehicleDetail } from '../../lib/queries/useVehicles';
 
+// Định nghĩa Type dựa trên Prisma Include
+type TCarDetail = {
+  id: string;
+  displayName: string;
+  sku: string;
+  description: string | null;
+  regularPrice: string | number;
+  salePrice: string | number | null;
+  depositPrice: string | number | null;
+  isInStock: boolean;
+  quantity: number | null;
+  thumbnailUrl: string;
+  brand: { displayName: string };
+  categories: { id: string; displayName: string }[];
+  featuredImages: { id: string; url: string }[];
+  // Quan trọng: Cấu trúc nested của Specification
+  specifications: {
+    id: string;
+    value: string;
+    specificationType: {
+      id: string;
+      label: string;
+      icon: string | null;
+    };
+  }[];
+};
+
 export default function ChiTietXePage() {
   const { slug } = useParams();
-  const { data, isLoading } = useVehicleDetail(slug);
+  // Ép kiểu data trả về
+  const { data, isLoading } = useVehicleDetail(slug) as {
+    data: TCarDetail;
+    isLoading: boolean;
+  };
 
   const navigate = useNavigate();
-
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [quantity, setQuantity] = useState(1);
+
+  const images =
+    data?.featuredImages.concat({
+      id: 'thumbnailUrl',
+      url: data?.thumbnailUrl,
+    }) || [];
+  const hasImages = images.length > 0;
 
   const nextImage = () => {
-    setCurrentImageIndex((prev) =>
-      prev === data?.featuredImages.length - 1 ? 0 : prev + 1
-    );
+    if (!hasImages) return;
+    setCurrentImageIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1));
   };
 
   const prevImage = () => {
-    setCurrentImageIndex((prev) =>
-      prev === 0 ? data?.featuredImages.length - 1 : prev - 1
-    );
+    if (!hasImages) return;
+    setCurrentImageIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1));
   };
 
-  const discount = (
-    ((Number.parseFloat(data?.regularPrice) -
-      Number.parseFloat(data?.salePrice || '0')) /
-      Number.parseFloat(data?.regularPrice)) *
-    100
-  ).toFixed(0);
+  // Tính toán giảm giá an toàn
+  const regularPrice = Number(data?.regularPrice || 0);
+  const salePrice = Number(data?.salePrice || 0);
+  const displayPrice = salePrice > 0 ? salePrice : regularPrice;
+
+  const discountPercentage =
+    regularPrice > 0 && salePrice > 0
+      ? (((regularPrice - salePrice) / regularPrice) * 100).toFixed(0)
+      : 0;
 
   const datXeUrl = `/dat-xe/${data?.id}`;
 
   return (
-    <div className='min-h-screen bg-background'>
+    <div className='min-h-screen bg-background pb-20'>
       <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8'>
-        <div className='grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12'>
-          {/* Image Gallery */}
+        {/* Breadcrumb / Back button could go here */}
+
+        <div className='grid grid-cols-1 lg:grid-cols-2 gap-12 mb-12'>
+          {/* --- LEFT COLUMN: IMAGES --- */}
           <div className='space-y-4'>
-            <div className='relative bg-card rounded-lg overflow-hidden aspect-video'>
-              <Image
-                src={
-                  data?.featuredImages[currentImageIndex].url ||
-                  '/placeholder.svg'
-                }
-                alt={`${data?.displayName} view ${currentImageIndex + 1}`}
-                className='object-cover'
-              />
-
-              {/* Navigation Buttons */}
-              <button
-                onClick={prevImage}
-                className='absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition'
-                aria-label='Previous image'
-              >
-                <ChevronLeft className='w-6 h-6' />
-              </button>
-              <button
-                onClick={nextImage}
-                className='absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition'
-                aria-label='Next image'
-              >
-                <ChevronRight className='w-6 h-6' />
-              </button>
-
-              {/* Image Counter */}
-              <div className='absolute bottom-4 right-4 bg-black/50 text-white px-3 py-1 rounded text-sm'>
-                {currentImageIndex + 1} / {data?.featuredImages.length}
-              </div>
-            </div>
-
-            {/* Thumbnail Gallery */}
-            <div className='grid grid-cols-4 gap-2'>
-              {data?.featuredImages.map((image: any, index: number) => (
-                <button
-                  key={image.id}
-                  onClick={() => setCurrentImageIndex(index)}
-                  className={`relative aspect-video rounded overflow-hidden border-2 transition ${
-                    currentImageIndex === index
-                      ? 'border-primary'
-                      : 'border-border hover:border-muted-foreground'
-                  }`}
-                >
+            {/* Main Image View */}
+            <div className='relative bg-gray-100 rounded-xl overflow-hidden aspect-[4/3] border border-border'>
+              {isLoading ? (
+                <Skeleton className='w-full h-full' />
+              ) : (
+                <>
                   <Image
-                    src={image.url || '/placeholder.svg'}
-                    alt={`Thumbnail ${index + 1}`}
-                    className='object-cover'
-                    preview={false}
+                    // Sử dụng mảng images đã gộp
+                    src={
+                      hasImages
+                        ? images[currentImageIndex].url
+                        : '/placeholder.svg'
+                    }
+                    alt={`${data?.displayName} view`}
+                    className='object-cover w-full h-full'
+                    wrapperClassName='w-full h-full'
                   />
-                </button>
-              ))}
+
+                  {hasImages && images.length > 1 && (
+                    <>
+                      <button
+                        onClick={prevImage}
+                        className='absolute left-4 top-1/2 -translate-y-1/2 bg-black/40 hover:bg-black/60 text-white p-2 rounded-full transition backdrop-blur-sm z-10'
+                      >
+                        <ChevronLeft className='w-6 h-6' />
+                      </button>
+                      <button
+                        onClick={nextImage}
+                        className='absolute right-4 top-1/2 -translate-y-1/2 bg-black/40 hover:bg-black/60 text-white p-2 rounded-full transition backdrop-blur-sm z-10'
+                      >
+                        <ChevronRight className='w-6 h-6' />
+                      </button>
+                      <div className='absolute bottom-4 right-4 bg-black/60 text-white px-3 py-1 rounded-full text-xs font-medium backdrop-blur-md z-10'>
+                        {currentImageIndex + 1} / {images.length}
+                      </div>
+                    </>
+                  )}
+                </>
+              )}
             </div>
+
+            {/* Thumbnail Strip */}
+            {hasImages && images.length > 1 && (
+              <div className='flex gap-3 overflow-x-auto pb-2 custom-scrollbar'>
+                {images.map((image, index) => (
+                  <button
+                    key={image.id} // Key id là 'main-thumbnail' hoặc uuid
+                    onClick={() => setCurrentImageIndex(index)}
+                    className={`relative w-24 aspect-video flex-shrink-0 rounded-lg overflow-hidden border-2 transition-all ${
+                      currentImageIndex === index
+                        ? 'border-primary ring-2 ring-primary/20'
+                        : 'border-transparent opacity-70 hover:opacity-100'
+                    }`}
+                  >
+                    <Image
+                      src={image.url}
+                      alt='thumbnail'
+                      rootClassName='object-cover w-full h-full'
+                      className='object-cover w-full h-full'
+                      preview={false}
+                    />
+                    {/* Đánh dấu ảnh nào là Thumbnail chính (Optional) */}
+                    {image.id === 'main-thumbnail' && (
+                      <div className='absolute top-0 left-0 bg-primary/80 text-[8px] text-white px-1'>
+                        MAIN
+                      </div>
+                    )}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
-          {/* Car Details */}
-          <div className='space-y-6'>
-            {/* Brand */}
-            <div className='flex items-center gap-2'>
-              {isLoading ? (
-                <Skeleton className='mt-2 w-20 h-6' />
-              ) : (
-                <p className='text-sm font-semibold text-primary uppercase tracking-wider'>
-                  {data?.brand.displayName}
-                </p>
-              )}
-            </div>
-
-            {/* Title */}
+          {/* --- RIGHT COLUMN: INFO --- */}
+          <div className='space-y-8'>
+            {/* Header Info */}
             <div>
               {isLoading ? (
-                <Skeleton className='w-[400px] h-16' />
+                <div className='space-y-2'>
+                  <Skeleton className='w-20 h-4' />
+                  <Skeleton className='w-3/4 h-10' />
+                </div>
               ) : (
-                <h1 className='text-4xl lg:text-5xl font-bold text-balance mb-2'>
-                  {data?.displayName}
-                </h1>
-              )}
-
-              {isLoading ? (
-                <Skeleton className='mt-2 w-[100px] h-6' />
-              ) : (
-                <p className='text-muted-foreground'>{data?.sku}</p>
+                <>
+                  <div className='flex items-center gap-3 mb-2'>
+                    <span className='text-sm font-bold text-primary uppercase tracking-wider bg-primary/10 px-2 py-1 rounded'>
+                      {data?.brand?.displayName}
+                    </span>
+                    {data?.categories?.map((cat) => (
+                      <span
+                        key={cat.id}
+                        className='text-xs font-medium text-muted-foreground bg-secondary px-2 py-1 rounded'
+                      >
+                        {cat.displayName}
+                      </span>
+                    ))}
+                  </div>
+                  <h1 className='text-3xl lg:text-4xl font-extrabold tracking-tight text-gray-900'>
+                    {data?.displayName}
+                  </h1>
+                  <p className='text-sm text-muted-foreground mt-1 font-mono'>
+                    SKU: {data?.sku}
+                  </p>
+                </>
               )}
             </div>
 
-            {/* Description */}
-            {isLoading ? (
-              <div className='space-y-0.5'>
-                <Skeleton className='mt-2 w-[610px] h-5' />
-                <Skeleton className='mt-2 w-[610px] h-5' />
+            {/* Pricing Section */}
+            <div className='bg-card border border-border rounded-xl p-6 shadow-sm space-y-4'>
+              {/* Giữ nguyên logic Pricing cũ */}
+              {/* ... */}
+              <div className='text-4xl font-bold text-primary'>
+                {(displayPrice / 1000).toLocaleString('vi-VN')}k
+                <span className='text-lg text-muted-foreground font-normal ml-1'>
+                  / ngày
+                </span>
               </div>
-            ) : (
-              <p className='text-foreground/90 leading-relaxed'>
-                {data?.description}
-              </p>
-            )}
-
-            {/* Pricing */}
-            <div className='bg-card border border-border rounded-lg p-6 space-y-3'>
-              {isLoading ? (
-                <Skeleton className='mt-2 w-[270px] h-14' />
-              ) : (
-                <div className='flex items-baseline gap-3'>
-                  <div className='text-3xl font-bold text-primary'>
-                    $
-                    {(
-                      Number.parseFloat(data?.salePrice || data?.regularPrice) /
-                      1000
-                    ).toFixed(0)}
-                    k
-                  </div>
-                  <div className='text-lg text-muted-foreground line-through'>
-                    ${(Number.parseFloat(data?.regularPrice) / 1000).toFixed(0)}
-                    k
-                  </div>
-                  {data?.salePrice && (
-                    <div className='bg-primary/20 text-primary px-3 py-1 rounded text-sm font-semibold'>
-                      Save {discount}%
-                    </div>
-                  )}
-                </div>
-              )}
-
-              <p className='text-sm text-muted-foreground'>
-                Deposit: ${data?.depositPrice}
-              </p>
-              <p
-                className={`text-sm font-medium ${
-                  data?.isInStock ? 'text-green-500' : 'text-destructive'
+              {/* ... */}
+              <div
+                className={`flex items-center gap-2 text-sm font-medium ${
+                  data?.isInStock ? 'text-green-600' : 'text-red-600'
                 }`}
               >
+                {data?.isInStock ? (
+                  <CheckCircle2 size={16} />
+                ) : (
+                  <Info size={16} />
+                )}
                 {data?.isInStock
-                  ? `${data?.quantity} in stock`
-                  : 'Out of stock'}
-              </p>
+                  ? `Còn ${data?.quantity} xe sẵn sàng`
+                  : 'Tạm hết xe'}
+              </div>
             </div>
 
             {/* Quick Specs */}
-            <div className='grid grid-cols-3 gap-3'>
-              <div className='bg-card border border-border rounded-lg p-4 text-center'>
-                <Zap className='w-6 h-6 mx-auto mb-2 text-primary' />
-                <div className='text-sm font-semibold'>503 HP</div>
-                <div className='text-xs text-muted-foreground'>Power</div>
-              </div>
-              <div className='bg-card border border-border rounded-lg p-4 text-center'>
-                <Gauge className='w-6 h-6 mx-auto mb-2 text-primary' />
-                <div className='text-sm font-semibold'>3.8s</div>
-                <div className='text-xs text-muted-foreground'>0-100 km/h</div>
-              </div>
-              <div className='bg-card border border-border rounded-lg p-4 text-center'>
-                <Users className='w-6 h-6 mx-auto mb-2 text-primary' />
-                <div className='text-sm font-semibold'>5</div>
-                <div className='text-xs text-muted-foreground'>Seats</div>
-              </div>
-            </div>
+            {!isLoading &&
+              data?.specifications &&
+              data.specifications.length > 0 && (
+                <div className='grid grid-cols-3 gap-3'>
+                  {data.specifications.slice(0, 3).map((spec) => (
+                    <div
+                      key={spec.id}
+                      className='bg-secondary/30 border border-border rounded-lg p-3 text-center'
+                    >
+                      <div className='text-xs text-muted-foreground uppercase mb-1 truncate'>
+                        {spec.specificationType.label}
+                      </div>
+                      <div className='text-sm font-bold text-foreground truncate'>
+                        {spec.value}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
 
-            {/* Purchase Section */}
-            <div className='space-y-3'>
+            {/* Buttons */}
+            <div className='flex gap-3'>
               <Button
-                disabled={!data?.isInStock}
-                className='w-full bg-primary hover:bg-primary/90 text-primary-foreground py-6 text-lg font-semibold rounded-lg transition'
+                disabled={!data?.isInStock || isLoading}
+                className='flex-1 bg-primary hover:bg-primary/90 text-white h-12 text-lg font-semibold rounded-lg shadow-md'
                 onClick={() => navigate(datXeUrl)}
               >
-                {data?.isInStock ? 'Thuê xe ngay' : 'Xe không khả dụng'}
+                {isLoading
+                  ? 'Loading...'
+                  : data?.isInStock
+                  ? 'ĐẶT XE NGAY'
+                  : 'LIÊN HỆ KHI CÓ XE'}
               </Button>
-
-              <Button
-                variant='outline'
-                className='w-full border-border hover:bg-muted py-6 text-lg font-semibold bg-transparent'
-              >
-                Liên hệ
+              <Button variant='outline' className='h-12 px-6'>
+                Tư vấn
               </Button>
             </div>
 
-            {/* Categories */}
-            <div className='flex gap-2 flex-wrap'>
-              {data?.categories.map((category: any) => (
-                <span
-                  key={category.id}
-                  className='px-3 py-1 bg-muted/50 text-muted-foreground text-xs font-semibold rounded-full'
-                >
-                  {category.displayName}
-                </span>
-              ))}
+            <div className='prose prose-sm text-muted-foreground'>
+              <p>{data?.description}</p>
             </div>
           </div>
         </div>
 
-        {/* Full Specifications */}
-        <div className='bg-card border border-border rounded-lg p-8 mb-12'>
-          <h2 className='text-2xl font-bold mb-6'>Specifications</h2>
-          <div className='grid grid-cols-2 md:grid-cols-3 gap-6'>
-            {data?.specifications.map((spec: any) => (
-              <div key={spec.id} className='border-b border-border pb-4'>
-                <div className='text-sm text-muted-foreground mb-1'>
-                  {spec.label}
-                </div>
-                <div className='text-lg font-semibold text-foreground'>
-                  {spec.value}
-                </div>
+        {/* --- FULL SPECIFICATIONS TABLE --- */}
+        {data?.specifications && data.specifications.length > 0 && (
+          <div className='mb-12'>
+            <div className='flex items-center gap-2 mb-6'>
+              <Trophy className='text-primary' />
+              <h2 className='text-2xl font-bold text-gray-900'>
+                Thông số kỹ thuật chi tiết
+              </h2>
+            </div>
+            <div className='bg-white border border-border rounded-xl overflow-hidden shadow-sm'>
+              <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 divide-y md:divide-y-0'>
+                {data.specifications.map((spec, index) => (
+                  <div
+                    key={spec.id}
+                    className={`p-4 flex flex-col justify-center ${
+                      index % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'
+                    } md:border-b md:border-r border-gray-100`}
+                  >
+                    <span className='text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1'>
+                      {spec.specificationType.label}
+                    </span>
+                    <span className='text-base font-medium text-gray-900'>
+                      {spec.value}
+                    </span>
+                  </div>
+                ))}
               </div>
-            ))}
+            </div>
           </div>
-        </div>
+        )}
 
-        {/* Additional Info */}
+        {/* --- WHY CHOOSE US (Static Content for Marketing) --- */}
         <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
-          <div className='bg-card border border-border rounded-lg p-6'>
-            <h3 className='text-lg font-bold mb-3'>Available Stations</h3>
-            <ul className='space-y-2 text-sm text-muted-foreground'>
-              {data?.stationIds.map((station: any) => (
-                <li key={station} className='flex items-center gap-2'>
-                  <span className='w-2 h-2 bg-primary rounded-full'></span>
-                  {station === 'station-001' && 'Downtown Showroom'}
-                  {station === 'station-002' && 'Airport Branch'}
-                </li>
-              ))}
+          <div className='bg-blue-50/50 border border-blue-100 rounded-xl p-6'>
+            <h3 className='flex items-center gap-2 text-lg font-bold text-blue-900 mb-3'>
+              <ShieldCheck className='text-blue-600' />
+              Cam kết chất lượng
+            </h3>
+            <ul className='space-y-2 text-sm text-blue-800/80'>
+              <li className='flex items-center gap-2'>
+                • Xe được bảo dưỡng định kỳ chính hãng.
+              </li>
+              <li className='flex items-center gap-2'>
+                • Vệ sinh sạch sẽ, khử khuẩn trước khi giao.
+              </li>
+              <li className='flex items-center gap-2'>
+                • Hỗ trợ sự cố kỹ thuật 24/7.
+              </li>
             </ul>
           </div>
 
-          <div className='bg-card border border-border rounded-lg p-6'>
-            <h3 className='text-lg font-bold mb-3'>Why Choose This Car?</h3>
-            <ul className='space-y-2 text-sm text-muted-foreground'>
+          <div className='bg-green-50/50 border border-green-100 rounded-xl p-6'>
+            <h3 className='flex items-center gap-2 text-lg font-bold text-green-900 mb-3'>
+              <CheckCircle2 className='text-green-600' />
+              Thủ tục đơn giản
+            </h3>
+            <ul className='space-y-2 text-sm text-green-800/80'>
               <li className='flex items-center gap-2'>
-                <span className='w-2 h-2 bg-primary rounded-full'></span>
-                Premium German Engineering
+                • Chỉ cần CCCD gắn chip & GPLX.
               </li>
               <li className='flex items-center gap-2'>
-                <span className='w-2 h-2 bg-primary rounded-full'></span>
-                Advanced Safety Features
+                • Không giữ giấy tờ gốc (tuỳ dòng xe).
               </li>
               <li className='flex items-center gap-2'>
-                <span className='w-2 h-2 bg-primary rounded-full'></span>
-                Exceptional Performance
+                • Giao xe tận nơi trong nội thành.
               </li>
             </ul>
           </div>

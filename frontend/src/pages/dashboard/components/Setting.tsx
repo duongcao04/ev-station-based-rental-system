@@ -23,6 +23,7 @@ import { useNavigate } from "react-router-dom";
 import { adminApi } from "@/lib/api/admin.api";
 import { authApi } from "@/lib/api/auth.api";
 import { toast } from "sonner";
+import { CronSettingsManager } from "./CronSettingsManager";
 
 export function Settings() {
   const [activeDialog, setActiveDialog] = useState<
@@ -100,6 +101,9 @@ export function Settings() {
 
           {/* Settings Cards */}
           <div className="space-y-4">
+            {/* Cron Job Settings Card */}
+            <CronSettingsManager />
+            
             {/* Change Password Card */}
             <Card className="border border-border hover:border-primary/50 transition-colors">
               <CardHeader className="pb-3">
@@ -225,3 +229,4 @@ export function Settings() {
     </div>
   );
 }
+

@@ -76,6 +76,9 @@ export default function TramXePage() {
         retry: false,
     });
 
+    console.log(stationVehicles);
+    
+
 
     // Handle station click
     const handleStationClick = (station: Station) => {

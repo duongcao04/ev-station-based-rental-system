@@ -31,6 +31,8 @@ import QuanLyThuongHieuPage from './pages/dashboard/QuanLyThuongHieuPage';
 import ChiTietThuongHieuPage from './pages/dashboard/ChiTietThuongHieuPage';
 import QuanLyDanhMucPage from './pages/dashboard/QuanLyDanhMucPage';
 import ChiTietDanhMucPage from './pages/dashboard/ChiTietDanhMucPage';
+import { DeviceRegistrationHandler } from './components/DeviceRegistrationHandler';
+import { RealtimeNotificationHandler } from './components/RealtimeNotificationHandler';
 
 const LoginPage = lazy(() => import('@/pages/auth/LoginPage'));
 const RegisterPage = lazy(() => import('@/pages/auth/RegisterPage'));
@@ -347,7 +349,7 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: '/dashboard/menbers',
+        path: '/dashboard/members',
         element: (
           <ProtectedRoute allowedRoles={['admin']}>
             <DashboardLayout>
@@ -382,11 +384,14 @@ export const router = createBrowserRouter([
   },
 ]);
 
+
 export default function AppRouter() {
   return (
     <>
       <RouterProvider router={router} />
       <Toaster position='top-right' richColors />
+      <DeviceRegistrationHandler />
+      <RealtimeNotificationHandler />
     </>
   );
 }

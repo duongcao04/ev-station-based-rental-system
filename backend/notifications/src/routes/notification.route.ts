@@ -9,18 +9,18 @@ import { authMiddleware } from "../middleware/auth.middleware"; // if you want a
 const router = Router();
 
 // Send notification + push
-router.post("/notifications/send", authMiddleware.authenticate, sendNotificationController);
+router.post("/send", authMiddleware.authenticate, sendNotificationController);
 
 // List notifications by userId
 router.get(
-	"/notifications/:userId",
+	"/:userId",
 	authMiddleware.authenticate,
 	getNotificationsByUserIdController,
 );
 
 // Mark a notification as read
 router.patch(
-	"/notifications/:notificationId/read", authMiddleware.authenticate,
+	"/:notificationId/read", authMiddleware.authenticate,
 	markNotificationAsReadController,
 );
 

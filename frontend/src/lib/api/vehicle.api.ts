@@ -1,9 +1,19 @@
 import { axiosClient } from '@/lib/axios';
 import type { TCar } from '../types/car.type';
 
+export type TVehicleQueryParams = {
+	brands?: string[];
+	categories?: string[];
+	min?: number;
+	max?: number;
+};
+
 export const vehicleApi = {
 	// Vehicles
-	getVehicles: () => axiosClient.get<TCar[]>('/v1/vehicles'),
+	getVehicles: (params?: TVehicleQueryParams) =>
+		axiosClient.get<TCar[]>('/v1/vehicles', {
+			params,
+		}),
 	getVehicle: (id: string | number) => axiosClient.get(`/v1/vehicles/${id}`),
 	getVehicleBySlug: (slug: string) => axiosClient.get(`/v1/vehicles/slug/${slug}`),
 	createVehicle: (data: any) => axiosClient.post('/v1/vehicles', data),

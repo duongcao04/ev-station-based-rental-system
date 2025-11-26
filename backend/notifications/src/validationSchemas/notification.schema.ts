@@ -18,7 +18,7 @@ export const sendNotificationSchema = yup.object({
 			"Invalid notification type",
 		)
 		.default("INFO"),
-	url: yup.string().url("url must be a valid URL").optional().nullable(),
+	url: yup.string().optional().nullable(),
 	// Optional extra payload for FCM (e.g., { bookingId: "123" })
 	data: yup
 		.object()
