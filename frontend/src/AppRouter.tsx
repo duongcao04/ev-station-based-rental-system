@@ -1,5 +1,5 @@
 import MainLayout from '@/components/layouts/MainLayout';
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, useEffect } from 'react';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import { Toaster } from 'sonner';
 import ProtectedRoute from './components/auth/ProtectedRoute';
@@ -33,6 +33,11 @@ import QuanLyDanhMucPage from './pages/dashboard/QuanLyDanhMucPage';
 import ChiTietDanhMucPage from './pages/dashboard/ChiTietDanhMucPage';
 import { DeviceRegistrationHandler } from './components/DeviceRegistrationHandler';
 import { RealtimeNotificationHandler } from './components/RealtimeNotificationHandler';
+<<<<<<< Updated upstream
+=======
+import { getToken } from 'firebase/messaging';
+import { messaging } from './lib/firebase';
+>>>>>>> Stashed changes
 
 const LoginPage = lazy(() => import('@/pages/auth/LoginPage'));
 const RegisterPage = lazy(() => import('@/pages/auth/RegisterPage'));
@@ -386,6 +391,10 @@ export const router = createBrowserRouter([
 
 
 export default function AppRouter() {
+  useEffect(() => {
+    getToken(messaging);
+  }, []);
+
   return (
     <>
       <RouterProvider router={router} />

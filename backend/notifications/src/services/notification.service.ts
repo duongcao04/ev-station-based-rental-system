@@ -4,7 +4,6 @@ import { SendNotificationDto } from "../validationSchemas/notification.schema";
 import * as admin from "firebase-admin";
 
 const prisma = new PrismaClient();
-
 export async function sendNotificationService(input: SendNotificationDto) {
   const { userId, title, message, type = "INFO", url, data } = input;
 
@@ -21,10 +20,13 @@ export async function sendNotificationService(input: SendNotificationDto) {
 
   // 2. Get user devices
   const devices = await prisma.userDevice.findMany({
-    where: { userId },
+    where: { 
+      userId,
+      fcmToken: { not: undefined } // Chỉ lấy devices có token
+    },
   });
 
-  const tokens = devices.map((d) => d.fcmToken).filter(Boolean);
+  const tokens = devices.map((d) => d.fcmToken).filter(Boolean) as string[];
 
   if (!tokens.length) {
     return {
@@ -37,39 +39,113 @@ export async function sendNotificationService(input: SendNotificationDto) {
     };
   }
 
-  // 3. Build FCM message
+  // 3. Build data payload (tất cả values phải là string)
+  const dataPayload: Record<string, string> = {
+    notificationId: notification.id.toString(),
+    type: type,
+    timestamp: new Date().toISOString(),
+    ...(url && { url }), // Thêm URL để handle click
+    ...(data && Object.entries(data).reduce((acc, [key, value]) => {
+      acc[key] = String(value); // Convert tất cả về string
+      return acc;
+    }, {} as Record<string, string>))
+  };
+
+  // 4. Build FCM message
   const messagePayload: admin.messaging.MulticastMessage = {
     tokens,
     notification: {
-      title: title ?? "Notification",
+      title: title || "Thông báo", // Fallback nếu title null
       body: message,
     },
-    data: (data ?? {}) as Record<string, string>,
+    data: dataPayload,
+    // Android options
+    android: {
+      priority: "high",
+      notification: {
+        icon: "notification_icon", // Icon trong res/drawable
+        color: "#4F46E5", // Màu notification
+        sound: "default",
+        tag: `notification_${notification.id}`, // Tránh duplicate
+        clickAction: "FLUTTER_NOTIFICATION_CLICK",
+      },
+    },
+    // iOS options
+    apns: {
+      payload: {
+        aps: {
+          sound: "default",
+          badge: 1,
+        },
+      },
+    },
+    // Web options
+    webpush: {
+      notification: {
+        icon: "/favicon.ico", // Icon cho web
+        badge: "/favicon.ico",
+        tag: `notification_${notification.id}`,
+        requireInteraction: false,
+        ...(url && { 
+          data: { url } // URL để mở khi click
+        })
+      },
+      fcmOptions: {
+        link: url || "/", // URL fallback
+      },
+    },
   };
 
-  // 4. Send via FCM
-  const response = await messaging.sendEachForMulticast(messagePayload);
+  // 5. Send via FCM với error handling
+  let response: admin.messaging.BatchResponse;
+  try {
+    response = await messaging.sendEachForMulticast(messagePayload);
+  } catch (error) {
+    console.error("FCM send error:", error);
+    return {
+      notification,
+      fcm: {
+        successCount: 0,
+        failureCount: tokens.length,
+        error: error instanceof Error ? error.message : "Unknown error",
+      },
+    };
+  }
 
-  // 5. Cleanup invalid tokens
+  // 6. Cleanup invalid tokens
   const tokensToDelete: string[] = [];
+  const failedTokenDetails: Array<{ token: string; error: string }> = [];
+
   response.responses.forEach((res, idx) => {
-    if (!res.success) {
-      const code = res.error?.code;
+    if (!res.success && res.error) {
+      const code = res.error.code;
+      const token = tokens[idx];
+
+      // Log chi tiết lỗi
+      failedTokenDetails.push({
+        token,
+        error: `${code}: ${res.error.message}`,
+      });
+
+      // Xóa token không hợp lệ
       if (
         code === "messaging/invalid-registration-token" ||
-        code === "messaging/registration-token-not-registered"
+        code === "messaging/registration-token-not-registered" ||
+        code === "messaging/invalid-argument"
       ) {
-        tokensToDelete.push(tokens[idx]);
+        tokensToDelete.push(token);
       }
     }
   });
 
-  if (tokensToDelete.length) {
+  // 7. Delete invalid tokens from DB
+  if (tokensToDelete.length > 0) {
     await prisma.userDevice.deleteMany({
       where: {
         fcmToken: { in: tokensToDelete },
       },
     });
+    console.log(`Deleted ${tokensToDelete.length} invalid FCM tokens`);
   }
 
   return {
@@ -77,7 +153,10 @@ export async function sendNotificationService(input: SendNotificationDto) {
     fcm: {
       successCount: response.successCount,
       failureCount: response.failureCount,
-      removedTokens: tokensToDelete,
+      removedTokens: tokensToDelete.length,
+      ...(failedTokenDetails.length > 0 && { 
+        failureDetails: failedTokenDetails 
+      }),
     },
   };
 }

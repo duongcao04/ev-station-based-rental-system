@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 // Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app";
 import { getMessaging } from "firebase/messaging";
@@ -19,3 +20,22 @@ const app = initializeApp(firebaseConfig);
 const messaging = getMessaging(app);
 
 export { app, messaging };
+=======
+import { initializeApp } from "firebase/app";
+import { getMessaging, getToken, onMessage } from "firebase/messaging";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAqu7tmSBlvb2G88U2f9LhBkVFZZL0LSOQ",
+  authDomain: "ev-rental-a17ae.firebaseapp.com",
+  projectId: "ev-rental-a17ae",
+  storageBucket: "ev-rental-a17ae.firebasestorage.app",
+  messagingSenderId: "562689774640",
+  appId: "1:562689774640:web:a6fbc7b11f9ab7950249f5",
+  measurementId: "G-9MD7ZBWE15"
+};
+
+const app = initializeApp(firebaseConfig);
+const messaging = getMessaging(app);
+
+export { messaging, getToken, onMessage };
+>>>>>>> Stashed changes
