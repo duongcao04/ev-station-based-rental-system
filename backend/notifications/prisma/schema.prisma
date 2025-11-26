@@ -20,6 +20,7 @@ enum NotificationType {
   SYSTEM_ALERT
   BOOKING_CONFIRMED
   BOOKING_REMINDER
+  PROMOTION // For promotional content
   INFO
 }
 
@@ -54,4 +55,13 @@ model UserDevice {
   lastActiveAt DateTime @default(now())
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+}
+
+model CronJobSetting {
+  id        String   @id @default(uuid())
+  jobName   String   @unique // e.g., "PROMOTIONAL_NOTIFICATION"
+  cronTime  String   // The cron expression, e.g., "0 8 * * *"
+  isEnabled Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

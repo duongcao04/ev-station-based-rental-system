@@ -126,6 +126,7 @@ export async function markNotificationAsReadService(notificationId: string) {
 export async function sendNotificationToAllUsers(
   title: string,
   message: string,
+  type: NotificationType = "PROMOTION",
   url?: string
 ) {
   const devices = await prisma.userDevice.findMany({
@@ -139,7 +140,7 @@ export async function sendNotificationToAllUsers(
       userId,
       title,
       message,
-      type: "PROMOTION",
+      type: type,
       url,
     });
     results.push(result);

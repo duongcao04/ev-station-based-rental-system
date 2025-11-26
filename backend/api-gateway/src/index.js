@@ -176,6 +176,10 @@ app.use(
     "/api/v1/devices",
     makeProxy(SERVICES.NOTIFICATIONS, (path) => `/api/v1/devices${path}`)
 );
+app.use(
+    "/api/v1/cron",
+    makeProxy(SERVICES.NOTIFICATIONS, (path) => `/api/v1/cron${path}`)
+);
 
 // ===== 404 Gateway (chỉ bật sau cùng) =====
 app.use((req, res) => {
