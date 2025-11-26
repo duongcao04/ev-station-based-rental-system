@@ -10,7 +10,7 @@ import {
 
 const router = express.Router();
 
-router.use(protectedRoute, authorize("admin"));
+router.use(protectedRoute, authorize("admin,staff"));
 
 router.post("/create-account", createAccount);
 router.get("/users", getAllUsers);

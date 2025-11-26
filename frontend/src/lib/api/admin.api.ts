@@ -40,4 +40,8 @@ export const adminApi = {
     const res = await axiosClient.patch(`/v1/admin/users/${id}`, data);
     return res.data;
   },
+  getUser: async (id: string) => {
+    const res = await axiosClient.get(`/v1/admin/users/${id}`);
+    return res.data;
+  },
 };
