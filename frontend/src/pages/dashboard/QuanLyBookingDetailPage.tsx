@@ -10,9 +10,12 @@ import { StatusBadge } from './components/StatusBadge';
 import { CheckinModal } from './components/CheckinModal';
 import { CheckoutModal } from './components/CheckoutModal';
 import { CancelModal } from './components/CancelModal';
+import { useNotifications } from '../../lib/queries/useNotifications';
+import dayjs from 'dayjs';
 
 
 export default function QuanLyBookingDetailPage() {
+    const {sendNotification} = useNotifications()
     const { bookingId } = useParams();
     const navigate = useNavigate();
     const [booking, setBooking] = useState<any>(null);
@@ -218,11 +221,24 @@ export default function QuanLyBookingDetailPage() {
         try {
             setIsProcessing(true);
             await bookingApi.checkinBooking(bookingId);
+            sendNotification({
+                                userId: booking.user_id,
+                                title: 'Check in xe thành công!',
+                                message: `Check in xe ${
+                                  vehicle?.displayName
+                                } cho chuyến đi từ ${dayjs(booking.start_date).format(
+                                  'DD/MM/YYYY'
+                                )} đến ${dayjs(booking.end_date).format(
+                                  'DD/MM/YYYY'
+                                )} thành công.`,
+                                url: `/tai-khoan/lich-su-thue/${bookingId}`,
+                              });
 
             // Nếu booking có payment_id, cập nhật payment status thành 'succeeded'
             if (booking?.payment_id && !isPaymentSucceeded()) {
                 try {
                     await paymentApi.updatePaymentStatus(booking.payment_id, 'succeeded');
+                    
                 } catch (paymentErr) {
                     console.error('Error updating payment status:', paymentErr);
                 }

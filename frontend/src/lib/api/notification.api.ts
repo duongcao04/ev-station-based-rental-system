@@ -13,7 +13,7 @@ export const registerDevice = async (fcmToken: string, platform: string, deviceN
   return response.data;
 };
 
-export const getNotifications = async (userId: string): Promise<Notification[]> => {
+export const getNotifications = async (userId: string): Promise<{ items: Notification[], limit: number, offset: number, success: boolean, total: number }> => {
   const response = await axiosClient.get(`${NOTIFICATION_API_URL}/${userId}`, {
     withCredentials: true
   });
@@ -22,5 +22,17 @@ export const getNotifications = async (userId: string): Promise<Notification[]> 
 
 export const markAsRead = async (notificationId: string) => {
   const response = await axiosClient.patch(`${NOTIFICATION_API_URL}/${notificationId}/read`);
+  return response.data;
+};
+
+export interface ISendNotificationPayload {
+  userId: string;
+  title: string;
+  message: string;
+  url?: string
+}
+
+export const sendNotification = async (payload: ISendNotificationPayload) => {
+  const response = await axiosClient.post(`${NOTIFICATION_API_URL}/send`, payload);
   return response.data;
 };

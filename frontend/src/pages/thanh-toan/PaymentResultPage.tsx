@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button'
 import { bookingApi } from '@/lib/api/booking.api'
 import { vehicleApi } from '@/lib/api/vehicle.api'
 
-interface BookingData {
+export interface BookingData {
     booking_id: string
     vehicle_id: string
     start_date: string

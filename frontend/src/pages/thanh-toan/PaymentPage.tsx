@@ -10,6 +10,11 @@ import { ProviderSelection } from './components/ProviderSelection';
 import { CashPaymentInfo } from './components/CashPaymentInfo';
 import { PaymentSummaryCard } from './components/PaymentSummaryCard';
 import { LoadingState } from '../dat-xe/components/LoadingState';
+import { useProfile } from '../../lib/queries/useAuth';
+import { useNotifications } from '../../lib/queries/useNotifications';
+import { vehicleApi } from '../../lib/api/vehicle.api';
+import type { BookingData } from './PaymentResultPage';
+import dayjs from 'dayjs';
 
 const PAYMENT_METHODS = [
     {
@@ -48,10 +53,13 @@ export default function PaymentPage() {
     const [selectedMethod, setSelectedMethod] = useState('');
     const [selectedProvider, setSelectedProvider] = useState('');
     const [renterInfo, setRenterInfo] = useState({});
-    const [bookingData, setBookingData] = useState(null);
+    const [bookingData, setBookingData] = useState<BookingData | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
     const [isProcessing, setIsProcessing] = useState(false);
+    
+  const { data: user } = useProfile();
+  const { sendNotification } = useNotifications();
 
     // Load booking data
     useEffect(() => {
@@ -94,7 +102,19 @@ export default function PaymentPage() {
         }
 
         if (selectedMethod === 'cash') {
-            alert('Đặt xe thành công! Vui lòng thanh toán tiền mặt khi nhận xe.');
+            const vehicle = await vehicleApi.getVehicle(bookingData?.vehicle_id).then(res=>res.data)
+            sendNotification({
+            userId: user.id,
+            title: 'Đặt xe thành công!',
+            message: `Bạn đã đặt thành công xe ${
+              vehicle?.displayName
+            } cho chuyến đi từ ${dayjs(bookingData.start_date).format(
+              'DD/MM/YYYY'
+            )} đến ${dayjs(bookingData.end_date).format(
+              'DD/MM/YYYY'
+            )}. Mã đặt xe của bạn là ${bookingId}.`,
+            url: `/tai-khoan/lich-su-thue/${bookingId}`,
+          });
             navigate('/thue-xe-tu-lai');
             return;
         }

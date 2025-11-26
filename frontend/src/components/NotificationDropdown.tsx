@@ -34,6 +34,8 @@ function getNotificationIcon(type: Notification['type']) {
 
 export function NotificationDropdown() {
   const { notifications, isLoading, markAsRead } = useNotifications();
+  console.log(notifications);
+  
   const navigate = useNavigate();
 
   const unreadCount = notifications?.length

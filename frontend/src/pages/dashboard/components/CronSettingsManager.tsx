@@ -2,7 +2,11 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getCronSettings, updateCronSettings } from '@/lib/api/cron.api';
+import {
+  getCronSettings,
+  updateCronSettings,
+  triggerCronNow,
+} from '@/lib/api/cron.api';
 import { toast } from 'sonner';
 import {
   Card,
@@ -44,7 +48,7 @@ export const CronSettingsManager = () => {
     queryFn: getCronSettings,
   });
 
-  const mutation = useMutation({
+  const updateMutation = useMutation({
     mutationFn: updateCronSettings,
     onSuccess: (data) => {
       toast.success(data.message || 'Settings updated successfully!');
@@ -52,6 +56,18 @@ export const CronSettingsManager = () => {
     },
     onError: (error: any) => {
       toast.error(error.message || 'Failed to update settings.');
+    },
+  });
+
+  const testMutation = useMutation({
+    mutationFn: triggerCronNow,
+    onSuccess: (data) => {
+      toast.success(
+        data.message || 'Test notification sent successfully to all users!',
+      );
+    },
+    onError: (error: any) => {
+      toast.error(error.message || 'Failed to send test notification.');
     },
   });
 
@@ -73,7 +89,11 @@ export const CronSettingsManager = () => {
   }, [cronSettings, form]);
 
   const onSubmit = (values: CronSettingsFormValues) => {
-    mutation.mutate(values);
+    updateMutation.mutate(values);
+  };
+
+  const handleTestCron = () => {
+    testMutation.mutate();
   };
 
   if (isLoading) {
@@ -129,9 +149,19 @@ export const CronSettingsManager = () => {
                 </FormItem>
               )}
             />
-            <Button type='submit' disabled={mutation.isPending}>
-              {mutation.isPending ? 'Saving...' : 'Save Changes'}
-            </Button>
+            <div className='flex space-x-2'>
+              <Button type='submit' disabled={updateMutation.isPending}>
+                {updateMutation.isPending ? 'Saving...' : 'Save Changes'}
+              </Button>
+              <Button
+                type='button'
+                variant='outline'
+                onClick={handleTestCron}
+                disabled={testMutation.isPending}
+              >
+                {testMutation.isPending ? 'Sending...' : 'Test Cron Now'}
+              </Button>
+            </div>
           </form>
         </Form>
       </CardContent>

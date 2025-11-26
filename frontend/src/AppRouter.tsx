@@ -349,7 +349,7 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: '/dashboard/menbers',
+        path: '/dashboard/members',
         element: (
           <ProtectedRoute allowedRoles={['admin']}>
             <DashboardLayout>

@@ -1,7 +1,8 @@
 import { Router } from 'express';
 import {
-    getCronJobSetting,
-    updateCronJobSetting,
+  getCronJobSetting,
+  updateCronJobSetting,
+  triggerPromotionalJob,
 } from '../controllers/cron.controller';
 import { authMiddleware } from '../middleware/auth.middleware';
 
@@ -57,5 +58,19 @@ router.get('/settings', getCronJobSetting);
  *         description: Server error
  */
 router.put('/settings', updateCronJobSetting);
+
+/**
+ * @swagger
+ * /api/v1/cron/trigger:
+ *   post:
+ *     summary: Manually trigger the promotional notification job now
+ *     tags: [CronSettings]
+ *     responses:
+ *       200:
+ *         description: Successfully triggered the job.
+ *       500:
+ *         description: Server error
+ */
+router.post('/trigger', triggerPromotionalJob);
 
 export default router;

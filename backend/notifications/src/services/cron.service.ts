@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import { ICronJobSetting } from '../types/cron.types';
+import { runPromotionalJob } from '../cron/jobs';
 
 const prisma = new PrismaClient();
 
@@ -11,21 +12,21 @@ const PROMOTIONAL_JOB_NAME = 'PROMOTIONAL_NOTIFICATION';
  * @returns {Promise<ICronJobSetting>} The cron job setting.
  */
 export const getCronJobSettingService = async (): Promise<ICronJobSetting> => {
-    let cronSetting = await prisma.cronJobSetting.findUnique({
-        where: { jobName: PROMOTIONAL_JOB_NAME },
+  let cronSetting = await prisma.cronJobSetting.findUnique({
+    where: { jobName: PROMOTIONAL_JOB_NAME },
+  });
+
+  if (!cronSetting) {
+    cronSetting = await prisma.cronJobSetting.create({
+      data: {
+        jobName: PROMOTIONAL_JOB_NAME,
+        cronTime: '0 8 * * *', // Default: 8:00 AM every day
+        isEnabled: true,
+      },
     });
+  }
 
-    if (!cronSetting) {
-        cronSetting = await prisma.cronJobSetting.create({
-            data: {
-                jobName: PROMOTIONAL_JOB_NAME,
-                cronTime: '0 8 * * *', // Default: 8:00 AM every day
-                isEnabled: true,
-            },
-        });
-    }
-
-    return cronSetting;
+  return cronSetting;
 };
 
 /**
@@ -35,18 +36,25 @@ export const getCronJobSettingService = async (): Promise<ICronJobSetting> => {
  * @returns {Promise<ICronJobSetting>} The updated cron job setting.
  */
 export const updateCronJobSettingService = async (
-    cronTime: string,
-    isEnabled: boolean,
+  cronTime: string,
+  isEnabled: boolean,
 ): Promise<ICronJobSetting> => {
-    const updatedSetting = await prisma.cronJobSetting.upsert({
-        where: { jobName: PROMOTIONAL_JOB_NAME },
-        update: { cronTime, isEnabled },
-        create: {
-            jobName: PROMOTIONAL_JOB_NAME,
-            cronTime,
-            isEnabled,
-        },
-    });
+  const updatedSetting = await prisma.cronJobSetting.upsert({
+    where: { jobName: PROMOTIONAL_JOB_NAME },
+    update: { cronTime, isEnabled },
+    create: {
+      jobName: PROMOTIONAL_JOB_NAME,
+      cronTime,
+      isEnabled,
+    },
+  });
 
-    return updatedSetting;
+  return updatedSetting;
+};
+
+/**
+ * Manually triggers the promotional notification job.
+ */
+export const triggerPromotionalJobService = async (): Promise<void> => {
+  await runPromotionalJob();
 };
