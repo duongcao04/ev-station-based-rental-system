@@ -6,13 +6,18 @@ const ACCESS_TOKEN_TTL = "1d";
 const REFRESH_TOKEN_TTL = 14 * 24 * 60 * 60 * 1000; //14d
 
 const generateAccessToken = async (user) => {
-  const token = jwt.sign(
-    { userId: user.id, role: user.role },
-    process.env.AUTH_ACCESS_TOKEN_SECRET,
-    {
-      expiresIn: ACCESS_TOKEN_TTL,
-    }
-  );
+  const payload = {
+    userId: user.id,
+    role: user.role,
+  };
+
+  if (user.station_id) {
+    payload.station_id = user.station_id;
+  }
+
+  const token = jwt.sign(payload, process.env.AUTH_ACCESS_TOKEN_SECRET, {
+    expiresIn: ACCESS_TOKEN_TTL,
+  });
   return token;
 };
 
@@ -34,13 +39,18 @@ const authenticateToken = async (req, res, next) => {
 };
 
 const generateRefreshToken = async (user) => {
-  const token = jwt.sign(
-    { userId: user.id, role: user.role },
-    process.env.AUTH_REFRESH_TOKEN_SECRET,
-    {
-      expiresIn: REFRESH_TOKEN_TTL,
-    }
-  );
+  const payload = {
+    userId: user.id,
+    role: user.role,
+  };
+
+  if (user.station_id) {
+    payload.station_id = user.station_id;
+  }
+
+  const token = jwt.sign(payload, process.env.AUTH_REFRESH_TOKEN_SECRET, {
+    expiresIn: REFRESH_TOKEN_TTL,
+  });
   return token;
 };
 

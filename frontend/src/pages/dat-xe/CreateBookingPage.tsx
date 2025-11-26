@@ -69,7 +69,7 @@ export default function CreateBookingPage() {
   const pickupStations = pickupStationsData
     ? (Array.isArray(pickupStationsData) ? pickupStationsData : []).map(
         (station: any) => ({
-          id: station.station_id || station.user_id, // Ưu tiên station_id, fallback về user_id
+          id: station.station_id || station.user_id, 
           name:
             station.display_name ||
             station.address ||
@@ -87,7 +87,7 @@ export default function CreateBookingPage() {
   const returnStations = returnStationsData
     ? (Array.isArray(returnStationsData) ? returnStationsData : []).map(
         (station: any) => ({
-          id: station.station_id || station.user_id, // Ưu tiên station_id, fallback về user_id
+          id: station.station_id || station.user_id,
           name:
             station.display_name ||
             station.address ||
@@ -110,7 +110,7 @@ export default function CreateBookingPage() {
     }
   }, [dateRange, vehicle]);
 
-  // Log errors
+
   useEffect(() => {
     if (error) {
       console.error('Error loading vehicles:', error);
@@ -134,7 +134,7 @@ export default function CreateBookingPage() {
         if (email && !renterEmail) setRenterEmail(email);
       }
     } catch (_) {
-      // ignore decode errors
+  
     }
   }, []);
 
@@ -232,8 +232,8 @@ export default function CreateBookingPage() {
 
     const bookingData = {
       vehicle_id: vehicleId,
-      start_station_id: startStationId, // Ưu tiên station_id
-      end_station_id: endStationId, // Ưu tiên station_id
+      start_station_id: startStationId, 
+      end_station_id: endStationId, 
       start_date: dateRange[0].toISOString(),
       end_date: dateRange[1].toISOString(),
       total_amount: totalAmount,
@@ -275,7 +275,7 @@ export default function CreateBookingPage() {
   return (
     <div className='min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-purple-50 py-12'>
       <div className='max-w-6xl mx-auto px-4 sm:px-6 lg:px-8'>
-        {/* Header with back button */}
+        
         <div className='mb-8 flex items-center gap-4'>
           <Button
             variant='ghost'
@@ -294,9 +294,7 @@ export default function CreateBookingPage() {
         </div>
 
         <div className='grid grid-cols-1 lg:grid-cols-3 gap-8'>
-          {/* Left Column: Form */}
           <div className='lg:col-span-2 space-y-6'>
-            {/* Replace vehicle info with renter info */}
             <RenterInfoCard
               renterName={renterName}
               renterPhone={renterPhone}
@@ -333,7 +331,6 @@ export default function CreateBookingPage() {
             />
           </div>
 
-          {/* Right Column: Summary */}
           <div className='lg:col-span-1'>
             <BookingSummaryCard
               vehicle={vehicle}

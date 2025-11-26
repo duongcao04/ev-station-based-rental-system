@@ -28,7 +28,40 @@ export function LichSuThueXeChiTietPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isCancelling, setIsCancelling] = useState(false);
+  const [stations, setStations] = useState<any[]>([]);
 
+
+  useEffect(() => {
+    const loadStations = async () => {
+      try {
+        const response = await stationApi.getAllStations();
+        const stationsData = Array.isArray(response.data) ? response.data : [];
+        setStations(stationsData);
+      } catch (err) {
+        console.error('Error loading stations list:', err);
+        setStations([]);
+      }
+    };
+
+    loadStations();
+  }, []);
+
+  const resolveStationName = (stationState: any, fallbackId?: string) => {
+    if (stationState?.display_name) {
+      return stationState.display_name;
+    }
+
+    if (!fallbackId) {
+      return '-';
+    }
+
+    const matchedStation = stations.find(
+      (station: any) =>
+        station.station_id === fallbackId || station.user_id === fallbackId
+    );
+
+    return matchedStation?.display_name || '-';
+  };
 
   useEffect(() => {
     if (!bookingId) {
@@ -477,7 +510,6 @@ export function LichSuThueXeChiTietPage() {
               <h3 className="text-xl font-bold text-white">Thông tin chi tiết</h3>
             </div>
             <div className="p-6 space-y-4">
-              {/* Booking Status */}
               <div className="space-y-2 pb-3 border-b">
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-muted-foreground">Trạng thái booking:</span>
@@ -487,7 +519,11 @@ export function LichSuThueXeChiTietPage() {
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-muted-foreground">Trạng thái thanh toán:</span>
-                  {(bookingData as any)?.payment_id ? (
+                  {['ongoing', 'completed'].includes(((bookingData as any)?.status || '').toLowerCase()) ? (
+                    <Badge className="bg-emerald-100 text-emerald-800 border border-emerald-200">
+                      Đã thanh toán
+                    </Badge>
+                  ) : (bookingData as any)?.payment_id ? (
                     paymentData ? (
                       <Badge className={getPaymentStatusColor((paymentData as any).status)}>
                         {getPaymentStatusText((paymentData as any).status)}
@@ -541,12 +577,7 @@ export function LichSuThueXeChiTietPage() {
                       <div className="flex justify-between items-center">
                         <span className="text-sm text-muted-foreground">Trạm nhận xe:</span>
                         <span className="font-semibold text-sm">
-                          {startStation?.display_name
-                            ? startStation.display_name
-                            : (bookingData as any).start_station_id
-                              ? `Trạm ${(bookingData as any).start_station_id.slice(-5).toUpperCase()}`
-                              : '-'
-                          }
+                          {resolveStationName(startStation, (bookingData as any).start_station_id)}
                         </span>
                       </div>
                     )}
@@ -554,12 +585,7 @@ export function LichSuThueXeChiTietPage() {
                       <div className="flex justify-between items-center">
                         <span className="text-sm text-muted-foreground">Trạm trả xe dự kiến:</span>
                         <span className="font-semibold text-sm">
-                          {endStation?.display_name
-                            ? endStation.display_name
-                            : (bookingData as any).end_station_id
-                              ? `Trạm ${(bookingData as any).end_station_id.slice(-5).toUpperCase()}`
-                              : '-'
-                          }
+                          {resolveStationName(endStation, (bookingData as any).end_station_id)}
                         </span>
                       </div>
                     )}
@@ -567,12 +593,7 @@ export function LichSuThueXeChiTietPage() {
                       <div className="flex justify-between items-center">
                         <span className="text-sm text-muted-foreground">Trạm trả xe thực tế:</span>
                         <span className="font-semibold text-sm text-blue-600">
-                          {actualReturnStation?.display_name
-                            ? actualReturnStation.display_name
-                            : (bookingData as any).actual_return_station_id
-                              ? `Trạm ${(bookingData as any).actual_return_station_id.slice(-5).toUpperCase()}`
-                              : '-'
-                          }
+                          {resolveStationName(actualReturnStation, (bookingData as any).actual_return_station_id)}
                         </span>
                       </div>
                     )}

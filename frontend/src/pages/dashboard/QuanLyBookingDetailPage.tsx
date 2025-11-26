@@ -4,6 +4,7 @@ import { bookingApi } from '@/lib/api/booking.api';
 import { vehicleApi } from '@/lib/api/vehicle.api';
 import { stationApi } from '@/lib/api/station.api';
 import { paymentApi } from '@/lib/api/payment.api';
+import { adminApi } from '@/lib/api/admin.api';
 import { formatVNDCurrency } from '@/lib/number';
 import { BookingInfoCard, InfoRow } from './components/BookingInfoCard';
 import { StatusBadge } from './components/StatusBadge';
@@ -15,7 +16,7 @@ import dayjs from 'dayjs';
 
 
 export default function QuanLyBookingDetailPage() {
-    const {sendNotification} = useNotifications()
+    const { sendNotification } = useNotifications()
     const { bookingId } = useParams();
     const navigate = useNavigate();
     const [booking, setBooking] = useState<any>(null);
@@ -34,6 +35,7 @@ export default function QuanLyBookingDetailPage() {
     const [actualReturnStationId, setActualReturnStationId] = useState('');
     const [penaltyFee, setPenaltyFee] = useState('');
     const [cancelPenaltyFee, setCancelPenaltyFee] = useState('');
+    const [customerInfo, setCustomerInfo] = useState<{ fullName?: string; email?: string } | null>(null);
 
 
 
@@ -76,13 +78,16 @@ export default function QuanLyBookingDetailPage() {
             const bookingResponse = await bookingApi.getBooking(bookingId);
             const bookingData = bookingResponse.data;
             setBooking(bookingData);
+            setCustomerInfo(null);
 
-            // Load station info
-            // Lưu ý: booking.start_station_id có thể là station_id hoặc user_id
-            // Thử load theo station_id trước, nếu fail thì thử user_id
+            if (bookingData?.user_id) {
+                fetchCustomerInfo(bookingData.user_id);
+            }
+
+
             if (bookingData.start_station_id) {
                 try {
-                    // Thử get by station_id trước
+
                     try {
                         const stationResponse = await stationApi.getStationById(bookingData.start_station_id);
                         console.log('Start station data (by station_id):', stationResponse.data);
@@ -173,6 +178,23 @@ export default function QuanLyBookingDetailPage() {
         }
     };
 
+    const resolveStationName = (stationState: any, fallbackId?: string) => {
+        if (stationState?.display_name) {
+            return stationState.display_name;
+        }
+
+        if (!fallbackId) {
+            return '-';
+        }
+
+        const matchedStation = stations.find(
+            (station: any) =>
+                station.station_id === fallbackId || station.user_id === fallbackId
+        );
+
+        return matchedStation?.display_name || '-';
+    };
+
     const isPaymentSucceeded = () => paymentData?.status?.toLowerCase() === 'succeeded';
 
     const renderPaymentStatus = () => {
@@ -215,6 +237,27 @@ export default function QuanLyBookingDetailPage() {
         );
     };
 
+    const fetchCustomerInfo = async (userId: string) => {
+        try {
+            const response = await adminApi.getUser(userId);
+            const userData = response?.user || response?.result || response;
+
+            if (userData) {
+                const renterProfile = userData.renter_profile || userData.renterProfile;
+                const fullName = renterProfile?.full_name || renterProfile?.fullName || userData.full_name || userData.displayName;
+                setCustomerInfo({
+                    fullName: fullName || '',
+                    email: userData.email || renterProfile?.email || '',
+                });
+            } else {
+                setCustomerInfo(null);
+            }
+        } catch (err) {
+            console.error('Error loading customer info:', err);
+            setCustomerInfo(null);
+        }
+    };
+
     const handleCheckin = async () => {
         if (!bookingId) return;
 
@@ -222,23 +265,22 @@ export default function QuanLyBookingDetailPage() {
             setIsProcessing(true);
             await bookingApi.checkinBooking(bookingId);
             sendNotification({
-                                userId: booking.user_id,
-                                title: 'Check in xe thành công!',
-                                message: `Check in xe ${
-                                  vehicle?.displayName
-                                } cho chuyến đi từ ${dayjs(booking.start_date).format(
-                                  'DD/MM/YYYY'
-                                )} đến ${dayjs(booking.end_date).format(
-                                  'DD/MM/YYYY'
-                                )} thành công.`,
-                                url: `/tai-khoan/lich-su-thue/${bookingId}`,
-                              });
+                userId: booking.user_id,
+                title: 'Check in xe thành công!',
+                message: `Check in xe ${vehicle?.displayName
+                    } cho chuyến đi từ ${dayjs(booking.start_date).format(
+                        'DD/MM/YYYY'
+                    )} đến ${dayjs(booking.end_date).format(
+                        'DD/MM/YYYY'
+                    )} thành công.`,
+                url: `/tai-khoan/lich-su-thue/${bookingId}`,
+            });
 
             // Nếu booking có payment_id, cập nhật payment status thành 'succeeded'
             if (booking?.payment_id && !isPaymentSucceeded()) {
                 try {
                     await paymentApi.updatePaymentStatus(booking.payment_id, 'succeeded');
-                    
+
                 } catch (paymentErr) {
                     console.error('Error updating payment status:', paymentErr);
                 }
@@ -582,28 +624,16 @@ export default function QuanLyBookingDetailPage() {
                 <BookingInfoCard title="Thông tin Trạm">
                     <InfoRow
                         label="Trạm nhận"
-                        value={
-                            startStation
-                                ? `${startStation.display_name || 'N/A'} (ID: ${startStation.station_id ? startStation.station_id : booking?.start_station_id || 'N/A'})`
-                                : booking?.start_station_id ? `ID: ${booking.start_station_id}` : '-'
-                        }
+                        value={resolveStationName(startStation, booking?.start_station_id)}
                     />
                     <InfoRow
                         label="Trạm trả"
-                        value={
-                            endStation
-                                ? `${endStation.display_name || 'N/A'} (ID: ${endStation.station_id ? endStation.station_id : booking?.end_station_id || 'N/A'})`
-                                : booking?.end_station_id ? `ID: ${booking.end_station_id}` : '-'
-                        }
+                        value={resolveStationName(endStation, booking?.end_station_id)}
                     />
                     {booking?.actual_return_station_id && (
                         <InfoRow
                             label="Trạm trả thực tế"
-                            value={
-                                actualReturnStation
-                                    ? `${actualReturnStation.display_name || 'N/A'} (ID: ${actualReturnStation.station_id ? actualReturnStation.station_id : booking.actual_return_station_id})`
-                                    : `ID: ${booking.actual_return_station_id}`
-                            }
+                            value={resolveStationName(actualReturnStation, booking?.actual_return_station_id)}
                         />
                     )}
                 </BookingInfoCard>
@@ -618,7 +648,7 @@ export default function QuanLyBookingDetailPage() {
                 />
                 <InfoRow
                     label="Họ và tên"
-                    value={booking?.email || '-'}
+                    value={customerInfo?.fullName || customerInfo?.email || booking?.email || '-'}
                     valueStyle={{ fontWeight: '600' }}
                 />
             </BookingInfoCard>

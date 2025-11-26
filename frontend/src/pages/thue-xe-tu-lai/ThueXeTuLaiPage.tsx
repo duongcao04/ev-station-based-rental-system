@@ -42,20 +42,6 @@ export default function ThueXeTuLaiPage() {
 
         {/* Content */}
         <div className='w-full col-span-9 space-y-9'>
-          {/* ... Location Card UI ... */}
-          <div className='relative w-full h-[150px] rounded-lg grid grid-cols-2 gap-8'>
-            {/* (Code Location giữ nguyên) */}
-            <LocationCard title={'Điểm thuê'} />
-            <div className='absolute left-[50%] translate-x-[-50%] top-[50%] translate-y-[-50%]'>
-              <button className='cursor-pointer shadow-md rounded-lg'>
-                <div className='size-14 rounded-lg bg-primary text-white flex items-center justify-center'>
-                  <ArrowUpDown size={24} />
-                </div>
-              </button>
-            </div>
-            <LocationCard title={'Điểm trả'} />
-          </div>
-
           <div className='flex justify-between items-center'>
             <h2 className='text-xl font-bold'>
               {/* Kiểm tra length an toàn */}
