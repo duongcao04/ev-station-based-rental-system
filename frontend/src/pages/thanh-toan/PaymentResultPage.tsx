@@ -3,6 +3,9 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { bookingApi } from '@/lib/api/booking.api'
 import { vehicleApi } from '@/lib/api/vehicle.api'
+import { useNotifications } from '@/lib/queries/useNotifications'
+import { useProfile } from '@/lib/queries/useAuth'
+import dayjs from 'dayjs'
 
 export interface BookingData {
     booking_id: string
@@ -41,6 +44,10 @@ export default function PaymentResultPage() {
     const [loadingBooking, setLoadingBooking] = useState(true)
     const [loadingVehicle, setLoadingVehicle] = useState(false)
     const [syncingPayment, setSyncingPayment] = useState(false)
+    const [notificationSent, setNotificationSent] = useState(false)
+
+    const { data: user } = useProfile()
+    const { sendNotification } = useNotifications()
 
     const isSuccess = status === 'success'
 
@@ -133,6 +140,25 @@ export default function PaymentResultPage() {
             syncPayment()
         }
     }, [isSuccess, bookingId, paymentId, syncAttempted])
+
+    // Gửi notification khi thanh toán thành công
+    useEffect(() => {
+        if (isSuccess && !syncingPayment && !notificationSent && user?.id && bookingId && bookingData && vehicleData) {
+            setNotificationSent(true)
+
+            sendNotification({
+                userId: user.id,
+                title: 'Thanh toán thành công!',
+                message: `Bạn đã đặt thành công xe ${vehicleData.displayName
+                    } cho chuyến đi từ ${dayjs(bookingData.start_date).format(
+                        'DD/MM/YYYY'
+                    )} đến ${dayjs(bookingData.end_date).format(
+                        'DD/MM/YYYY'
+                    )}. Mã đặt xe của bạn là ${bookingId}.`,
+                url: `/tai-khoan/lich-su-thue/${bookingId}`,
+            })
+        }
+    }, [isSuccess, syncingPayment, notificationSent, user?.id, bookingId, bookingData, vehicleData, sendNotification])
 
 
     return (
